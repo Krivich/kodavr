@@ -1,0 +1,12 @@
+{{!-- Call at column 0 — see the note in site/gate.hbs.
+     On a dump page the block starts hidden in SSR (button "1" reveals it); the
+     /reception/ page passes reveal=true, where reception IS the page content. --}}
+<section class="reception-block"{{#unless reveal}} hidden{{/unless}} aria-labelledby="reception-title">
+  <h2 id="reception-title" class="sr-only">{{copy.reception_title}}</h2>
+  <pre class="reception-text">{{copy.reception}}</pre>
+  <pre class="reception-prompt" id="reception-prompt">{{copy.prompt}}</pre>
+  <button type="button" class="copy-prompt" data-copy-target="reception-prompt" data-copied-label="{{copy.copied_label}}" data-copied-announcement="{{copy.copied_announcement}}">{{copy.copy_label}}</button>
+{{#unless reveal}}
+  <p class="reset-link-wrap"><a href="/" class="reset-link" data-reset-machine>{{copy.reset_label}}</a></p>
+{{/unless}}
+</section>

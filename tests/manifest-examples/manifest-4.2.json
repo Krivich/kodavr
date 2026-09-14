@@ -1,0 +1,23 @@
+{
+  "slug": "2026-09-14-kodavr-manifesto",
+  "type": "case",
+  "title": "Kodavr manifesto: raw experience your agent reads for you",
+  "date": "2026-09-14",
+  "domain": "engineering",
+  "tags": ["agents", "knowledge-sharing", "static-site", "manifest"],
+  "stakes": "low",
+  "content_flags": ["opinion"],
+  "trust_level": "self-tested",
+  "generated_by": "hybrid",
+  "human_review": "attested",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "Why polishing kills experience exchange and how a machine-readable contract shifts adaptation to the reader's side.",
+  "sources": ["chat-log", "source-code"],
+  "layers": [ { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true } ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "docs/SPEC.md", "note": "the specification that spawned the repository" },
+    { "kind": "file", "path_or_url": "static/logo.svg", "note": "the Kodavr wordmark" }
+  ],
+  "derived_from": null
+}

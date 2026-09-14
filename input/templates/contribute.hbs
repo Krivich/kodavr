@@ -1,0 +1,31 @@
+{{!-- ignition: noblock --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{> site/head}}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{{> site/header}}
+<main id="main" tabindex="-1" class="contribute">
+  <h1>{{title}}</h1>
+  <section class="pr-flow">
+    <h2>Bring a dump</h2>
+    <ol>
+      <li>Fork the repository and add content/dumps/&lt;slug&gt;/manifest.json and raw.md.</li>
+      <li>Open one pull request per dump.</li>
+      <li>CI validates the manifest schema and rejects junk before merge.</li>
+    </ol>
+  </section>
+  <section class="manifest-schema">
+    <h2>Manifest schema</h2>
+    <p>Required fields: slug, title, type, domain, date, stakes, trust_level, content_flags, summary.</p>
+  </section>
+  <section class="licences">
+    <h2>Licences</h2>
+    <p>Built on Ignition. MIT for code, CC-BY-4.0 for content.</p>
+  </section>
+</main>
+{{> site/footer}}
+</body>
+</html>

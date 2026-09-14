@@ -1,0 +1,32 @@
+{
+  "slug": "2026-09-14-kodavr-manifesto",
+  "title": "Kodavr manifesto: raw experience your agent reads for you",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-09-14",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["opinion"],
+  "tags": ["manifesto", "kodavr", "meta", "self-reference", "registry"],
+  "generated_by": "hybrid",
+  "human_review": "attested",
+  "license": "CC-BY-4.0",
+  "summary": "Kodavr publishes raw experience as machine-readable dumps: the author documents what worked without polishing it, and the reader's agent adapts it. This first dump is the platform's own case study — the problem, the contract, the naming traps and the artifacts.",
+  "artifacts": [
+    {
+      "kind": "file",
+      "path_or_url": "docs/SPEC.md",
+      "note": "The specification that spawned this repository (§0 register, §10 starter content)."
+    },
+    {
+      "kind": "file",
+      "path_or_url": "static/logo.svg",
+      "note": "The Kodavr wordmark described in the naming section."
+    },
+    {
+      "kind": "file",
+      "path_or_url": "manifest.schema.json",
+      "note": "The manifest schema: a JSON Schema derived from §4.1."
+    }
+  ]
+}

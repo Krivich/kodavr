@@ -1,0 +1,18 @@
+{{!-- ignition: noblock --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{> site/head}}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{{> site/header}}
+<main id="main" tabindex="-1" class="not-found">
+  {{!-- §6.6: the visible §7.6 block is a <pre>; this sr-only H1 still gives the
+       page exactly one heading for assistive tech without changing the copy. --}}
+  <h1 class="sr-only">{{title}}</h1>
+  <pre class="not-found-text">{{copy.notFound}}</pre>
+</main>
+{{> site/footer}}
+</body>
+</html>

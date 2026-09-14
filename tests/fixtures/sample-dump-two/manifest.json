@@ -1,0 +1,15 @@
+{
+  "slug": "sample-dump-two",
+  "title": "Sample Dump Two",
+  "type": "pack",
+  "domain": "finance",
+  "date": "2026-09-20",
+  "stakes": "high",
+  "trust_level": "raw",
+  "content_flags": ["professional_advice"],
+  "summary": "A second fixture dump for machine-contract tests.",
+  "artifacts": [
+    { "kind": "file", "path_or_url": "SETUP_AGENT.md", "note": "installer instructions" }
+  ],
+  "derived_from": null
+}

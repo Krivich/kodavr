@@ -1,0 +1,52 @@
+{{!-- ignition: noblock --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{> site/head}}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{{> site/header}}
+<main id="main" tabindex="-1" class="home">
+  <h1>{{title}}</h1>
+  <p class="positioning">{{tagline}}</p>
+  <p class="dump-story">{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p>
+
+  <section class="machine-quickstart">
+    <h2>For machines</h2>
+    <pre class="quickstart">curl -s {{index_url}}</pre>
+    <ul>
+      <li><a href="/index.json">/index.json</a></li>
+      <li><a href="/.well-known/kodavr.json">/.well-known/kodavr.json</a></li>
+      <li><a href="/feeds/all.atom">/feeds/all.atom</a></li>
+    </ul>
+  </section>
+
+  <section class="human-quickstart">
+    <h2>For humans</h2>
+    <p><a href="/reception/">Check in at reception</a></p>
+  </section>
+
+  <section class="dump-feed">
+    <h2>Latest dumps</h2>
+    {{> ignition/pagination
+        collection="dumps"
+        perPage=10
+        pageTemplate="home/page"
+        layout=layout
+        dataset=dataset
+    }}
+  </section>
+
+  <section class="trust-legend">
+    <h2>Trust levels</h2>
+    <ol class="trust-levels">
+      {{#each trust_levels}}
+      <li>{{this}}</li>
+      {{/each}}
+    </ol>
+  </section>
+</main>
+{{> site/footer}}
+</body>
+</html>

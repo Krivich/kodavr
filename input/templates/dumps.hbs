@@ -1,0 +1,24 @@
+{{!-- ignition: noblock --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{> site/head}}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{{> site/header}}
+<main id="main" tabindex="-1" class="dump-page">
+  {{#unless body_has_title}}<h1 class="dump-title">{{title}}</h1>{{/unless}}
+  <article class="dump-body">{{{body_html}}}</article>
+  <p class="post-gate-line" hidden>{{copy.post_gate_line}}</p>
+{{> site/gate}}
+{{> site/reception-block}}
+  <p id="a11y-status" class="sr-only" role="status" aria-live="polite" data-hall-announcement="{{copy.hall_announcement}}" data-reception-announcement="{{copy.reception_announcement}}"></p>
+{{> site/artifacts}}
+  <p class="dump-discuss"><a href="{{issues_url}}" rel="noopener noreferrer">{{copy.discuss_label}}</a></p>
+{{> site/manifest-card}}
+  <a class="back-to-feed" href="/" aria-label="Back to feed">&#x2190;</a>
+</main>
+{{> site/footer}}
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "slug": "sample-dump",
+  "title": "Sample Dump",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-09-14",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["opinion"],
+  "summary": "A fixture dump for tests.",
+  "artifacts": [
+    { "kind": "url", "path_or_url": "https://example.test/docs", "note": "component docs" }
+  ]
+}

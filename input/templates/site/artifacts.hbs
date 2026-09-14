@@ -1,0 +1,17 @@
+{{!-- §6.5: the artifacts list — each entry is its own card (icon/kind +
+     link + note). Call at column 0: the engine compiles partials without
+     preventIndent, so an indented call would shift this markup. --}}
+<section class="artifacts">
+  <h2 class="artifacts-heading">Artifacts</h2>
+  {{#if artifacts.length}}
+  {{#each artifacts}}
+  <article class="artifact-card">
+    <span class="artifact-kind">{{kind}}</span>
+    <a class="artifact-link" href="{{#if href}}{{href}}{{else}}{{path_or_url}}{{/if}}">{{path_or_url}}</a>
+    {{#if note}}<p class="artifact-note">{{note}}</p>{{/if}}
+  </article>
+  {{/each}}
+  {{else}}
+  <p class="artifacts-empty">No artifacts.</p>
+  {{/if}}
+</section>

@@ -1,0 +1,52 @@
+{
+  "description": "Black-zone heuristics for SPEC §2.5. Declarative and conservative: a file, not code, so the pattern list can be reviewed and extended by PR. A hit is NOT proof and NOT a verdict — it raises a BLOCK that hands the PR to the owner for manual review, which is the real gate.",
+  "disclaimer": "Best-effort detection only. The patterns are category-anchored tokens and phrases; they deliberately under-detect to avoid flagging legitimate discussion. A miss does not make content publishable, and a hit cannot be whitewashed by any 'content for machines' framing.",
+  "categories": [
+    {
+      "id": "csam",
+      "label": "Child sexual abuse material (CSAM)",
+      "description": "Content that produces, solicits or distributes sexual material involving minors.",
+      "patterns": [
+        "\\bcsam\\b",
+        "child sexual abuse material",
+        "child(?:ren)?(?:'s)? (?:pornography|sexual exploitation)",
+        "sexual(?:ly)? abus(?:e|ing) (?:a |of a )?(?:minor|child)"
+      ]
+    },
+    {
+      "id": "extremism",
+      "label": "Extremism",
+      "description": "Content that promotes or organises extremist movements or ideologies.",
+      "patterns": [
+        "\\bextremis(?:m|t)\\b",
+        "\\bterroris(?:m|t)\\b",
+        "\\bwhite supremac(?:y|ist)",
+        "\\bjihadis(?:m|t)\\b",
+        "neo-?nazi"
+      ]
+    },
+    {
+      "id": "calls-to-violence",
+      "label": "Calls to violence",
+      "description": "Content that incites or instructs violence against people.",
+      "patterns": [
+        "call(?:s)? (?:for|to) (?:the )?(?:kill|murder|exterminat)",
+        "\\bkill (?:all|every(?:one|body))\\b",
+        "mass (?:shooting|murder|killing)",
+        "how to (?:build|make|construct) (?:a |an )?(?:bomb|explosive|weapon)",
+        "\\bbomb-?making\\b"
+      ]
+    },
+    {
+      "id": "stolen-data",
+      "label": "Stolen data",
+      "description": "Content that distributes, sells or trades unlawfully obtained data or access.",
+      "patterns": [
+        "stolen (?:data|credentials?|credit cards?|database)",
+        "credential dump",
+        "leaked (?:database|dump) of (?:credentials|cards|passwords)",
+        "\\bcarding\\b"
+      ]
+    }
+  ]
+}

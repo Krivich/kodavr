@@ -1,0 +1,25 @@
+# Personal/ephemeral artifacts of the context machine
+STATE.md
+.opencode/
+docs/wip-*/
+drafts/
+node_modules/
+input/data/
+output/
+tmp/
+
+# Playwright artifacts (e2e run reports and traces)
+test-results/
+playwright-report/
+blob-report/
+
+# IDE / OS / editor cruft
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+*.log
+
+# A stray byte-identical duplicate of the owner's unpublished article; the kept
+# copy lives in drafts/ (also ignored) until the owner re-publishes it via PR.
+context-machine-setup.md

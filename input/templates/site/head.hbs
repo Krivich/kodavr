@@ -1,0 +1,44 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="/logo.svg">
+{{!-- §6.5: the SVG favicon stays; iOS/Android home-screen use the rasterized
+     192x192 dark icon (regenerate with `npm run touch-icon`). --}}
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/touch-icon-192.png">
+<title>{{title}} · Kodavr</title>
+<meta name="description" content="{{og_description}}">
+<meta name="robots" content="{{robots}}">
+{{!-- §6.4 canonical: absolute so it is stable under any host/subpath. --}}
+<link rel="canonical" href="{{canonical_url}}">
+{{!-- §6.4 Atom autodiscovery; relativized per page by the P2c pass. --}}
+<link rel="alternate" type="application/atom+xml" title="Kodavr dumps" href="/feeds/all.atom">
+<meta property="og:site_name" content="{{og_site_name}}">
+<meta property="og:locale" content="{{og_locale}}">
+<meta property="og:title" content="{{og_title}}">
+<meta property="og:description" content="{{og_description}}">
+<meta property="og:image" content="{{og_image}}">
+<meta property="og:image:width" content="{{og_image_width}}">
+<meta property="og:image:height" content="{{og_image_height}}">
+<meta property="og:image:type" content="{{og_image_type}}">
+<meta property="og:image:alt" content="{{og_image_alt}}">
+<meta property="og:type" content="{{og_type}}">
+<meta property="og:url" content="{{og_url}}">
+{{#if article}}
+<meta property="article:published_time" content="{{article.published_time}}">
+<meta property="article:modified_time" content="{{article.modified_time}}">
+<meta property="article:section" content="{{article.section}}">
+{{#each article.tags}}
+<meta property="article:tag" content="{{this}}">
+{{/each}}
+{{/if}}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{og_title}}">
+<meta name="twitter:description" content="{{og_description}}">
+<meta name="twitter:image" content="{{og_image}}">
+{{!-- §6.4/§A4: server-rendered Schema.org JSON-LD; the value already went
+      through the safe serializer (no literal `</script>` can break out). --}}
+{{#if jsonld}}
+<script type="application/ld+json">{{{jsonld}}}</script>
+{{/if}}
+<link rel="stylesheet" href="/assets/styles.css">
+<script src="/assets/site.js"></script>

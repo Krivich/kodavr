@@ -1,0 +1,21 @@
+{
+  "slug": "2026-09-20-economist-docflow",
+  "type": "pack",
+  "title": "Agent-powered document workflow for a non-programmer (economist)",
+  "date": "2026-09-20",
+  "domain": "finance",
+  "tags": ["opencode", "agent-setup", "templates", "non-programmer"],
+  "stakes": "medium",
+  "content_flags": ["professional_advice", "requires_expert_review"],
+  "trust_level": "self-tested",
+  "generated_by": "hybrid",
+  "human_review": "attested",
+  "verification": "executable",
+  "license": "CC-BY-4.0",
+  "summary": "A setup package for agent-powered document workflow: the installer-agent deploys templates and rules into a non-programmer's folder.",
+  "artifacts": [
+    { "kind": "file", "path_or_url": "SETUP_AGENT.md" },
+    { "kind": "file", "path_or_url": "START_HERE.md" },
+    { "kind": "release", "path_or_url": "https://github.com/<owner>/kodavr/releases/download/dump-economist-docflow-v1/pack.zip" }
+  ]
+}

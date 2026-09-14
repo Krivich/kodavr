@@ -1,0 +1,146 @@
+@startuml
+' workflow-arrows — the linted map of kodavr's code tree and the numbered flow.
+' How to read / maintain / lint / render: AGENTS/workflow-arrows.md.
+' Never edit the .svg. scripts/workflow-arrows-lint.mjs fails on any drift:
+' drawers, file coverage of code dirs, links, symbols, stereotypes, step numbers.
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam ArrowFontSize 12
+skinparam ArrowFontColor #263238
+skinparam DefaultFontSize 12
+skinparam nodesep 18
+skinparam ranksep 28
+' Stereotype themes: one per drawer; <<ext>> is reserved for external actors/systems.
+skinparam component {
+  BackgroundColor<<ext>> #FAFAFA
+  BorderColor<<ext>> #9E9E9E
+  BackgroundColor<<lib>> #E3F2FD
+  BorderColor<<lib>> #1E88E5
+  BackgroundColor<<cli>> #FFF3E0
+  BorderColor<<cli>> #FB8C00
+  BackgroundColor<<ctrl>> #E8F5E9
+  BorderColor<<ctrl>> #43A047
+  BackgroundColor<<view>> #EDE7F6
+  BorderColor<<view>> #7E57C2
+  BackgroundColor<<asset>> #FCE4EC
+  BorderColor<<asset>> #D81B60
+  BackgroundColor<<content>> #E0F2F1
+  BorderColor<<content>> #00897B
+}
+left to right direction
+
+title kodavr — drawers, bricks and the numbered flow (number · callee method · why)
+
+' ── externals ──────────────────────────────────────────────────────────────────
+actor "Author\n(opening a PR)" as AUTHOR
+actor "AI agent\n(the reader)" as AGENT
+actor "Human\n(a visitor)" as HUMAN
+component "Ignition engine\nvendor/ignition-ssg\n--\nHandlebars SSG: input/ + data → output/public" as ENGINE <<ext>>
+component "GitHub\nPages + Actions\n--\nserves the artifact, runs validate on a PR" as GH <<ext>>
+component "Playwright (dev)\n--\nrasterizes the OG card and the touch icon" as PW <<ext>>
+
+' ── drawers ────────────────────────────────────────────────────────────────────
+package "scripts/lib\n====\nthe smart controller: content, machine contracts, build steps" as P_LIB {
+  component "build.mjs\nbuildProject\n--\nthe one build pipeline (controller)" as BUILD <<lib>> [[../scripts/lib/build.mjs#buildProject]]
+  component "dumps.mjs\nreadDumps · toDataset\n--\ncontent/dumps/* → engine datasets" as DUMPS <<lib>> [[../scripts/lib/dumps.mjs#readDumps]]
+  component "markdown.mjs\nrenderMarkdown\n--\nmarkdown → sanitized HTML" as MD <<lib>> [[../scripts/lib/markdown.mjs#renderMarkdown]]
+  component "pages.mjs\nbuildRouteDatasets · buildNav\n--\nroute datasets: copydeck, SEO, JSON-LD" as PAGES <<lib>> [[../scripts/lib/pages.mjs#buildRouteDatasets]]
+  component "copy.mjs\n--\nsingle source of truth for every human string" as COPY <<lib>> [[../scripts/lib/copy.mjs]]
+  component "jsonld.mjs\nserializeJsonLd\n--\nsafe schema.org @graph per page" as JSONLD <<lib>> [[../scripts/lib/jsonld.mjs#serializeJsonLd]]
+  component "machine.mjs\nwriteMachineFiles · writeSitemap\n--\nindex.json, well-known, feeds, tags, sitemap" as MACHINE <<lib>> [[../scripts/lib/machine.mjs#writeMachineFiles]]
+  component "ignition.mjs\nrunIgnition\n--\nspawns the vendored engine" as IGN <<lib>> [[../scripts/lib/ignition.mjs#runIgnition]]
+  component "relativize.mjs\nrelativizeSite\n--\nhost-agnostic internal links" as REL <<lib>> [[../scripts/lib/relativize.mjs#relativizeSite]]
+  component "verbatim.mjs\nROBOTS_TXT · HUMANS_TXT\n--\nverbatim robots/humans" as VERB <<lib>> [[../scripts/lib/verbatim.mjs]]
+  component "static-server.mjs\ncreateStaticServer\n--\nlocal preview server" as SSRV <<lib>> [[../scripts/lib/static-server.mjs#createStaticServer]]
+}
+
+package "scripts\n====\nentry points you actually run" as P_CLI {
+  component "build.mjs\n--\nnpm run build → output/public" as CLI_BUILD <<cli>> [[../scripts/build.mjs]]
+  component "validate.mjs\nvalidateContent · validateManifest\n--\nKDV-CI gate over content/dumps" as CLI_VAL <<cli>> [[../scripts/validate.mjs#validateContent]]
+  component "req-coverage.js\n--\nreconcile tests ↔ REQUIREMENTS.md" as CLI_REQ <<cli>> [[../scripts/req-coverage.js]]
+  component "serve.mjs\n--\nlocal static server" as CLI_SERVE <<cli>> [[../scripts/serve.mjs]]
+  component "state-diet.mjs\n--\nSTATE.md chronicle → docs/history" as CLI_DIET <<cli>> [[../scripts/state-diet.mjs]]
+  component "generate-og-image.mjs\n--\nrasterizes the OG card" as CLI_OG <<cli>> [[../scripts/generate-og-image.mjs]]
+  component "generate-touch-icon.mjs\n--\nrasterizes the touch icon" as CLI_TI <<cli>> [[../scripts/generate-touch-icon.mjs]]
+  component "workflow-arrows-lint.mjs\nlintDiagram\n--\nthis map's drift alarm" as CLI_LINT <<cli>> [[../scripts/workflow-arrows-lint.mjs#lintDiagram]]
+  component "contract.mjs\nvalidateAll\n--\nguards the module index (contract headers)" as CLI_CONTRACT <<cli>> [[../scripts/contract.mjs#validateAll]]
+}
+
+package "input/controllers\n====\nclient controllers injected by the engine" as P_CTRL {
+  component "dumps.js\n--\nthe gate, the hall, the reception toggle" as CTRL_DUMPS <<ctrl>> [[../input/controllers/dumps.js]]
+  component "reception.js\n--\nthe reception page behaviour" as CTRL_REC <<ctrl>> [[../input/controllers/reception.js]]
+}
+
+package "input/templates\n====\nHandlebars layouts + partials (the HTML projection)" as P_VIEW {
+  component "home.hbs · about.hbs · dumps.hbs\nreception.hbs · contribute.hbs\n--\nthe human-surface layouts" as VIEW_PAGES <<view>> [[../input/templates/home.hbs]]
+  component "site/gate.hbs · site/reception-block.hbs\n--\nthe consumption-contract partials" as VIEW_GATE <<view>> [[../input/templates/site/gate.hbs]]
+}
+
+package "static/assets\n====\nstylesheet, client JS and brand assets" as P_ASSET {
+  component "styles.css · site.js\n--\nstyling + the copy-button behaviour" as ASSET <<asset>> [[../static/assets/styles.css]]
+  component "logo.svg · og-default.png\ntouch-icon-192.png\n--\nthe wordmark and social/touch images" as ASSET_IMG <<asset>> [[../static/logo.svg]]
+}
+
+package "content/dumps\n====\nthe dumps themselves: manifest.json + raw.md per slug" as P_CONTENT {
+  component "2026-09-14-kodavr-manifesto/\nmanifest.json + raw.md\n--\nthe launch dump: demo + platform manifesto" as DUMP1 <<content>> [[../content/dumps/2026-09-14-kodavr-manifesto/manifest.json]]
+}
+
+' ── flow ───────────────────────────────────────────────────────────────────────
+' The publish pipeline: one controller, two entry points (local + CI).
+CLI_BUILD -[#FB8C00]-> BUILD : [[../scripts/lib/build.mjs#buildProject 1 · buildProject()]]\nthe CLI hands off to the one pipeline
+BUILD -[#1E88E5]-> DUMPS : [[../scripts/lib/dumps.mjs#readDumps 2 · readDumps()]]\nread every content/dumps/*
+BUILD -[#1E88E5]-> DUMPS : [[../scripts/lib/dumps.mjs#toDataset 3 · toDataset()]]\nmerge the manifest, turn the body into HTML
+DUMPS -[#1E88E5]-> MD : [[../scripts/lib/markdown.mjs#renderMarkdown 4 · renderMarkdown()]]\nsanitize before markdown becomes HTML
+BUILD -[#1E88E5]-> PAGES : [[../scripts/lib/pages.mjs#buildRouteDatasets 5 · buildRouteDatasets()]]\nassemble every route's dataset
+PAGES -[#1E88E5]-> COPY : [[../scripts/lib/copy.mjs 6 · copydeck slices]]\ntemplates never retype contract text
+PAGES -[#1E88E5]-> JSONLD : [[../scripts/lib/jsonld.mjs#serializeJsonLd 7 · serializeJsonLd()]]\nper-page schema.org @graph
+BUILD -[#1E88E5]-> IGN : [[../scripts/lib/ignition.mjs#runIgnition 8 · runIgnition()]]\nhand input/ + data to the engine
+IGN -[#9E9E9E]-> ENGINE : 9 · engine build\nthe SSG renders output/public
+BUILD -[#1E88E5]-> REL : [[../scripts/lib/relativize.mjs#relativizeSite 10 · relativizeSite()]]\nrewrite internal links per page depth
+BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeMachineFiles 11 · writeMachineFiles()]]\nindex.json, well-known, feeds, tags
+BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeSitemap 12 · writeSitemap()]]\nsitemap.xml over the pretty URLs
+MACHINE ..> GH : 13 ⟵ output/public\nthe artifact GitHub Pages serves
+
+' The consumption loop: machines first, humans at the reception.
+AGENT -[#43A047]-> MACHINE : [[../scripts/lib/machine.mjs 14 · GET /index.json]]\nthe agent picks dumps by field
+AGENT -[#43A047]-> DUMP1 : [[../content/dumps/2026-09-14-kodavr-manifesto/manifest.json 15 · GET manifest.json + raw]]\nfetch the contract and the body
+HUMAN -[#43A047]-> CTRL_DUMPS : [[../input/controllers/dumps.js 16 · gate → reception]]\ncheck in, or hand the dump to an agent
+AUTHOR -[#00897B]-> CLI_VAL : [[../scripts/validate.mjs#validateContent 17 · PR → validate]]\nevery dump arrives as a validated PR
+
+' Structural edges (dashed, unnumbered): imports, assets and dev tools —
+' the glue that anchors every brick to the flow.
+BUILD ..> ASSET : publishes static/ into the artifact
+BUILD ..> ASSET_IMG : and the brand images
+IGN ..> VIEW_PAGES : the engine renders the layouts
+IGN ..> VIEW_GATE : and the consumption-contract partials
+IGN ..> CTRL_DUMPS : injects the page controller
+IGN ..> CTRL_REC : injects the reception controller
+PAGES ..> MACHINE : reads buildIndexEntry / buildWellKnown
+MACHINE ..> VERB : writes robots.txt / humans.txt verbatim
+CLI_SERVE ..> SSRV : serves output/public locally
+CLI_OG ..> PW : rasterizes the OG card
+CLI_TI ..> PW : rasterizes the touch icon
+GH ..> CLI_REQ : runs the coverage check
+GH ..> CLI_LINT : guards this map
+GH ..> CLI_CONTRACT : guards the module index
+AGENT ..> CLI_DIET : keeps STATE.md compact
+
+legend right
+  **how to read an arrow**
+  line 1 (colored link):  N · callee.method()  — the API method
+  of the TARGET brick this arrow calls (the callee), N = order 1 to 17
+  line 2 (plain text):    why the call happens (business intent)
+  solid = call · dashed = return · dashed to an actor = a push
+  click a brick → its file · click a call → the method's source
+  **drawers** = first-party code dirs; the code drawers are covered
+  file-by-file (scripts/lib, scripts, input/controllers)
+  **linted idioms** (workflow-arrows-lint): a brick's stereotype =
+  its drawer; every numbered call links the callee method,
+  returns carry no link; step numbers are exactly 1..N
+endlegend
+
+@enduml

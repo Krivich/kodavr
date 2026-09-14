@@ -1,0 +1,20 @@
+<header class="site-header">
+  {{!-- §6.5: inline the trusted logo (triple-stash) — no separate request.
+       The <img> is the build-time fallback when the controller supplies no
+       logo_svg (e.g. a dataset built without the static tree). --}}
+  <a class="site-logo" href="/">{{#if logo_svg}}{{{logo_svg}}}{{else}}<img src="/logo.svg" alt="Kodavr" width="32" height="32">{{/if}}</a>
+  {{!-- §6.6: the nav is data-driven (route datasets carry `nav` with a `current`
+       flag rendered as aria-current="page"); the static list is the fallback. --}}
+  <nav class="site-nav" aria-label="Primary">
+    {{#if nav}}
+    {{#each nav}}
+    <a href="{{href}}"{{#if current}} aria-current="page"{{/if}}>{{label}}</a>
+    {{/each}}
+    {{else}}
+    <a href="/">home</a>
+    <a href="/reception/">reception</a>
+    <a href="/about/">about</a>
+    <a href="/contribute/">contribute</a>
+    {{/if}}
+  </nav>
+</header>

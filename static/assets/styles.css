@@ -1,0 +1,362 @@
+/* Kodavr human surface — a single mobile-first stylesheet (§6.5).
+   Mobile-first: the unprefixed rules already target the narrowest screens;
+   the media queries below only relax them for wider viewports. No external
+   fonts — system stack only, so there is no FOUT. */
+
+:root {
+  color-scheme: light dark;
+  /* §6.6: the palette is declared per scheme. Light is the default; the dark
+     block below re-declares every colour so contrast stays AA in both. */
+  --fg: #111;
+  --bg: #fafafa;
+  --muted: #555;
+  --line: #8a8a8a;
+  --pre-bg: #f0f0f0;
+  --focus: #0b57d0;
+  /* Breakpoint tokens (documentation / JS consumption). The @media conditions
+     below use the literal px values because @media cannot read custom props. */
+  --bp-mobile: 480px;
+  --bp-tablet: 768px;
+  --tap: 44px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #f5f5f5;
+    --bg: #111111;
+    --muted: #b8b8b8;
+    --line: #666666;
+    --pre-bg: #1e1e1e;
+    --focus: #8ab4f8;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0 auto;
+  max-width: 48rem;
+  padding: 1rem 1.25rem 3rem;
+  font: 17px/1.6 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+/* §6.5: removes the 300ms tap delay on interactive elements. */
+button,
+a,
+summary,
+[role='button'] { touch-action: manipulation; }
+
+a { color: inherit; }
+
+/* §6.6: keyboard focus is always visible — never suppress it. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* §6.6: the skip link is the first focusable control; it stays off-screen
+   until focused, then becomes a visible pill over the header. */
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -3rem;
+  z-index: 30;
+  padding: 0.5rem 1rem;
+  background: var(--fg);
+  color: var(--bg);
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* §6.6: visually hidden, but available to screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--pre-bg);
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+/* --- Hall (dump body) --------------------------------------------------- */
+
+.dump-body { font-size: clamp(1rem, 2.5vw, 1.125rem); }
+
+.dump-body img { max-width: 100%; height: auto; }
+
+/* Code blocks scroll horizontally (never word-wrap) and carry a hint. */
+.dump-body pre {
+  position: relative;
+  white-space: pre;
+  word-break: normal;
+  overflow-x: auto;
+}
+
+.dump-body pre::after {
+  content: 'scroll →';
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+  background: var(--pre-bg);
+  padding: 0 0.25rem;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* --- Artifacts (§6.5) --------------------------------------------------- */
+
+.artifacts-heading { font-size: 1.2rem; }
+
+.artifact-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+}
+
+.artifact-kind {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+}
+
+.artifact-link { overflow-wrap: anywhere; }
+.artifact-note { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 0.9rem; }
+.artifacts-empty { color: var(--muted); }
+
+/* --- Header / footer ---------------------------------------------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 0 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* §6.5: the inlined header logo keeps the old 32x32 footprint. */
+.site-logo { display: inline-flex; }
+.site-logo svg,
+.site-logo img { width: 32px; height: 32px; display: block; }
+
+.site-nav { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+/* §6.6: nav targets stay ≥ 44px tall like every other control. */
+.site-nav a { display: inline-flex; align-items: center; min-height: var(--tap); }
+
+.site-footer {
+  margin-top: 3rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* --- What a dump is, woven into the prose (§7.10) ----------------------- */
+
+.dump-story {
+  border-left: 3px solid var(--line);
+  padding-left: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.dump-prompt { font-style: italic; }
+
+.publish-note {
+  border-left: 3px solid var(--fg);
+  padding-left: 0.75rem;
+  margin: 1.25rem 0;
+  font-weight: 600;
+}
+
+/* --- Gate --------------------------------------------------------------- */
+
+.gate-choices { display: flex; gap: 0.5rem; }
+
+#gate button {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  font-size: 1.05rem;
+}
+
+#gate,
+.reception-block { transition: opacity 0.15s ease; }
+
+/* --- Reception ---------------------------------------------------------- */
+
+.reception-prompt {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.copy-prompt {
+  min-height: var(--tap);
+  font-size: 1rem;
+}
+
+/* --- Manifest accordion ------------------------------------------------- */
+
+.manifest-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.manifest-card > summary {
+  padding: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.manifest-card > summary::-webkit-details-marker { display: none; }
+/* §6.6: the native marker is hidden, so keep a visible disclosure indicator. */
+.manifest-card > summary::before {
+  content: '\25B8'; /* ▸ */
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.15s ease;
+}
+.manifest-card[open] > summary::before { transform: rotate(90deg); }
+.manifest-card[open] > summary { border-bottom: 1px solid var(--line); }
+.manifest-card > dl { padding: 0.5rem 1rem 0; }
+.manifest-card dt { font-weight: 600; }
+.manifest-card dd { margin: 0 0 0.5rem; }
+.manifest-card .manifest-links { padding: 0 1rem 1rem; }
+
+/* --- Cards / lists ------------------------------------------------------ */
+
+.dump-card,
+.reception-block { border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+
+.trust-levels { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; }
+.dump-meta,
+.dump-flags { color: var(--muted); font-size: 0.9rem; }
+
+/* --- Feed pagination (§6.5) -------------------------------------------- */
+
+/* Touch-friendly arrows and page numbers: every control is a >= 44px target.
+   Mobile-first — the flex row wraps on narrow screens without horizontal scroll. */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.25rem 0;
+}
+
+.pagination a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.pagination-arrow {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  font-size: 1.25rem;
+}
+
+.pagination-number.active {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+/* --- Back-to-feed FAB (§6.5) -------------------------------------------- */
+
+.back-to-feed {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Mobile (< 480px) --------------------------------------------------- */
+
+@media (max-width: 480px) {
+  body { padding: 0.75rem 1rem 3rem; }
+
+  .site-header { flex-direction: column; align-items: flex-start; }
+
+  #gate {
+    width: calc(100vw - 32px);
+    max-width: none;
+    margin: auto;
+    padding: 16px;
+    border: 0;
+    border-radius: 10px;
+  }
+
+  #gate button { font-size: 1.15rem; }
+
+  .reception-prompt { font-size: 13px; }
+
+  .copy-prompt { display: block; width: 100%; font-size: 1.05rem; }
+}
+
+/* --- Accessibility: reduced motion -------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  #gate,
+  #gate *,
+  .reception-block,
+  .reception-block *,
+  .manifest-card > summary::before,
+  .skip-link {
+    transition: none !important;
+    animation: none !important;
+  }
+}

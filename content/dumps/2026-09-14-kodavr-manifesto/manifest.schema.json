@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kodavr.xyz/dumps/2026-09-14-kodavr-manifesto/manifest.schema.json",
+  "title": "Kodavr dump manifest",
+  "description": "Machine-readable contract of a dump manifest (specification §4.1). A dump directory is named by its slug and carries manifest.json plus at least the raw layer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "slug",
+    "type",
+    "title",
+    "date",
+    "domain",
+    "tags",
+    "stakes",
+    "content_flags",
+    "trust_level",
+    "generated_by",
+    "human_review",
+    "summary"
+  ],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9][a-z0-9-]*$"
+    },
+    "type": {
+      "enum": ["note", "case", "pack"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "domain": {
+      "enum": ["engineering", "finance", "art", "law", "science", "education", "other"]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      }
+    },
+    "stakes": {
+      "enum": ["low", "medium", "high"]
+    },
+    "content_flags": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "unverified_claims",
+          "professional_advice",
+          "financial_advice",
+          "medical_claims",
+          "rough_language",
+          "opinion",
+          "experimental",
+          "contains_code",
+          "requires_expert_review"
+        ]
+      }
+    },
+    "trust_level": {
+      "enum": ["raw", "self-tested", "community-tested", "adapted", "library"]
+    },
+    "generated_by": {
+      "enum": ["human", "agent", "hybrid"]
+    },
+    "human_review": {
+      "enum": ["none", "minimal", "attested"]
+    },
+    "verification": {
+      "enum": ["executable", "checkable", "subjective"]
+    },
+    "status": {
+      "enum": ["published", "withdrawn"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One to three sentences."
+    },
+    "license": {
+      "type": "string"
+    },
+    "derived_from": {
+      "type": ["string", "null"]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "enum": ["chat-log", "source-code", "tests", "traces"]
+      }
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "file", "fact_checked", "author_voice"],
+        "properties": {
+          "name": { "enum": ["raw", "refined", "summary"] },
+          "file": { "type": "string" },
+          "fact_checked": { "type": "boolean" },
+          "author_voice": { "type": "boolean" }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "path_or_url"],
+        "properties": {
+          "kind": { "enum": ["file", "release", "url"] },
+          "path_or_url": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "consumption_contract": {
+      "type": "object",
+      "properties": {
+        "see": { "type": "string" }
+      }
+    },
+    "author": {
+      "type": ["object", "null"],
+      "properties": {
+        "github": { "type": ["string", "null"] },
+        "pr_url": { "type": ["string", "null"] },
+        "merged_at": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+name: deploy
+
+# Build and publish the static site to GitHub Pages (spec §8.3, per the
+# Ignition README CI/CD section). Runs only on main over the paths that can
+# change the built artifact — a docs-only push does not redeploy.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/**'
+      - 'input/**'
+      - 'scripts/**'
+      - 'static/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+# Pages publishing needs OIDC + a write token; the rest stays read-only.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; never cancel an in-flight publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          # The controller's whole public tree: HTML, index.json, feeds,
+          # robots.txt, humans.txt, sitemap.xml, /.well-known/kodavr.json,
+          # each dump's manifest.json, .nojekyll and CNAME.
+          path: output/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

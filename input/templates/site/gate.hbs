@@ -1,0 +1,10 @@
+{{!-- Call this partial at column 0: partial indentation shifts the continuation
+     lines of the multi-line §7.1 copy inside <pre> and breaks "verbatim". --}}
+<dialog id="gate" hidden aria-labelledby="gate-title" aria-describedby="gate-text">
+  <h2 id="gate-title" class="sr-only">{{copy.gate_title}}</h2>
+  <pre class="gate-text" id="gate-text">{{copy.gate}}</pre>
+  <div class="gate-choices">
+    <button type="button" data-gate-choice="machine" aria-label="{{copy.gate_machine_label}}">0</button>
+    <button type="button" data-gate-choice="human" aria-label="{{copy.gate_human_label}}">1</button>
+  </div>
+</dialog>

@@ -1,0 +1,22 @@
+{{!-- Feed page template for the engine's declarative pagination (§6.5).
+     Rendered server-side by `ignition/pagination` (with basePath/items/pagination)
+     and client-side by `ignition-pagination.js` (items/pagination only). --}}
+{{#each items}}
+<article class="dump-card">
+  <h3><a href="/dumps/{{slug}}/">{{title}}</a></h3>
+  <p class="dump-meta">{{date}} · {{domain}} · {{stakes}} · {{trust_level}}</p>
+  <p class="dump-flags">{{content_flags}}</p>
+  <p class="dump-summary">{{summary}}</p>
+</article>
+{{/each}}
+<nav class="pagination" aria-label="Pagination">
+  {{#if pagination.hasPrev}}
+  <a class="pagination-arrow" href="{{basePath}}{{pagination.prevPage}}.html" data-page="{{pagination.prevPage}}" rel="prev" aria-label="Previous page">&laquo;</a>
+  {{/if}}
+  {{#times pagination.totalPages}}
+  <a class="pagination-number{{#ifCond this '==' ../pagination.currentPage}} active{{/ifCond}}" href="{{../basePath}}{{this}}.html" data-page="{{this}}"{{#ifCond this '==' ../pagination.currentPage}} aria-current="page"{{/ifCond}}>{{this}}</a>
+  {{/times}}
+  {{#if pagination.hasNext}}
+  <a class="pagination-arrow" href="{{basePath}}{{pagination.nextPage}}.html" data-page="{{pagination.nextPage}}" rel="next" aria-label="Next page">&raquo;</a>
+  {{/if}}
+</nav>
