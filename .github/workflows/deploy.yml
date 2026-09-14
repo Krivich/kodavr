@@ -11,6 +11,7 @@ on:
       - 'input/**'
       - 'scripts/**'
       - 'static/**'
+      - '.github/**'
       - 'package.json'
       - 'package-lock.json'
   # Manual run from the Actions tab (also the recovery path when the Pages
