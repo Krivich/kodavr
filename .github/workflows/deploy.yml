@@ -13,6 +13,10 @@ on:
       - 'static/**'
       - 'package.json'
       - 'package-lock.json'
+  # Manual run from the Actions tab (also the recovery path when the Pages
+  # source was just switched from a branch to GitHub Actions and no artifact
+  # has been published yet).
+  workflow_dispatch:
 
 # Pages publishing needs OIDC + a write token; the rest stays read-only.
 permissions:
