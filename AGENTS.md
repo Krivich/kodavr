@@ -134,6 +134,9 @@ Files read at start (AGENTS.md) and checkpoints must not grow. When a batch is f
 - A full suite run may take a minute; rerun known flakes separately before fixing them.
 - Git: only `git add <specific files>`; the tree contains the human's untracked files —
   `git add -A` pulls them into the commit.
+- Bulk deletes: `Get-ChildItem -Include` without `-Recurse` and without a wildcard in the path
+  selects EVERYTHING in the directory (PowerShell 5.1). Print the selection count first and delete
+  through an explicit `-Filter`/wildcard path (`...\dm-*.cjs`), never a folder-wide sweep.
 
 ## Commands
 
