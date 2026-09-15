@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import {
   GATE_TITLE,
-  GATE_MACHINE_LABEL,
-  GATE_HUMAN_LABEL,
+  GATE_MACHINE_DOOR,
+  GATE_HUMAN_DOOR,
   HALL_ANNOUNCEMENT,
   RECEPTION_ANNOUNCEMENT,
   COPIED_ANNOUNCEMENT,
@@ -13,6 +13,12 @@ import {
 // The static baseline (skip link, landmarks) is proven by tests/unit/a11y.test.js;
 // here a real browser resolves the accessible names and focus targets.
 const DUMP = '/dumps/sample-dump/';
+
+// §6.5 P0-1: the doors' accessible names come from their visible labels, so the
+// assertion reads the same §7.1 copy the DOM exposes. The human line carries a
+// newline + indent in the fence; HTML collapses it to single spaces, and so does
+// the accessible-name computation — normalize both sides to compare.
+const flat = (label) => label.replace(/\s+/g, ' ').trim();
 
 test('KDV-A11Y-01: Tab from the top reaches the skip link first', async ({ page }) => {
   await page.goto('/');
@@ -27,8 +33,8 @@ test('KDV-A11Y-02: the gate dialog carries its §7.1 name and the 0/1 choices ha
 
   const dialog = page.getByRole('dialog', { name: GATE_TITLE });
   await expect(dialog).toBeVisible();
-  await expect(page.getByRole('button', { name: GATE_MACHINE_LABEL })).toBeVisible();
-  await expect(page.getByRole('button', { name: GATE_HUMAN_LABEL })).toBeVisible();
+  await expect(page.getByRole('button', { name: flat(GATE_MACHINE_DOOR) })).toBeVisible();
+  await expect(page.getByRole('button', { name: flat(GATE_HUMAN_DOOR) })).toBeVisible();
 
   // A bare digit is not exposed as an accessible name.
   await expect(page.getByRole('button', { name: '0', exact: true })).toHaveCount(0);
@@ -49,7 +55,7 @@ test('KDV-A11Y-03: choosing 0 by keyboard opens the hall and announces it', asyn
   await page.goto(DUMP);
   const status = page.locator('#a11y-status');
 
-  await page.getByRole('button', { name: GATE_MACHINE_LABEL }).focus();
+  await page.getByRole('button', { name: flat(GATE_MACHINE_DOOR) }).focus();
   await page.keyboard.press('Enter');
 
   await expect(page.locator('.dump-body')).toBeVisible();
@@ -60,7 +66,7 @@ test('KDV-A11Y-03: choosing 1 opens reception and announces it; a copy sets the 
   await page.goto(DUMP);
   const status = page.locator('#a11y-status');
 
-  await page.getByRole('button', { name: GATE_HUMAN_LABEL }).focus();
+  await page.getByRole('button', { name: flat(GATE_HUMAN_DOOR) }).focus();
   await page.keyboard.press('Enter');
 
   await expect(page.locator('.reception-block')).toBeVisible();

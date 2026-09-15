@@ -11,8 +11,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { buildRouteDatasets } from '../../scripts/lib/pages.mjs';
 import { readDumps, toDataset } from '../../scripts/lib/dumps.mjs';
 import {
-  GATE_MACHINE_LABEL,
-  GATE_HUMAN_LABEL,
+  GATE_MACHINE_DOOR,
+  GATE_HUMAN_DOOR,
   RECEPTION_TITLE,
   HALL_ANNOUNCEMENT,
   RECEPTION_ANNOUNCEMENT,
@@ -211,13 +211,22 @@ describe('accessibility: accessible gate modal (KDV-A11Y-02)', () => {
     expect(gate).toContain('{{copy.gate_title}}');
   });
 
-  it('gives both choices a descriptive, non-digit accessible name while keeping the digits visible', () => {
-    expect(gate).toMatch(/data-gate-choice="machine"[^>]*aria-label="\{\{copy\.gate_machine_label\}\}"/);
-    expect(gate).toMatch(/data-gate-choice="human"[^>]*aria-label="\{\{copy\.gate_human_label\}\}"/);
-    // The visible labels stay the bare contract digits (§7.1).
-    expect(gate).toContain('>0</button>');
-    expect(gate).toContain('>1</button>');
-    for (const label of [GATE_MACHINE_LABEL, GATE_HUMAN_LABEL]) {
+  it('gives both choices a descriptive, non-digit accessible name via their visible door labels', () => {
+    // §6.5 P0-1: each door is a button whose descriptive label is its accessible
+    // name (visible text, no aria-label — WCAG 2.5.3). The §7.1 digit stays as
+    // an aria-hidden badge, so a bare "0"/"1" is never the accessible name.
+    expect(gate).toMatch(/<div class="gate-doors" role="group" aria-label="Entry declaration">/);
+    expect(gate).toMatch(
+      /data-gate-choice="machine"[\s\S]*?<span class="door-label">\{\{copy\.gate_machine_door\}\}<\/span>/,
+    );
+    expect(gate).toMatch(
+      /data-gate-choice="human"[\s\S]*?<span class="door-label">\{\{copy\.gate_human_door\}\}<\/span>/,
+    );
+    expect(gate).toMatch(/<span class="door-digit" aria-hidden="true">0<\/span>/);
+    expect(gate).toMatch(/<span class="door-digit" aria-hidden="true">1<\/span>/);
+    expect(gate).not.toMatch(/aria-label="\{\{copy\.gate_machine_label\}\}"/);
+    expect(gate).not.toMatch(/aria-label="\{\{copy\.gate_human_label\}\}"/);
+    for (const label of [GATE_MACHINE_DOOR, GATE_HUMAN_DOOR]) {
       expect(label).not.toMatch(/^\d$/);
       expect(label.length).toBeGreaterThan(3);
     }
@@ -393,7 +402,7 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     expect(css).toMatch(/#gate\s*\{[^}]*border:\s*1px solid var\(--line\)/);
     // The duties read as a clause — a left rule with indented text.
     expect(css).toMatch(/\.gate-duties\s*\{[^}]*border-left:\s*2px solid var\(--line\)/);
-    // The 0/1 choices sit under a rule — the signature line.
-    expect(css).toMatch(/\.gate-choices\s*\{[^}]*border-top:\s*1px solid var\(--line\)/);
+    // The doors sit under a rule — the signature line.
+    expect(css).toMatch(/\.gate-doors\s*\{[^}]*border-top:\s*1px solid var\(--line\)/);
   });
 });

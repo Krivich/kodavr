@@ -47,11 +47,14 @@ import {
   GATE_DUTIES,
   GATE_MACHINE_LABEL,
   GATE_HUMAN_LABEL,
+  GATE_MACHINE_DOOR,
+  GATE_HUMAN_DOOR,
   RECEPTION_RATING,
   RECEPTION_TITLE,
   RECEPTION_WALL,
   BRIEF_HEADING,
   BRIEF_NOTE,
+  BRIEF_NOTE_PLATFORM,
   BRIEF_CTA,
   BRIEF_REPORT,
   BRIEF_FALLBACK,
@@ -75,6 +78,9 @@ import {
   DUMP_LEAD,
   DUMP_PROMPT,
   DUMP_TAIL,
+  HOME_HUMAN_LINE,
+  BRAND_SLOGAN_LEAD,
+  BRAND_SLOGANS_MUTED,
   AGENT_LANE_LEAD,
   AGENT_LANE_LEAD_KODAVR,
   AGENT_LANE_HINT,
@@ -188,6 +194,7 @@ function commonPage({
   robots = 'index,follow',
   extraGraph = [],
   withJsonLd = true,
+  extraCopy = {},
 }) {
   const url = urlPath ? `${base}/${urlPath}` : `${base}/`;
   const image = `${base}${OG_IMAGE_PATH}`;
@@ -228,6 +235,9 @@ function commonPage({
       footer: FOOTER_TEXT,
       footer_report_label: FOOTER_REPORT_LABEL,
       footer_report_url: FOOTER_REPORT_URL,
+      // Route-specific copydeck strings (e.g. the home human line, the About
+      // slogans) ride in through `extraCopy`, so the shared skeleton stays one place.
+      ...extraCopy,
     },
     ...(withJsonLd ? { jsonld: serializeJsonLd([website, webpage, ...extraGraph]) } : {}),
   };
@@ -255,6 +265,8 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
       description: HOME_TAGLINE,
       urlPath: '',
       logo,
+      // §7.14: the "For humans" block's quickstart line, from the copydeck.
+      extraCopy: { home_human_line: HOME_HUMAN_LINE },
       // §6.4: the storefront feed is a CollectionPage whose ItemList enumerates
       // the dumps (position, url, name) alongside the always-present WebPage.
       extraGraph: [
@@ -306,13 +318,13 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
       reception_wall: RECEPTION_WALL,
       reception_rating: RECEPTION_RATING,
       reception_title: RECEPTION_TITLE,
-      // §6.3/§7.2 v2: the reception block's third tier. /reception/ has no dump,
-      // so `brief_html` is absent and the fallback is what shows (expected).
+      // §6.3/§7.2 v2: the reception block's third tier. /reception/ has no dump
+      // and no `brief_html`; its middle is the platform note, never the
+      // dump-oriented fallback (which would promise a manifest not on the page).
       brief_heading: BRIEF_HEADING,
-      brief_note: BRIEF_NOTE,
+      brief_note_platform: BRIEF_NOTE_PLATFORM,
       brief_cta: BRIEF_CTA,
       brief_report: BRIEF_REPORT,
-      brief_fallback: BRIEF_FALLBACK,
       prompt: PROMPT_TEXT,
       lane_lead: AGENT_LANE_LEAD_KODAVR,
       agent_lane_hint: AGENT_LANE_HINT,
@@ -331,6 +343,12 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
       description: 'The Kodavr manifesto, condensed.',
       urlPath: 'about/',
       logo,
+      // §7.15: all three brand slogans from one source — the lead renders as-is,
+      // the other two as the muted tail.
+      extraCopy: {
+        brand_slogan_lead: BRAND_SLOGAN_LEAD,
+        brand_slogans_muted: BRAND_SLOGANS_MUTED,
+      },
     }),
     what_is_a_dump: {
       definition: DUMP_DEFINITION,
@@ -400,6 +418,10 @@ export function dumpCopySlices({ dumpUrl = null, indexUrl = null } = {}) {
     gate_rest: GATE_REST,
     gate_machine_label: GATE_MACHINE_LABEL,
     gate_human_label: GATE_HUMAN_LABEL,
+    // §6.5 P0-1: each door renders the §7.1 choice line as its visible label
+    // (the digit is a separate badge), so the label needs its own copy key.
+    gate_machine_door: GATE_MACHINE_DOOR,
+    gate_human_door: GATE_HUMAN_DOOR,
     // §7.2 v2: the wall, the brief tier and the 18+ rating render as separate
     // elements, so the reception block never prints any line twice.
     reception_wall: RECEPTION_WALL,

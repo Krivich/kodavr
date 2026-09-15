@@ -239,6 +239,11 @@ pre {
   font-weight: 600;
 }
 
+/* §7.14/§7.15: the home human quickstart line and the About slogan tail are
+   supporting notes — the AA-safe `--muted` token in both schemes, no new colours. */
+.human-quickstart-note,
+.slogan-muted { color: var(--muted); }
+
 /* --- Gate --------------------------------------------------------------- */
 
 /* §7.1 v2: the visible heading is the declaration itself; the standard CAPTCHA
@@ -288,15 +293,49 @@ pre {
   padding: 1.25rem;
 }
 
-/* §6.5: a rule above the 0/1 choices acts as the signature line. */
-.gate-choices { display: flex; gap: 0.5rem; margin: 0 0 0.75rem; justify-content: center; align-items: center; border-top: 1px solid var(--line); padding-top: 0.75rem; }
+/* §6.5: a rule above the doors acts as the signature line. */
+.gate-doors { display: flex; gap: 0.5rem; margin: 0 0 0.75rem; justify-content: center; align-items: stretch; border-top: 1px solid var(--line); padding-top: 0.75rem; }
 
 .gate-or { color: var(--muted); }
 
-#gate .gate-choices button {
-  min-width: var(--tap);
+/* §6.5 P0-1: each door is a labelled contract card — the digit is a badge, the
+   label is prose. --pre-bg is the existing "paper" token; hover/active reuse
+   --bg/--line so no new colours enter the palette. */
+.door {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   min-height: var(--tap);
-  font-size: 1.05rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  background: var(--pre-bg);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.door:hover { background: var(--bg); }
+.door:active { background: var(--line); }
+
+/* The "index" badge: the §7.1 digit in a fixed monospace square. */
+.door-digit {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+}
+
+/* The prose label is the button's accessible name; `white-space: normal` keeps
+   the fence's line break + indent in the human line collapsed to spaces. */
+.door-label {
+  font-family: var(--font-prose);
+  font-size: 0.95rem;
+  text-align: left;
+  white-space: normal;
 }
 
 #gate,
@@ -524,7 +563,22 @@ pre {
     border-radius: 10px;
   }
 
-  #gate .gate-choices button { font-size: 1.15rem; }
+  /* §6.5 P0-1: on narrow screens the doors stack; "or" stays centred. */
+  .gate-doors { flex-direction: column; align-items: stretch; }
+  .gate-or { align-self: center; }
+
+  /* §6.5/KDV-MOBILE-01: below 480px the prompt follows the doors, so the hook,
+     the lane, the duties and both labelled doors come first. Measured 2026-09-15:
+     at 320x568 they do NOT all fit the first screen (875px of content vs a 552px
+     dialog) — see tests/e2e/mobile.e2e.js and the pending owner decision in
+     STATE.md. `#gate:not([hidden])` guards the UA `[hidden]` rule the same way
+     .species-chip[hidden] does. */
+  #gate:not([hidden]) { display: flex; flex-direction: column; }
+  /* The gate is height-capped; without this a `<pre>` (overflow != visible)
+     would shrink to its min-content and lose its text. Let the dialog scroll. */
+  #gate:not([hidden]) > * { flex: 0 0 auto; }
+  .gate-prompt { order: 1; }
+  .gate-rest { order: 2; }
 
   .reception-prompt,
   .gate-prompt,

@@ -16,6 +16,8 @@ import {
   GATE_CHOICES_BLOCK,
   GATE_MACHINE_LINE,
   GATE_HUMAN_LINE,
+  GATE_MACHINE_DOOR,
+  GATE_HUMAN_DOOR,
   DECLARATION_TOAST,
   RECEPTION_RATING,
   RECEPTION_TEXT,
@@ -27,6 +29,7 @@ import {
   BRIEF_CTA,
   BRIEF_REPORT,
   BRIEF_FALLBACK,
+  BRIEF_NOTE_PLATFORM,
   BRIEF_BLOCK,
   LANE_COPY_LABEL,
   FOOTER_TEXT,
@@ -40,6 +43,10 @@ import {
   DUMP_LEAD,
   DUMP_PROMPT,
   DUMP_TAIL,
+  HOME_HUMAN_LINE,
+  BRAND_SLOGANS,
+  BRAND_SLOGAN_LEAD,
+  BRAND_SLOGANS_MUTED,
   AGENT_LINKS,
   AGENT_LANE_LEAD,
   AGENT_LANE_LEAD_KODAVR,
@@ -63,13 +70,21 @@ const SPEC = readFileSync(
 
 // The copydeck is defined verbatim in §7. The wiki text is the contract, so the
 // constants are compared against the spec's own fenced blocks instead of a copy.
-function blockFor(section) {
+// §7.2 carries a second fence (the platform variant), so the block index picks
+// which fence after the heading to read.
+function blockFor(section, index = 0) {
   const lines = SPEC.split(/\r?\n/);
   const heading = lines.findIndex((line) => line.startsWith(`### ${section}`));
   if (heading === -1) throw new Error(`spec section ${section} not found`);
-  const start = lines.findIndex((line, i) => i > heading && line.trim() === '```');
-  const end = lines.findIndex((line, i) => i > start && line.trim() === '```');
-  return lines.slice(start + 1, end).join('\n');
+  let cursor = heading;
+  for (let n = 0; n <= index; n += 1) {
+    const start = lines.findIndex((line, i) => i > cursor && line.trim() === '```');
+    const end = lines.findIndex((line, i) => i > start && line.trim() === '```');
+    if (start === -1 || end === -1) throw new Error(`spec block ${n} in §${section} not found`);
+    if (n === index) return lines.slice(start + 1, end).join('\n');
+    cursor = end;
+  }
+  throw new Error(`spec block ${index} in §${section} not found`);
 }
 
 describe('copydeck', () => {
@@ -100,6 +115,20 @@ describe('copydeck', () => {
     expect(GATE_DUTIES_BLOCK).toBe(`${GATE_DUTIES_LEAD}\n${GATE_DUTIES}`);
     expect(GATE_BUTTONS.map((b) => b.label)).toEqual(['0', '1']);
     for (const button of GATE_BUTTONS) expect(GATE_TEXT).toContain(button.text);
+    // §6.5 P0-1: the two doors render the §7.1 choice lines as their visible
+    // labels, with the [0]/[1] enumerator split off into a separate badge. Pin
+    // the derivation and the literals to the fence line so they cannot drift.
+    expect(blockFor('7.1')).toContain(GATE_MACHINE_LINE);
+    expect(blockFor('7.1')).toContain(GATE_HUMAN_LINE);
+    expect(GATE_MACHINE_DOOR).toBe(GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, ''));
+    expect(GATE_HUMAN_DOOR).toBe(GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, ''));
+    expect(GATE_MACHINE_DOOR).toBe('I enter as a machine (or on its behalf).');
+    expect(GATE_HUMAN_DOOR).toBe(
+      'I am human. Route me to reception — I will read through my\n    agent, or read the brief.',
+    );
+    // The marker lives on the fence line only; the door label starts at the prose.
+    expect(GATE_MACHINE_DOOR).not.toMatch(/^\[/);
+    expect(GATE_HUMAN_DOOR).not.toMatch(/^\[/);
     // The gate no longer ships a literal fake key affordance (§7.12).
     expect(GATE_TEXT).not.toContain('[ 0 ]');
     expect(GATE_TEXT).not.toContain('[ 1 ]');
@@ -131,6 +160,20 @@ describe('copydeck', () => {
     expect(BRIEF_HEADING).toBe('NO AGENT AT HAND?');
     expect(BRIEF_SLOT).toBe('<brief — the dump summary.md, rendered here>');
     expect(BRIEF_FALLBACK).toBe('brief not attached for this dump — manifest below');
+    // §7.2 v2: the second fence is the /reception/ platform variant. It is the
+    // honest middle when the page has no dump; the dump-page fallback and this
+    // note are mutually exclusive per surface.
+    expect(BRIEF_NOTE_PLATFORM).toBe(blockFor('7.2', 1));
+    expect(BRIEF_NOTE_PLATFORM).toBe(
+      [
+        'Every dump page carries its own brief: a short adaptation the',
+        "author's agent wrote for a human stranger. Open any dump and",
+        'check in as human (1) to read it. Manifests are metadata —',
+        'metadata is for humans, on every page.',
+      ].join('\n'),
+    );
+    expect(BRIEF_NOTE_PLATFORM).not.toBe(BRIEF_FALLBACK);
+    expect(BRIEF_BLOCK).not.toContain(BRIEF_NOTE_PLATFORM);
     for (const value of [BRIEF_HEADING, BRIEF_NOTE, BRIEF_SLOT, BRIEF_CTA, BRIEF_REPORT]) {
       expect(RECEPTION_TEXT, `§7.2 carries "${value}"`).toContain(value);
     }
@@ -228,5 +271,28 @@ describe('copydeck', () => {
       expect(SPEC, `§7.13 carries "${value}"`).toContain(value);
     }
     expect(SPEC).toContain('### 7.13');
+  });
+
+  it('KDV-COPY-10: the home human quickstart line is verbatim from §7.14', () => {
+    expect(HOME_HUMAN_LINE).toBe(blockFor('7.14'));
+    expect(HOME_HUMAN_LINE).toBe(
+      [
+        'Reception explains the contract, hands you the prompt for your',
+        'agent — and, if you have none, a pre-made brief per dump.',
+      ].join('\n'),
+    );
+  });
+
+  it('KDV-COPY-11: the About page shows all three §1.4 slogans from §7.15', () => {
+    expect(BRAND_SLOGANS.join('\n')).toBe(blockFor('7.15'));
+    expect(BRAND_SLOGANS).toEqual([
+      'The autopsy revealed the code was useful.',
+      'Share gears, not text.',
+      "Open your agent's insides.",
+    ]);
+    // The lead renders as-is; the muted tail joins the other two in §1.4 order.
+    expect(BRAND_SLOGAN_LEAD).toBe(BRAND_SLOGANS[1]);
+    expect(BRAND_SLOGANS_MUTED).toBe(`${BRAND_SLOGANS[0]} · ${BRAND_SLOGANS[2]}`);
+    expect(SPEC).toContain('### 7.15');
   });
 });

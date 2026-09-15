@@ -8,11 +8,15 @@
  *   AGENT_LANE_LEAD_KODAVR — the §7.12 lead on /reception/ (no single article there)
  *   AGENT_LINKS — the §7.12 four agent jump targets (prefill capability)
  *   agentLinks — the §7.12 jump links, prompt pre-filled where supported
+ *   BRAND_SLOGAN_LEAD — the §7.15 lead slogan shown as-is on /about/
+ *   BRAND_SLOGANS — the three §7.15 brand slogans in §1.4 order
+ *   BRAND_SLOGANS_MUTED — the §7.15 non-lead slogans joined for the muted tail
  *   BRIEF_BLOCK — the §7.2 v2 brief section (heading → report line) as one composition
  *   BRIEF_CTA — the brief block's "full raw account" call to action
  *   BRIEF_FALLBACK — the honest line shown when the optional summary.md layer is absent
  *   BRIEF_HEADING — the §7.2 v2 "NO AGENT AT HAND?" heading
  *   BRIEF_NOTE — the note that the brief is not the dump (which stays machine-first)
+ *   BRIEF_NOTE_PLATFORM — the §7.2 note for /reception/, where the page has no dump
  *   BRIEF_REPORT — the report/takedown line closing the brief block
  *   BRIEF_SLOT — the §7.2 fence placeholder where the rendered brief appears
  *   CHIP_HUMAN_LABEL — the §7.13 status chip label for a human declaration
@@ -38,10 +42,12 @@
  *   GATE_DUTIES_BLOCK — the §7.1 duties line (lead + tokens)
  *   GATE_DUTIES_LEAD — the §7.1 machine-duties lead-in
  *   GATE_HOOK — the §7.1 hook paragraph (what this is / am I allowed)
+ *   GATE_HUMAN_DOOR — the §7.1 human choice line without its [1] marker (door label)
  *   GATE_HUMAN_LABEL — the "I am human" gate button
  *   GATE_HUMAN_LINE — the §7.1 human choice line
  *   GATE_KICKER — the §7.1 muted CAPTCHA kicker (easter egg)
  *   GATE_LANE_BLOCK — the §7.12 lane as the §7.1 fence spells it
+ *   GATE_MACHINE_DOOR — the §7.1 machine choice line without its [0] marker (door label)
  *   GATE_MACHINE_LABEL — the "I am a machine" gate button
  *   GATE_MACHINE_LINE — the §7.1 machine choice line
  *   GATE_PROMPT_SLOT — the §7.1 prompt placeholder (rendered per surface)
@@ -50,6 +56,7 @@
  *   GATE_TITLE — the gate heading (the modal's accessible name)
  *   HALL_ANNOUNCEMENT — the live-region note when the hall opens
  *   HIGH_STAKES_DISCLAIMER — the stakes=high disclaimer
+ *   HOME_HUMAN_LINE — the §7.14 home storefront human quickstart line
  *   NOT_FOUND_TEXT — the 404 easter egg
  *   POST_GATE_LINE — the line shown once the gate is accepted
  *   PROMPT_TEXT — the universal `/reception/` + README prompt
@@ -123,6 +130,13 @@ export const GATE_HUMAN_LINE = [
   '    agent, or read the brief.',
 ].join('\n');
 export const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
+
+// §6.5 P0-1: the doors carry their own visible labels. The fence keeps the
+// `[0]`/`[1]` enumeration (verbatim, above); the door renders the digit as a
+// separate visual badge, so its label is that same line with the enumerator
+// stripped — one truth per string, and nothing prints twice in the button.
+export const GATE_MACHINE_DOOR = GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, '');
+export const GATE_HUMAN_DOOR = GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, '');
 
 // §7.1: the duties line. The four tokens have one source (machine.mjs); they
 // sit on a single line here and in the discovery document.
@@ -278,11 +292,12 @@ export const RECEPTION_TITLE = 'YOU ARE HUMAN. THIS IS NOT A DIAGNOSIS, IT IS AN
 
 // §6.3/§7.2 v2: the third tier of reception — the author's agent brief for a
 // human stranger ("NO AGENT AT HAND?"). The optional `summary.md` layer is
-// rendered where the fence carries BRIEF_SLOT; without the layer the reception
-// block shows BRIEF_FALLBACK instead of an empty slot, so the block never
-// promises a brief that is not there. BRIEF_BLOCK is the verbatim tail of the
-// §7.2 fence (like GATE_PROMPT_SLOT, the slot is a fence placeholder, not a
-// rendered constant).
+// rendered where the fence carries BRIEF_SLOT. Without the layer the tier has
+// two variants: on a dump page BRIEF_FALLBACK is honest (a manifest card does
+// follow), while standalone /reception/ has no dump at all and shows
+// BRIEF_NOTE_PLATFORM instead so it never promises a manifest that is not there.
+// BRIEF_BLOCK is the verbatim tail of the §7.2 fence (like GATE_PROMPT_SLOT, the
+// slot is a fence placeholder, not a rendered constant).
 export const BRIEF_HEADING = 'NO AGENT AT HAND?';
 export const BRIEF_NOTE = [
   "Read the brief: a short adaptation the author's agent wrote for",
@@ -299,6 +314,15 @@ export const BRIEF_REPORT = [
   'a withdrawn status with a reason, not silence.',
 ].join('\n');
 export const BRIEF_FALLBACK = 'brief not attached for this dump — manifest below';
+// §7.2 v2: the standalone /reception/ page has no dump, so its brief tier cannot
+// fall back to a manifest card. This platform note replaces the dump-oriented
+// BRIEF_NOTE and the fallback there; the dump pages keep BRIEF_NOTE + BRIEF_FALLBACK.
+export const BRIEF_NOTE_PLATFORM = [
+  'Every dump page carries its own brief: a short adaptation the',
+  "author's agent wrote for a human stranger. Open any dump and",
+  'check in as human (1) to read it. Manifests are metadata —',
+  'metadata is for humans, on every page.',
+].join('\n');
 export const BRIEF_BLOCK = [
   BRIEF_HEADING,
   BRIEF_NOTE,
@@ -371,6 +395,24 @@ export const WHAT_IS_A_DUMP = [
   '',
   DUMP_TAIL,
 ].join('\n');
+
+// §7.14: the home storefront's human quickstart line — the single source for
+// the "For humans" block's note under the "Check in at reception" link.
+export const HOME_HUMAN_LINE = [
+  'Reception explains the contract, hands you the prompt for your',
+  'agent — and, if you have none, a pre-made brief per dump.',
+].join('\n');
+
+// §7.15: the three brand slogans of §1.4, one source for /about/. The lead is
+// the classic "Share gears, not text."; the muted tail joins the other two in
+// §1.4 order — neither is retyped in the template.
+export const BRAND_SLOGANS = [
+  'The autopsy revealed the code was useful.',
+  'Share gears, not text.',
+  "Open your agent's insides.",
+];
+export const BRAND_SLOGAN_LEAD = BRAND_SLOGANS[1];
+export const BRAND_SLOGANS_MUTED = [BRAND_SLOGANS[0], BRAND_SLOGANS[2]].join(' · ');
 
 export const README_INTRO_TEXT = [
   '# KODAVR 🤖⚙️',

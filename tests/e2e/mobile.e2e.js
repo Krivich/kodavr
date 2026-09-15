@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { COPIED_LABEL, POST_GATE_LINE } from '../../scripts/lib/copy.mjs';
+import {
+  COPIED_LABEL,
+  POST_GATE_LINE,
+  GATE_MACHINE_DOOR,
+  GATE_HUMAN_DOOR,
+} from '../../scripts/lib/copy.mjs';
 
 // §6.5 mobile adaptation. The gate.e2e.js suite proves the interactive flow on
 // the desktop profile; this suite pins the viewport-dependent contract: the
@@ -178,6 +183,76 @@ test.describe('mobile 360x640', () => {
     await expect(page.locator('.reception-block')).toBeVisible();
     expect(await page.locator('.reception-prompt').evaluate((el) => getComputedStyle(el).fontSize)).toBe('13px');
     expect(await noHorizontalScroll(page)).toBe(true);
+  });
+});
+
+// §6.5 viral-seed scenario: the gate must be flawless on screens as narrow as
+// 320px. This pins the touch targets, the door labels and the absence of
+// horizontal scroll — the first-screen composition promise is measured and
+// reported here, not asserted (it does not fit at this width, see below).
+test.describe('mobile 320x568', () => {
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  test('KDV-MOBILE-01: both labelled doors are 44px targets with visible labels and no horizontal scroll at 320x568', async ({ page }) => {
+    await page.goto(DUMP);
+    await expect(page.locator('#gate')).toBeVisible();
+
+    // No horizontal scroll: the document never exceeds the viewport width.
+    const measured = await page.evaluate(() => {
+      const root = document.documentElement;
+      const rect = (sel) => {
+        const el = document.querySelector(sel);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { y: Math.round(r.y), height: Math.round(r.height), bottom: Math.round(r.bottom) };
+      };
+      return {
+        scrollWidth: root.scrollWidth,
+        clientWidth: root.clientWidth,
+        dialog: rect('#gate'),
+        hook: rect('#gate .gate-hook'),
+        lane: rect('#gate .agent-lane'),
+        duties: rect('#gate .gate-duties'),
+        doors: rect('#gate .gate-doors'),
+        prompt: rect('#gate .gate-prompt'),
+      };
+    });
+
+    // Measured 2026-09-15 with the gate dialog 552px tall: hook 190 + lane 284 +
+    // duties 163 + doors 238 = 875px — so "hook + lane + duties + doors share the
+    // first screen" cannot hold at 320px, even with the prompt moved below the
+    // doors (the <480px order in styles.css). Whether <480px keeps that promise or
+    // settles for "hook + lane, doors a short scroll away" is a pending owner
+    // decision; the number is reported here so it is never silently lost
+    // (STATE.md keeps the decision record).
+    test.info().annotations.push({
+      type: 'measurement',
+      description: `320x568 gate dialog H=${measured.dialog.height}: hook ${measured.hook.height}, lane ${measured.lane.height}, duties ${measured.duties.height}, doors y=${measured.doors.y} h=${measured.doors.height}`,
+    });
+
+    expect(measured.scrollWidth).toBeLessThanOrEqual(measured.clientWidth + 1);
+
+    // §6.5: each door is a >=44px touch target.
+    for (const choice of ['machine', 'human']) {
+      const door = page.locator(`[data-gate-choice="${choice}"]`);
+      await expect(door).toBeVisible();
+      const box = await door.boundingBox();
+      expect(box.height, choice).toBeGreaterThanOrEqual(44);
+    }
+
+    // §6.5 P0-1: both doors carry their visible §7.1 labels (digit stays a badge).
+    const labels = page.locator('#gate .door-label');
+    await expect(labels).toHaveCount(2);
+    await expect(labels.nth(0)).toHaveText(GATE_MACHINE_DOOR);
+    await expect(labels.nth(1)).toHaveText(GATE_HUMAN_DOOR);
+
+    // §6.5/KDV-MOBILE-01: below 480px the pinned prompt follows the doors — the
+    // labelled doors reach the reader before the prompt does.
+    expect(measured.prompt.y).toBeGreaterThan(measured.doors.bottom);
+
+    // Deliberately NOT asserted: both doors inside the initial 568px viewport — the
+    // measurement above shows it is unreachable at this width, and the composition
+    // promise for <480px is the pending owner decision.
   });
 });
 

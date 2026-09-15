@@ -8,6 +8,8 @@ import {
   RESET_LABEL,
   RESET_HUMAN_LABEL,
   CHIP_HUMAN_LABEL,
+  GATE_MACHINE_DOOR,
+  GATE_HUMAN_DOOR,
   chipMachine,
   dumpPrompt,
 } from '../../scripts/lib/copy.mjs';
@@ -292,16 +294,23 @@ test('KDV-SURFACE-13: the human fast lane leads the gate — a visible pinned pr
   // choices — all inside the viewport, the long declaration stays below the
   // fold.
   const viewport = page.viewportSize();
-  for (const selector of ['#gate .agent-lane', '#gate .gate-hook', '#gate .gate-duties', '#gate .gate-choices']) {
+  for (const selector of ['#gate .agent-lane', '#gate .gate-hook', '#gate .gate-duties', '#gate .gate-doors']) {
     const box = await page.locator(selector).boundingBox();
     expect(box.y, selector).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height, selector).toBeLessThanOrEqual(viewport.height);
   }
 
+  // §6.5 P0-1: both doors carry their own visible §7.1 labels (the digit stays a
+  // separate badge), so the first screen names the choices instead of a bare 0/1.
+  const doorLabels = page.locator('#gate .door-label');
+  await expect(doorLabels).toHaveCount(2);
+  await expect(doorLabels.nth(0)).toHaveText(GATE_MACHINE_DOOR);
+  await expect(doorLabels.nth(1)).toHaveText(GATE_HUMAN_DOOR);
+
   // The below-the-fold declaration must not be glued to the 0/1 buttons.
-  const choices = await page.locator('#gate .gate-choices').boundingBox();
+  const doors = await page.locator('#gate .gate-doors').boundingBox();
   const rest = await page.locator('#gate .gate-rest').boundingBox();
-  expect(rest.y - (choices.y + choices.height)).toBeGreaterThanOrEqual(4);
+  expect(rest.y - (doors.y + doors.height)).toBeGreaterThanOrEqual(4);
 });
 
 test('KDV-SURFACE-14: the dump prompt is pinned; /reception/ keeps the universal prompt', async ({ page }) => {

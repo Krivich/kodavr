@@ -15,17 +15,21 @@ import {
   GATE_DUTIES_LEAD,
   GATE_DUTIES,
   GATE_REST,
-  GATE_MACHINE_LABEL,
-  GATE_HUMAN_LABEL,
+  GATE_MACHINE_DOOR,
+  GATE_HUMAN_DOOR,
   RESET_HUMAN_LABEL,
   DECLARATION_TOAST,
   RECEPTION_WALL,
   RECEPTION_RATING,
   BRIEF_HEADING,
   BRIEF_NOTE,
+  BRIEF_NOTE_PLATFORM,
   BRIEF_CTA,
   BRIEF_REPORT,
   BRIEF_FALLBACK,
+  HOME_HUMAN_LINE,
+  BRAND_SLOGAN_LEAD,
+  BRAND_SLOGANS_MUTED,
   dumpPrompt,
   FOOTER_TEXT,
   FOOTER_REPORT_LABEL,
@@ -361,10 +365,22 @@ describe('build controller (integration)', () => {
     expect(home).toContain('href=".well-known/kodavr.json"');
     expect(home).toContain('href="feeds/all.atom"');
     expect(home).toContain('href="reception/"');
+    // §7.14/KDV-COPY-10: the human quickstart line renders from the copydeck
+    // (ignition may add its data-ignition-text binding attribute, so match the class and text).
+    expect(home).toContain('class="human-quickstart-note"');
+    expect(home).toContain(`>${HOME_HUMAN_LINE}</p>`);
     expect(home).toContain(`${BASE_URL}/index.json`);
     for (const level of ['raw', 'self-tested', 'community-tested', 'adapted', 'library']) {
       expect(home).toContain(level);
     }
+
+    // §7.15/KDV-COPY-11: /about/ carries all three slogans from one source —
+    // the lead as-is, the other two muted.
+    const about = decodeEntities(await readFile(join(publicDir, 'about', 'index.html'), 'utf8'));
+    expect(about).toContain('class="slogan"');
+    expect(about).toContain(`>${BRAND_SLOGAN_LEAD}</p>`);
+    expect(about).toContain('class="slogan-muted"');
+    expect(about).toContain(`>${BRAND_SLOGANS_MUTED}</p>`);
 
     // Sitemap now lists the human routes too (KDV-SURFACE-08). The 404 page is
     // served for arbitrary missing paths, so it is not a canonical page and is
@@ -474,12 +490,16 @@ describe('build controller (integration)', () => {
     // muted kicker above it (the modal's accessible name is the declaration).
     expect(text).toContain(GATE_TITLE);
 
-    // The bare digits stay visible; the accessible names are descriptive.
-    expect(html).toContain('>0</button>');
-    expect(html).toContain('>1</button>');
-    for (const label of [GATE_MACHINE_LABEL, GATE_HUMAN_LABEL]) {
-      expect(html).toContain(`aria-label="${label}"`);
-    }
+    // §6.5 P0-1: the doors are real buttons carrying their visible §7.1 labels
+    // (the bare digit stays a separate aria-hidden badge), so the accessible name
+    // comes from the label text itself, never from an `aria-label` on a digit.
+    expect(html).toMatch(/<button type="button" class="door" data-gate-choice="machine">/);
+    expect(html).toMatch(/<button type="button" class="door" data-gate-choice="human">/);
+    expect(html).toContain('class="door-digit" aria-hidden="true">0</span>');
+    expect(html).toContain('class="door-digit" aria-hidden="true">1</span>');
+    expect(text).toContain(GATE_MACHINE_DOOR);
+    expect(text).toContain(GATE_HUMAN_DOOR);
+    expect(html).not.toMatch(/aria-label="0 — I am a machine/);
 
     // No-navigation announcements: an SSR-present role="status" region wired to
     // the copydeck, and a named reception region (KDV-A11Y-03).
@@ -538,12 +558,17 @@ describe('build controller (integration)', () => {
     expect(withoutBrief).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
     expect(withoutBrief).toContain(`<p class="reception-brief-missing">${BRIEF_FALLBACK}</p>`);
 
-    // /reception/ carries no dump, so the fallback is what shows there (expected).
+    // /reception/ carries no dump, so its brief tier's middle is the platform
+    // note — the dump-oriented fallback must not appear on that page at all
+    // (not in the rendered markup and not in the inlined dataset).
     const receptionPage = decodeEntities(
       await readFile(join(publicDir, 'reception', 'index.html'), 'utf8'),
     );
     expect(receptionPage).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
-    expect(receptionPage).toContain(`<p class="reception-brief-missing">${BRIEF_FALLBACK}</p>`);
+    expect(receptionPage).toContain(`<p class="reception-brief-note">${BRIEF_NOTE_PLATFORM}</p>`);
+    expect(receptionPage).not.toContain(BRIEF_FALLBACK);
+    expect(receptionPage).not.toContain('class="reception-brief-missing"');
+    expect(receptionPage).not.toContain(`<p class="reception-brief-note">${BRIEF_NOTE}</p>`);
   });
 
   it('KDV-SURFACE-19: the dump SSR ships the one-shot declaration toast as a hidden, dataset-wired live region', async () => {
