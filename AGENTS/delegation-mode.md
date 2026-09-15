@@ -3,8 +3,15 @@
 > Master copy: `~/.config/opencode/templates/delegation-mode.md`. Moved out of AGENTS.md
 > so it is not loaded at the start by subagents (they must ignore it). The root reads this
 > file when delegation mode is enabled.
+>
+> Carries section revision **r1** (2026-09-15); the consumers list lives in the master's
+> header. Sync = port the master's meaning into this English rendition (never copy the
+> Russian verbatim).
 
 ## DELEGATION MODE — delegation workflow for heavy tasks
+
+> Section revision: **r1** (2026-09-15). Carried by every consumer copy; bump it on a
+> breaking change and update the consumers list in the master header.
 
 > **Scope: the primary (root) session only.** Subagents (`worker`, `worker-lite`,
 > `explore`) MUST ignore this section entirely and just execute their brief. The user
@@ -75,18 +82,21 @@ delegation costs tokens — all three tools ask for approval by default. The use
 any of them to `"allow"` (accept forever) in `opencode.jsonc`.
 
 **Session pin (24h) with human approval.** For simple/advanced the advisor pulls the
-daily benchmark feed and renders a **plain table** (model, score, $/session,
-sessions/mo) **plus the baseline = your current root model**, so the root can judge
-simple/advanced RELATIVE to it. No formulas, no thresholds, no "best model":
+daily `opencode-benchmark` feed and renders a **plain table** (model, score,
+$/session, sessions/mo) split into **MEASURED** rows and a **NO BENCHMARK** block, plus
+the baseline = your current root model, so the root can judge simple/advanced RELATIVE
+to it. No formulas, no thresholds, no "best model". A score-less model cannot be weighed
+on intelligence: **do not pin one as the tier representative** unless there is an
+explicit non-benchmark reason.
 
 1. Calling `delegate_simple_task` / `delegate_advanced_task` with no approved model
    **does not start a subagent**; it returns `MODEL SELECTION REQUIRED` with the table.
-2. Root looks at the request and the conversation (and its own knowledge of the
-   models), weighs price vs intelligence against the baseline, and proposes **one**
-   concrete model to the user; the user may name **any other** model.
+2. Root **shows the table to the user**, then — from the MEASURED rows, weighing price
+   vs intelligence against the baseline and its own knowledge — proposes **one**
+   concrete model; the user may name **any other** model.
 3. Root calls `set_tier_model({ tier: "simple" | "advanced", model, note })` —
-   opencode shows a **native permission prompt**, and the model is pinned only after
-   the human approves.
+   opencode shows a **native permission prompt** that lists the top measured
+   alternatives, and the model is pinned only after the human approves.
 4. Root repeats the same delegate tool with the same brief — the subagent runs.
 
 The pin lives 24h **within the session**. While it is fresh, the delegate tool uses it

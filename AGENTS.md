@@ -37,6 +37,12 @@ development terms. New terms are accumulated there; the section grows as work pr
 9. **Extend the flow, don't route around it.** A feature is woven into the existing flow that
    owns its concern — never a parallel path that bypasses the common step. Read the flow map
    (`AGENTS/workflow-arrows.md`) before changing a part.
+10. **Sketch before a UI/UX batch.** Where a UI/UX change admits more than one reasonable
+    reading, the agent first proposes a cheap sketch of the whole batch — text/ASCII, a copy
+    mock, a static page, covering the human-facing copy too — and gets it approved. Only then
+    does the implementation chain run unattended against an approved surface. An approved but
+    wrong sketch costs one message; an implemented but wrong batch costs rework and
+    re-verification of everything built on top of it.
 
 ## Requirements registry — AGENTS/requirements.md
 
