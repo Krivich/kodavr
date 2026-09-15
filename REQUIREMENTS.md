@@ -89,6 +89,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-MOBILE-07**: Platform hooks work: `env(safe-area-inset-bottom)` for the 18+ footer, Android back closes gate/reception to the feed, and `theme-color` plus a 192×192 touch icon are present. *(§6.5)*
 - ✅ **KDV-MOBILE-08**: CSS mechanics: `viewport-fit=cover`, `touch-action: manipulation`, `prefers-reduced-motion` for gate animation, breakpoint custom properties (`--bp-mobile: 480px`, `--bp-tablet: 768px`) and a single mobile-first `styles.css`; the post-gate footer line appears when the dump is opened via "0". *(§6.5)*
 - ✅ **KDV-MOBILE-09**: The agent lane is on the first screen, wraps with no horizontal scroll, every control is ≥44px, and the copy chip shares the jump-links row. *(§6.5)*
+- ✅ **KDV-MOBILE-10**: Every human page class — the home feed, a dump page and `/reception/` — fits the §6.5 gzip budget (HTML < 100KB gzipped) as the build emits it, no `<link>` in those pages names a foreign origin, and the single shipped stylesheet pulls no `@import`. *(§6.5, §6.4; the dump page's budget, the system font stack and the inline logo are KDV-MOBILE-06's — the served-page same-origin crawl is KDV-SURFACE-12's e2e)*
 
 ## KDV-A11Y — Accessibility (§6.6)
 
@@ -173,7 +174,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
 | KDV-CONTRACT | 9 | 9 | 0 | 0 | 0 |
 | KDV-SURFACE | 20 | 20 | 0 | 0 | 0 |
-| KDV-MOBILE | 9 | 8 | 1 | 0 | 0 |
+| KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 11 | 11 | 0 | 0 | 0 |
 | KDV-CI | 13 | 11 | 2 | 0 | 0 |
@@ -181,4 +182,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
 | KDV-SCOPE | 6 | 6 | 0 | 0 | 0 |
-| **Total** | **117** | **107** | **10** | **0** | **0** |
+| **Total** | **118** | **108** | **10** | **0** | **0** |

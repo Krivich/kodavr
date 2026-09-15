@@ -1111,6 +1111,55 @@ describe('build controller (integration)', () => {
     expect(html).not.toMatch(/<img[^>]+logo\.svg/);
   });
 
+  it('KDV-MOBILE-10: the home feed, a dump page and /reception/ stay under the §6.5 gzip budget and pull no external resource', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    // §6.5 performance budget: "dump page HTML size < 100KB gzipped (critical
+    // for 3G)". The dump page's own ceiling, the system font stack and the
+    // inlined logo are pinned by KDV-MOBILE-06 above; the reviewer's checklist
+    // (docs/ideas/feedback-human_surface_v2_1.md §4 item 14) asks for the same
+    // budget on `/` and `/reception/`, so all three page classes are measured
+    // here, against the artifacts the build really emits.
+    const pages = [
+      ['index.html', '/'],
+      ['dumps/sample-dump/index.html', '/dumps/<slug>/'],
+      ['reception/index.html', '/reception/'],
+    ];
+    const built = [];
+    for (const [file, label] of pages) {
+      const html = await readFile(join(publicDir, ...file.split('/')), 'utf8');
+      const gzipped = gzipSync(Buffer.from(html, 'utf8'));
+      // Same zlib defaults as the KDV-MOBILE-06 measurement above.
+      expect(gzipped.length, `${label} gzipped bytes`).toBeLessThan(100 * 1024);
+      built.push({ label, html });
+    }
+
+    // §6.5 no external fonts / §6.4 no foreign origins. Two neighbouring legs
+    // already exist and are NOT restated here: the served-page crawl over HTTP
+    // (tests/e2e/seo.e2e.js, KDV-SURFACE-12 — cross-origin <link>, Google Fonts
+    // and real font requests) and the stylesheet's system font stack plus the
+    // absence of @font-face (tests/unit/a11y.test.js, KDV-MOBILE-06). This leg
+    // is the build-artifact one: every absolute `<link>` on every page class
+    // stays on the site's own origin, whatever resource it names — Google Fonts
+    // or any other CDN. Same-origin absolutes (canonical, feed) are legitimate.
+    const baseOrigin = new URL(BASE_URL).origin;
+    for (const page of built) {
+      for (const link of page.html.match(/<link\b[^>]*>/g) ?? []) {
+        const href = (link.match(/\shref="([^"]*)"/) || [])[1];
+        if (href && /^https?:\/\//i.test(href)) {
+          expect(new URL(href).origin, `${page.label}: cross-origin <link> ${link}`).toBe(baseOrigin);
+        }
+      }
+    }
+
+    // §6.5/§6.4: the single shipped stylesheet (KDV-MOBILE-08) must not pull a
+    // second sheet — or a font — through `@import`; a web font can arrive from
+    // inside the CSS, not only as a `<link>`. Read as shipped, from the build.
+    const css = await readFile(join(publicDir, 'assets', 'styles.css'), 'utf8');
+    expect(css).not.toMatch(/@import\b/);
+  });
+
   it('KDV-MOBILE-07: the 192x192 touch icon is published and head carries theme-color plus the apple-touch-icon', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
