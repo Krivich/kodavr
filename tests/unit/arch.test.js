@@ -47,6 +47,19 @@ describe('architectural decisions (§0)', () => {
     // The deploy workflow publishes exactly that artifact tree.
     expect(read('.github/workflows/deploy.yml')).toContain('output/public');
   });
+
+  it('KDV-SURFACE-12: the production build embeds the deploy host, so canonical/og point at kodavr.xyz — never at a local dev host', () => {
+    // §6.4: canonical/og URLs are absolute, composed from the `domain` the build
+    // entry point hands to buildProject. Whether they name the production host is
+    // therefore a build-config fact — the e2e harness deliberately builds for its
+    // own origin, so only this level can catch a dev host leaking into a deploy
+    // (reviewer item 9). The deploy host is already declared in static/CNAME —
+    // the build entry must agree with it.
+    const domain = read('scripts/build.mjs').match(/domain:\s*'([^']+)'/)[1];
+    const deployHost = read('static/CNAME').trim();
+    expect(new URL(domain).host).toBe(deployHost);
+    expect(domain).toBe(`https://${deployHost}`);
+  });
 });
 
 describe('single controller (§8.2)', () => {

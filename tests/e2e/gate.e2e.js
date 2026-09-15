@@ -5,6 +5,8 @@ import {
   DECLARATION_TOAST,
   HALL_ANNOUNCEMENT,
   COPIED_LABEL,
+  COPIED_ANNOUNCEMENT,
+  LANE_COPY_LABEL,
   RESET_LABEL,
   RESET_HUMAN_LABEL,
   CHIP_HUMAN_LABEL,
@@ -117,6 +119,55 @@ test('KDV-SURFACE-04: a contract-version bump clears the stale declaration and r
   expect(await rawSpecies(page)).toBeNull();
 });
 
+// §6.2 (reviewer item 2): a declaration binds the visitor to the contract version
+// it was made against, so a record stamped with an older version must be dropped
+// and the gate must ask again — and the chip must then read the version the
+// visitor actually just signed, not the stale one it re-consented from.
+test('KDV-SURFACE-17 + KDV-SURFACE-04: a stale contract version forces re-consent and the chip then names the shipped version', async ({ page }) => {
+  await page.goto(DUMP);
+  // The shipped version has one source: the <meta> site.js reads.
+  const shipped = await page.locator('meta[name="kodavr-contract-version"]').getAttribute('content');
+  expect(shipped).toBe(CONTRACT_VERSION);
+
+  await page.evaluate((key) => {
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({ species: 'machine', contract_version: '0.9', declared_at: '2026-01-01' }),
+    );
+  }, SPECIES_KEY);
+  await page.reload();
+
+  // A machine was declared, yet the stale version invalidates it: re-consent.
+  await expect(page.locator('#gate')).toBeVisible();
+  expect(await rawSpecies(page)).toBeNull();
+
+  // The fresh declaration is stamped with the shipped version and the chip
+  // follows it in place, so the header never shows the stale contract.
+  await page.click('[data-gate-choice="machine"]');
+  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator('#species-chip .species-chip-text')).toHaveText(chipMachine(shipped));
+  expect((await declaration(page)).contract_version).toBe(shipped);
+});
+
+// The converse of the check above: a record made against the shipped version is
+// honoured — the gate must NOT reopen on every load (it is shown once, §6.2).
+test('KDV-SURFACE-04: a declaration stored against the shipped contract version never re-opens the gate', async ({ page }) => {
+  await page.goto(DUMP);
+  const shipped = await page.locator('meta[name="kodavr-contract-version"]').getAttribute('content');
+  await page.evaluate(({ key, version }) => {
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({ species: 'machine', contract_version: version, declared_at: new Date().toISOString() }),
+    );
+  }, { key: SPECIES_KEY, version: shipped });
+
+  await page.reload();
+
+  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('#species-chip .species-chip-text')).toHaveText(chipMachine(shipped));
+});
+
 test('KDV-SURFACE-04: getDeclaration returns the full record while getSpecies returns its species string', async ({ page }) => {
   await page.goto(DUMP);
 
@@ -146,6 +197,57 @@ test('KDV-SURFACE-05: Esc dismisses the gate as an accessible dialog and sets sp
   await expect(page.locator('#gate')).toBeHidden();
   expect(await species(page)).toBe('machine');
   await expect(page.locator('.dump-body')).toBeVisible();
+});
+
+// §6.2/§6.5 P1-1 (reviewer item 3): the dimmed backdrop is part of the gate's
+// "Esc" surface — a tap outside the card dismisses it as machine-adjacent. The
+// native <dialog> delivers a backdrop click with the dialog as the event target,
+// so this pins the pointer path (not just the keyboard one) and the silence that
+// must accompany it: a dismissal is not a declaration, hence no toast.
+test('KDV-SURFACE-05 + KDV-MOBILE-01: a tap on the dimmed backdrop dismisses the gate like Esc, without the toast', async ({ page }) => {
+  await page.goto(DUMP);
+  const gate = page.locator('#gate');
+  await expect(gate).toBeVisible();
+
+  // Tap the scrim: the card is capped at 46rem and centred, so the gutter beside
+  // it is inside the viewport but outside #gate's box.
+  const box = await gate.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box.x).toBeGreaterThan(16);
+  expect(box.x + box.width).toBeLessThan(viewport.width - 16);
+  await page.mouse.click(Math.floor(box.x / 2), Math.round(box.y + box.height / 2));
+
+  await expect(gate).toBeHidden();
+  expect(await species(page)).toBe('machine');
+  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.declaration-toast')).toBeHidden();
+});
+
+// §6.2/§6.3 (reviewer item 8): the "no JS = machine" fiction. Without JavaScript
+// the SSR markup IS the page — the body is fully readable while the gate and the
+// reception block ship `hidden` and stay that way (the engine marks the page
+// "live" only when a controller exists, so there is no downgrade path).
+test('KDV-SURFACE-03 + KDV-MOBILE-08: with JavaScript disabled the dump body is readable and neither the gate nor reception is shown', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto(DUMP);
+
+    // The whole body arrives from the server, rendered markdown and all.
+    const body = page.locator('.dump-body');
+    await expect(body).toBeVisible();
+    await expect(body.locator('h1')).toHaveText('Sample Heading');
+    await expect(body).toContainText('Body text with bold and a source link.');
+    await expect(body).toContainText('first item');
+    await expect(body.locator('pre')).toContainText('const answer = 42;');
+
+    // Both interstitials stay hidden: no gate, no reception, no machine panel.
+    await expect(page.locator('#gate')).toBeHidden();
+    await expect(page.locator('.reception-block')).toBeHidden();
+    await expect(page.locator('.machine-panel')).toBeHidden();
+  } finally {
+    await context.close();
+  }
 });
 
 test('KDV-SURFACE-06: button 0 dismisses the gate, opens the hall and reveals the post-gate line', async ({ page }) => {
@@ -312,6 +414,43 @@ test('KDV-SURFACE-13: the human fast lane leads the gate — a visible pinned pr
   const doors = await page.locator('#gate .gate-doors').boundingBox();
   const rest = await page.locator('#gate .gate-rest').boundingBox();
   expect(rest.y - (doors.y + doors.height)).toBeGreaterThanOrEqual(4);
+});
+
+// §6.5/§6.6 (reviewer items 5 and 7): the lane's copy chip is the fallback way to
+// take the prompt. It must carry the WHOLE pinned prompt, flip to "Copied ✓",
+// announce through the shared role=status region, and — where the platform
+// exposes Web Share — hand the same text to the OS sheet (site.js maybeShare).
+// The agent jump links opt out (data-copy-share="off"), so the sheet never
+// hijacks a navigation; the stub covers the offer without opening anything.
+test('KDV-SURFACE-13 + KDV-MOBILE-04: the lane copy chip copies the whole prompt, shows Copied and offers Web Share', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__kodavrShares = [];
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: (data) => {
+        window.__kodavrShares.push(data);
+        return Promise.resolve();
+      },
+    });
+  });
+  await page.goto(DUMP);
+
+  // The jump links must not trigger the share sheet: they navigate to an agent.
+  await expect(page.locator('#gate .agent-link').first()).toHaveAttribute('data-copy-share', 'off');
+
+  const button = page.locator('#gate .copy-prompt');
+  await expect(button).toHaveText(LANE_COPY_LABEL);
+  await button.click();
+
+  await expect(button).toHaveText(COPIED_LABEL);
+  // The Windows clipboard normalizes LF to CRLF; compare on normalized newlines.
+  const clipboard = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n');
+  expect(clipboard).toBe(DUMP_PROMPT);
+  await expect(page.locator('#a11y-status')).toHaveText(COPIED_ANNOUNCEMENT);
+
+  // Web Share gets the same whole prompt — the offer is exercised, then stops:
+  // the stub is never awaited by the page (failures are silent by design).
+  expect(await page.evaluate(() => window.__kodavrShares)).toEqual([{ text: DUMP_PROMPT }]);
 });
 
 test('KDV-SURFACE-14: the dump prompt is pinned; /reception/ keeps the universal prompt', async ({ page }) => {
