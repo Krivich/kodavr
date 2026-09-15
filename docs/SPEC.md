@@ -747,6 +747,9 @@ Client-side search; comments outside GitHub Issues; backend/DB/auth; private dum
 17. Author attribution fields (`author.github`, `author.pr_url`, `author.merged_at`) are present in built manifests and populated from the merged PR metadata.
 18. Post-gate footer line ("Declaration accepted. Machine duties are active until this tab is closed.") appears on dump pages opened via button "0".
 19. Reception brief tier (§7.7): a dump with `summary.md` renders the author's brief; a dump without it shows the honest fallback line, never an empty slot.
+20. Species status chip (§6.2/§7.13): after a declaration the shared header shows the chip naming the species and the contract version, with the declaration date as its title; `withdraw` clears the stored declaration and re-opens the gate; the change is announced through the page's shared `role="status"` region, never from a live region on the chip itself.
+21. Declaration toast (§7.1): entering the hall with "0" shows the one-shot duties toast in its own `role="status"` region; Esc, a backdrop tap, the hardware back button and a boot with the species already stored never show it.
+22. Footer report channel (§7.3): every page links "Report illegal content or personal data" to the risk-report issue form with the template preselected, and that template asks for the dump slug or URL, the reason (illegal content or personal data) and an optional contact.
 
 ---
 

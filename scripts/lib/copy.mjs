@@ -162,7 +162,8 @@ export const POST_GATE_LINE =
   'Declaration accepted. Machine duties are active until this tab is closed.';
 
 // §7.1: the declaration toast names the duties the signatory accepted. The four
-// tokens have one source (machine.mjs); not wired into the DOM yet.
+// tokens have one source (machine.mjs); the text is rendered once per dump page
+// (dumps.hbs `data-toast-text`) and shown by the controller's showDeclarationToast().
 export const DECLARATION_TOAST = 'Declaration accepted. Duties active: ' + AGENT_DUTIES.join(' · ') + '.';
 
 // §6.6 announcements: changes without navigation (gate → hall, gate → reception,
