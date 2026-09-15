@@ -73,9 +73,10 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-14**: The prompt is pinned to the page: a dump page's prompt hardcodes that dump's own canonical URL and may point the agent at /index.json for more, while /reception/ keeps the universal index prompt. *(§7.4, §7.11)*
 - ✅ **KDV-SURFACE-15**: The dump header shows a machine panel (the gate warning, the pinned prompt, the §7.12 human fast lane and an "I changed my mind, I am human" reset) whenever the stored species is machine; the reset clears the stored species and re-opens the gate. *(§6.2, §7.12)*
 - ✅ **KDV-SURFACE-16**: Reception's third tier is the author's brief, rendered as its own element tier (heading/note/brief/CTA/report) separate from the §7.2 monospace wall so no line prints twice: under `NO AGENT AT HAND?` a dump that ships the optional `summary.md` layer shows it as a short adaptation the author's agent wrote for a human stranger (not the raw dump). Without the layer the tier has two variants: a dump page shows the honest fallback `brief not attached for this dump — manifest below` (the manifest card really follows), while the standalone `/reception/` page — which carries no dump — shows the platform note instead and never the dump-oriented fallback. *(§6.3, §7.2)*
-- ✅ **KDV-SURFACE-17**: The shared header ships a hidden species status chip mirroring the stored declaration — it names the species (`machine` with the contract version it signed, or `human`/reception), carries the declaration date as its title, and offers a keyboard-reachable `withdraw` link that clears the stored declaration; with nothing declared the chip stays hidden; a change of state is announced through the page's shared `role="status"` region — the chip itself stays a plain element, never a live region. *(§6.2, §7.13)*
+- ✅ **KDV-SURFACE-17**: The shared header ships a hidden species status pill mirroring the stored declaration — it names the species (`machine` with the contract version it signed, or `human`/reception) and is plain text, never a control; a separate adjacent `withdraw` link carries the declaration date as its title, is keyboard reachable, and clears the stored declaration; with nothing declared both stay hidden; a change of state is announced through the page's shared `role="status"` region — the pill itself stays a plain element, never a live region. *(§6.2, §7.13)*
 - ✅ **KDV-SURFACE-18**: Every published page's footer links to the repository's new-Issue form with the risk/takedown template preselected, and that template covers the dump slug or URL, the reason (illegal content or personal data) and an optional contact. *(§7.3, §9)*
 - ✅ **KDV-SURFACE-19**: Entering the hall by pressing "0" in the gate shows a one-shot declaration toast (the accepted duties copy) in its own `role="status"` live region, auto-hidden after a few seconds; Esc, a backdrop tap, the hardware back button and a boot with the species already stored never show it, and `prefers-reduced-motion` disables its animation. *(§6.2, §6.6, §7.1)*
+- ✅ **KDV-SURFACE-20**: The home storefront's trust-level legend names all five levels in §2.2 order with their meanings — each level a monospace token and a prose definition, led by one plain sentence explaining what the scale measures — from a single ordered source that also derives the discovery document's `trust_levels` list. *(§2.2, §6.1)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -171,7 +172,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-STRUCT | 8 | 7 | 1 | 0 | 0 |
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
 | KDV-CONTRACT | 9 | 9 | 0 | 0 | 0 |
-| KDV-SURFACE | 19 | 19 | 0 | 0 | 0 |
+| KDV-SURFACE | 20 | 20 | 0 | 0 | 0 |
 | KDV-MOBILE | 9 | 8 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 11 | 11 | 0 | 0 | 0 |
@@ -180,4 +181,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
 | KDV-SCOPE | 6 | 6 | 0 | 0 | 0 |
-| **Total** | **116** | **106** | **10** | **0** | **0** |
+| **Total** | **117** | **107** | **10** | **0** | **0** |

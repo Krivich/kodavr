@@ -11,7 +11,9 @@
  *   REPOSITORY — the owner/repo slug
  *   REPOSITORY_BRANCH — the default branch
  *   STAKES_VOCABULARY — the allowed stakes values
+ *   TRUST_LEGEND_LEAD — the §6.1 storefront trust-legend lead line
  *   TRUST_LEVELS — the allowed trust_level values
+ *   TRUST_LEVEL_MEANINGS — the ordered §2.2 level/meaning pairs
  *   buildAtom — an Atom feed document
  *   buildIndex — the /index.json document
  *   buildIndexEntry — the §5.1 per-dump index entry
@@ -71,7 +73,23 @@ export function escapeXml(value) {
 // discovery document (§5.2) and the content validator.
 export const DEFAULT_LICENSE = 'CC-BY-4.0';
 export const CONSUMPTION_CONTRACT_SEE = '/.well-known/kodavr.json';
-export const TRUST_LEVELS = ['raw', 'self-tested', 'community-tested', 'adapted', 'library'];
+// §2.2: the trust scale is one ordered source — the level/meaning pairs, with
+// the meanings taken verbatim from SPEC §2.2. TRUST_LEVELS derives from the
+// same rows, so the storefront legend (§6.1) and the §5.2 discovery document
+// can never drift from each other or from the spec.
+export const TRUST_LEVEL_MEANINGS = [
+  { level: 'raw', meaning: 'raw dump, verified by nothing' },
+  { level: 'self-tested', meaning: 'author confirms: it works for them' },
+  { level: 'community-tested', meaning: 'at least one external consumer confirmed' },
+  { level: 'adapted', meaning: 'a derivative adaptation exists, published on the platform' },
+  { level: 'library', meaning: 'the dump grew into a versioned library/package' },
+];
+export const TRUST_LEVELS = TRUST_LEVEL_MEANINGS.map((row) => row.level);
+
+// §6.1/§2.2: the storefront legend's lead — one plain sentence that tells a
+// newcomer who has never heard of Kodavr what the scale measures. Exported from
+// the same source as the scale, so the page explains the list it actually shows.
+export const TRUST_LEGEND_LEAD = "How far a dump's claims have been checked:";
 export const STAKES_VOCABULARY = ['low', 'medium', 'high'];
 export const CONTENT_FLAGS_VOCABULARY = [
   'unverified_claims',

@@ -51,7 +51,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: JSONLD_CONTEXT, jsonldArticle, jsonldBreadcrumb, jsonldCollectionPage, jsonldItemList, jsonldOrganization, jsonldWebpage, jsonldWebsite, serializeJsonLd
   invariants: — every serialized graph is safe inside a script tag (angle brackets are escaped)
 - **scripts/lib/machine.mjs** — the machine-first surface: index.json, well-known, feeds, tags, sitemap
-  exports: AGENT_DUTIES, CONSUMPTION_CONTRACT_SEE, CONTENT_FLAGS_VOCABULARY, CONTRACT_VERSION, DEFAULT_LICENSE, ISSUES_URL, REPOSITORY, REPOSITORY_BRANCH, STAKES_VOCABULARY, TRUST_LEVELS, buildAtom, buildIndex, buildIndexEntry, buildTagGraph, buildWellKnown, collectHtmlFiles, escapeXml, injectBuildMeta, readGitHubEvent, resolveAuthorFromCi, resolveAuthorMeta, resolveRepository, writeMachineFiles, writeSitemap
+  exports: AGENT_DUTIES, CONSUMPTION_CONTRACT_SEE, CONTENT_FLAGS_VOCABULARY, CONTRACT_VERSION, DEFAULT_LICENSE, ISSUES_URL, REPOSITORY, REPOSITORY_BRANCH, STAKES_VOCABULARY, TRUST_LEGEND_LEAD, TRUST_LEVELS, TRUST_LEVEL_MEANINGS, buildAtom, buildIndex, buildIndexEntry, buildTagGraph, buildWellKnown, collectHtmlFiles, escapeXml, injectBuildMeta, readGitHubEvent, resolveAuthorFromCi, resolveAuthorMeta, resolveRepository, writeMachineFiles, writeSitemap
   consumes: ./verbatim.mjs, node:fs, node:fs/promises, node:path
   invariants: — machine files are generated, never hand-edited
 - **scripts/lib/markdown.mjs** — markdown → sanitized HTML for dump bodies

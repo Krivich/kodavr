@@ -205,13 +205,14 @@
     }
   }
 
-  // §6.2/§7.13: the header's species status chip. SSR ships the chip hidden and
-  // empty, with the copydeck labels in data attributes; this fills the visible
-  // text from the stored declaration (machine → the versioned label, human → the
-  // reception label), carries the declaration date as the chip's title and reveals
-  // it. Nothing declared (or a stale/malformed record, which readDeclaration
-  // clears) means the chip stays hidden. The withdraw link clears the stored
-  // declaration and lets the anchor navigate home. Never throws.
+  // §6.2/§7.13: the header's species status pill and its separate withdraw
+  // link. SSR ships both hidden and empty, with the copydeck labels in data
+  // attributes; this fills the pill's visible text from the stored declaration
+  // (machine → the versioned label, human → the reception label), carries the
+  // declaration date as the withdraw link's title and reveals the pill. Nothing
+  // declared (or a stale/malformed record, which readDeclaration clears) means
+  // both stay hidden. The withdraw link clears the stored declaration and lets
+  // the anchor navigate home. Never throws.
   function chipFill(template, token, value) {
     return String(template).split(token).join(value == null ? '' : String(value));
   }
@@ -220,7 +221,9 @@
     var chip = document.getElementById('species-chip');
     if (!chip) return;
     var text = chip.querySelector('.species-chip-text');
-    var withdraw = chip.querySelector('[data-withdraw]');
+    // §7.13: the withdraw action is a sibling of the pill, never inside it.
+    var group = chip.parentNode;
+    var withdraw = group && group.querySelector ? group.querySelector('[data-withdraw]') : null;
 
     var record = readDeclaration();
     if (!record) {
@@ -239,10 +242,11 @@
     if (text) text.textContent = label;
 
     // §7.13: the title is the declaration date only (ISO prefix), not the full
-    // timestamp — the tooltip stays human-sized.
+    // timestamp — the tooltip stays human-sized. It sits on the withdraw link
+    // (the pill is plain text).
     var declaredAt = record.declared_at ? String(record.declared_at).slice(0, 10) : '';
-    if (declaredAt && titleTemplate) {
-      chip.setAttribute('title', chipFill(titleTemplate, '<declared-at>', declaredAt));
+    if (declaredAt && titleTemplate && withdraw) {
+      withdraw.setAttribute('title', chipFill(titleTemplate, '<declared-at>', declaredAt));
     }
 
     chip.hidden = false;
@@ -253,6 +257,7 @@
         withdraw.addEventListener('click', function () {
           clearSpecies();
           chip.hidden = true;
+          withdraw.hidden = true;
         });
       }
     }

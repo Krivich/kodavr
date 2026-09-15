@@ -7,7 +7,7 @@ import { XMLValidator } from 'fast-xml-parser';
 import { buildProject } from '../../scripts/lib/build.mjs';
 import { ROUTE_PAGES, FOOTER_REPORT_URL } from '../../scripts/lib/pages.mjs';
 import { ROBOTS_TXT, HUMANS_TXT } from '../../scripts/lib/verbatim.mjs';
-import { CONTRACT_VERSION } from '../../scripts/lib/machine.mjs';
+import { CONTRACT_VERSION, TRUST_LEGEND_LEAD, TRUST_LEVEL_MEANINGS } from '../../scripts/lib/machine.mjs';
 import {
   GATE_KICKER,
   GATE_TITLE,
@@ -39,6 +39,7 @@ import {
   CHIP_MACHINE_TEMPLATE,
   CHIP_HUMAN_LABEL,
   CHIP_TITLE_TEMPLATE,
+  CHIP_WITHDRAW_LABEL,
 } from '../../scripts/lib/copy.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -320,7 +321,7 @@ describe('build controller (integration)', () => {
     expect(withoutBrief.brief_html).toBeFalsy();
   });
 
-  it('KDV-SURFACE-01 + KDV-SURFACE-18 + KDV-COPY-03 + KDV-COPY-05: publishes every §6.1 route with the verbatim footer, report link and 404 copy', async () => {
+  it('KDV-SURFACE-01 + KDV-SURFACE-18 + KDV-SURFACE-20 + KDV-COPY-03 + KDV-COPY-05: publishes every §6.1 route with the verbatim footer, report link and 404 copy', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
 
@@ -370,8 +371,17 @@ describe('build controller (integration)', () => {
     expect(home).toContain('class="human-quickstart-note"');
     expect(home).toContain(`>${HOME_HUMAN_LINE}</p>`);
     expect(home).toContain(`${BASE_URL}/index.json`);
-    for (const level of ['raw', 'self-tested', 'community-tested', 'adapted', 'library']) {
-      expect(home).toContain(level);
+    // §2.2/§6.1 KDV-SURFACE-20: the trust legend is a definition list — the lead
+    // plus every level as a monospace token with its prose meaning. The engine
+    // injects a data-ignition-text binding into <dt>/<dd>, so compare the inner
+    // text (`>token</dt>`), not the bare tag. The old `<ol class="trust-levels">`
+    // token list is gone.
+    expect(home).toContain(TRUST_LEGEND_LEAD);
+    expect(home).toContain('class="trust-legend"');
+    expect(home).not.toContain('class="trust-levels"');
+    for (const { level, meaning } of TRUST_LEVEL_MEANINGS) {
+      expect(home).toContain(`>${level}</dt>`);
+      expect(home).toContain(`>${meaning}</dd>`);
     }
 
     // §7.15/KDV-COPY-11: /about/ carries all three slogans from one source —
@@ -605,6 +615,16 @@ describe('build controller (integration)', () => {
       // §7.13: the chip lives in the shared header, so every route carries it.
       expect(raw, route).toContain('class="species-chip"');
       expect(raw, route).toContain('id="species-chip"');
+      // §7.13: the status pill renders only the status text — the withdraw
+      // action is a separate link outside it, not a control inside the pill.
+      const pill = raw.match(/<span class="species-chip"[\s\S]*?<\/span><\/span>/);
+      expect(pill, route).not.toBeNull();
+      expect(pill[0], route).not.toMatch(/<(a|button|input|select|textarea)\b/);
+      expect(raw, route).toMatch(
+        new RegExp(
+          `<a class="species-chip-withdraw"[^>]*data-withdraw[^>]*hidden[^>]*>${CHIP_WITHDRAW_LABEL}</a>`,
+        ),
+      );
       // The copydeck labels reach the client through the dataset (Handlebars
       // escapes the `<version>`/`<declared-at>` placeholders — decode first).
       const html = decodeEntities(raw);

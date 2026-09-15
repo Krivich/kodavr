@@ -39,13 +39,17 @@
     }}
   </section>
 
-  <section class="trust-legend">
+  {{!-- §2.2/§6.1: the trust-level legend — a lead plus a definition list whose
+       tokens are the same monospace badges as the manifest metadata, and whose
+       meanings are prose. One source: machine.mjs via the route dataset. --}}
+  <section class="trust-legend-section">
     <h2>Trust levels</h2>
-    <ol class="trust-levels">
-      {{#each trust_levels}}
-      <li>{{this}}</li>
+    <p class="trust-legend-lead">{{trust_legend.lead}}</p>
+    <dl class="trust-legend">
+      {{#each trust_legend.levels}}
+      <div><dt>{{this.level}}</dt><dd>{{this.meaning}}</dd></div>
       {{/each}}
-    </ol>
+    </dl>
   </section>
 </main>
 {{> site/footer}}

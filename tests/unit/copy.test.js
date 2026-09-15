@@ -60,7 +60,12 @@ import {
   agentLinks,
   dumpPrompt,
 } from '../../scripts/lib/copy.mjs';
-import { AGENT_DUTIES } from '../../scripts/lib/machine.mjs';
+import {
+  AGENT_DUTIES,
+  TRUST_LEGEND_LEAD,
+  TRUST_LEVELS,
+  TRUST_LEVEL_MEANINGS,
+} from '../../scripts/lib/machine.mjs';
 import { buildRouteDatasets } from '../../scripts/lib/pages.mjs';
 
 const SPEC = readFileSync(
@@ -85,6 +90,27 @@ function blockFor(section, index = 0) {
     cursor = end;
   }
   throw new Error(`spec block ${index} in §${section} not found`);
+}
+
+// §2.2 is a markdown table (not a fence), so read it row by row: skip the
+// `| Level | Meaning |` header and its `|---|` separator, strip the code ticks
+// around each level, and stop at the next heading. Same spirit as blockFor —
+// the spec is the contract, the constant is compared against it, never a copy.
+function trustTableFor(section) {
+  const lines = SPEC.split(/\r?\n/);
+  const heading = lines.findIndex((line) => line.startsWith(`### ${section}`));
+  if (heading === -1) throw new Error(`spec section ${section} not found`);
+  const rows = [];
+  for (let i = heading + 1; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (/^#{1,6}\s/.test(line)) break;
+    if (!line.trim().startsWith('|')) continue;
+    const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
+    if (cells[0].toLowerCase() === 'level') continue;
+    if (cells.every((cell) => /^-+$/.test(cell))) continue;
+    rows.push({ level: cells[0].replace(/^`|`$/g, ''), meaning: cells[1] });
+  }
+  return rows;
 }
 
 describe('copydeck', () => {
@@ -294,5 +320,31 @@ describe('copydeck', () => {
     expect(BRAND_SLOGAN_LEAD).toBe(BRAND_SLOGANS[1]);
     expect(BRAND_SLOGANS_MUTED).toBe(`${BRAND_SLOGANS[0]} · ${BRAND_SLOGANS[2]}`);
     expect(SPEC).toContain('### 7.15');
+  });
+
+  it('KDV-SURFACE-20: the trust-level legend is one ordered source and matches SPEC §2.2', () => {
+    // The level/meaning table is the single source of the scale: its rows must
+    // equal the §2.2 table exactly, in order. The token list derives from it, so
+    // the §5.2 discovery document and the storefront legend cannot drift apart.
+    expect(TRUST_LEVEL_MEANINGS).toEqual(trustTableFor('2.2'));
+    expect(TRUST_LEVELS).toEqual(TRUST_LEVEL_MEANINGS.map((row) => row.level));
+    expect(TRUST_LEVELS).toEqual([
+      'raw',
+      'self-tested',
+      'community-tested',
+      'adapted',
+      'library',
+    ]);
+
+    // §6.1: the lead is the same single source and is exported for the page.
+    expect(TRUST_LEGEND_LEAD).toBe("How far a dump's claims have been checked:");
+
+    // The home route dataset carries that same lead and the same ordered rows.
+    const routes = buildRouteDatasets([], { baseUrl: 'https://example.test' });
+    expect(routes.home.trust_legend).toEqual({
+      lead: TRUST_LEGEND_LEAD,
+      levels: TRUST_LEVEL_MEANINGS,
+    });
+    expect(routes.home.trust_levels).toEqual(TRUST_LEVELS);
   });
 });

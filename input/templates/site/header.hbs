@@ -3,15 +3,19 @@
        The <img> is the build-time fallback when the controller supplies no
        logo_svg (e.g. a dataset built without the static tree). --}}
   <a class="site-logo" href="/">{{#if logo_svg}}{{{logo_svg}}}{{else}}<img src="/logo.svg" alt="Kodavr" width="32" height="32">{{/if}}</a>
-  {{!-- §6.2/§7.13: the species status chip — mirrors the stored declaration
-       (§6.2) in the shared header. SSR ships it hidden and empty; site.js fills
-       it from the stored record and clears the declaration when the withdraw
-       link is followed. No role="status": a live region must not wrap an
-       interactive link, and it would capture the announce() role fallback. --}}
-  <p class="species-chip" id="species-chip" hidden
-     data-machine-label="{{copy.chip_machine_template}}"
-     data-human-label="{{copy.chip_human_label}}"
-     data-title-template="{{copy.chip_title_template}}"><span class="species-chip-text"></span> <a class="species-chip-withdraw" href="/" data-withdraw hidden>{{copy.chip_withdraw_label}}</a></p>
+  {{!-- §6.2/§7.13: the species status — a non-interactive status pill next to
+       the separate withdraw action. The pill mirrors the stored declaration
+       (§6.2); SSR ships both the pill and the link hidden and empty, and
+       site.js fills the status text, carries the declaration date as the
+       link's title and clears the declaration when the link is followed. No
+       role="status": a live region must not wrap an interactive link, and it
+       would capture the announce() role fallback. --}}
+  <p class="species-declaration">
+    <span class="species-chip" id="species-chip" hidden
+       data-machine-label="{{copy.chip_machine_template}}"
+       data-human-label="{{copy.chip_human_label}}"
+       data-title-template="{{copy.chip_title_template}}"><span class="species-chip-text"></span></span><span class="species-separator" aria-hidden="true">·</span><a class="species-chip-withdraw" href="/" data-withdraw hidden>{{copy.chip_withdraw_label}}</a>
+  </p>
   {{!-- §6.6: the nav is data-driven (route datasets carry `nav` with a `current`
        flag rendered as aria-current="page"); the static list is the fallback. --}}
   <nav class="site-nav" aria-label="Primary">

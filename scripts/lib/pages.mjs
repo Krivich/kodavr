@@ -87,7 +87,14 @@ import {
   agentLinks,
   dumpPrompt,
 } from './copy.mjs';
-import { ISSUES_URL, CONTRACT_VERSION, buildIndexEntry, buildWellKnown } from './machine.mjs';
+import {
+  ISSUES_URL,
+  CONTRACT_VERSION,
+  TRUST_LEGEND_LEAD,
+  TRUST_LEVEL_MEANINGS,
+  buildIndexEntry,
+  buildWellKnown,
+} from './machine.mjs';
 import {
   jsonldWebsite,
   jsonldWebpage,
@@ -296,6 +303,13 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
     well_known_url: `${base}/.well-known/kodavr.json`,
     feed_url: `${base}/feeds/all.atom`,
     trust_levels: buildWellKnown().trust_levels,
+    // §2.2/§6.1: the storefront legend — one lead + the five level/meaning
+    // pairs. The pairs are the same ordered table the §5.2 `trust_levels` list
+    // derives from (machine.mjs), so the page cannot invent its own meanings.
+    trust_legend: {
+      lead: TRUST_LEGEND_LEAD,
+      levels: TRUST_LEVEL_MEANINGS,
+    },
     dumps: entries,
   };
 

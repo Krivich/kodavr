@@ -190,30 +190,47 @@ pre {
 /* §6.6: nav targets stay ≥ 44px tall like every other control. */
 .site-nav a { display: inline-flex; align-items: center; min-height: var(--tap); }
 
-/* §7.13: the header's species status chip — small and muted; it sits to the
-   left of the nav (which keeps the right edge) and stacks with the header on
-   narrow screens. Deliberately not animated. */
-.species-chip {
+/* §7.13: the header's species declaration group — the non-interactive status
+   pill with the separate withdraw action next to it. It sits to the left of the
+   nav (which keeps the right edge) and stacks with the header on narrow
+   screens. Deliberately not animated. */
+.species-declaration {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   margin: 0 0 0 auto;
-  padding: 0.15rem 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
   color: var(--muted);
   font-size: 0.75rem;
   line-height: 1.4;
 }
 
-/* `display` above would otherwise beat the UA `[hidden]` rule. */
+/* §7.13: the pill carries the status text only — never a control. */
+.species-chip {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+/* SSR ships the pill hidden; `[hidden]` must always win. */
 .species-chip[hidden] { display: none; }
 
 .species-chip-text { overflow-wrap: anywhere; }
 
-/* §6.6: the withdraw link keeps the global visible focus ring and stays a
-   legible, underlined control inside the muted chip. */
-.species-chip-withdraw { color: inherit; text-underline-offset: 2px; }
+/* §7.13: the dot between the status and the action; it disappears with the
+   pill (this also covers the pre-JS SSR state where the link has `hidden`). */
+.species-separator { color: var(--muted); }
+.species-chip[hidden] ~ .species-separator { display: none; }
+
+/* §6.6/§7.13: the withdraw action is a quiet link — it inherits the muted
+   colour, underlines on hover/focus only, and keeps the global visible focus
+   ring. */
+.species-chip-withdraw {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+.species-chip-withdraw:hover,
+.species-chip-withdraw:focus-visible { text-decoration: underline; }
 
 .site-footer {
   margin-top: 3rem;
@@ -271,6 +288,18 @@ pre {
 .gate-prompt,
 .gate-rest { margin: 0 0 0.75rem; }
 
+/* §3.7 P1-1: a grey block hugs its text, so no empty grey field is left to the
+   right of a short prompt/declaration. Scoped to the prompt blocks (the gate's
+   and the hall panel's) — the hall's code blocks keep full width and horizontal
+   scrolling with the "scroll →" hint (KDV-MOBILE-02). `max-width: 100%` keeps a
+   long line clamped to the card, so the narrow-screen measure is unchanged. */
+.gate-prompt,
+.gate-rest,
+.machine-prompt {
+  width: fit-content;
+  max-width: 100%;
+}
+
 /* §7.1: the duties line is lead + tokens on two physical lines; `pre-line`
    keeps that split after HTML would otherwise collapse the newline. */
 .gate-duties {
@@ -284,14 +313,27 @@ pre {
 /* The long machine-duty declaration scrolls below the fold (§7.1): the dialog
    is capped to the viewport so everything stays reachable on small screens. */
 /* §6.5: the dialog is a contract card, not a warning modal — a document frame
-   around the content, with the kicker above and the choices under a rule. */
+   around the content, with the kicker above and the choices under a rule.
+   §3.7 P1-1: a document measure caps the card, so the hook reads as a paragraph
+   instead of one line running the full desktop width. */
 #gate {
   max-height: calc(100vh - 2rem);
+  max-width: 46rem;
   overflow-y: auto;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 1.25rem;
+  padding: 1.5rem 1.75rem;
 }
+
+/* §3.7 P1-1: the prose inside the card keeps a readable measure (~68ch); the
+   door labels are prose too, so they share it. */
+#gate p,
+#gate .door-label { max-width: 68ch; }
+
+/* §3.7 P1-1: a modal must read as modal. The UA default scrim is ~10% — too
+   faint to separate the ceremony from the page behind it. #111 at 32% is a
+   dark scrim under the card; no text sits on it, so AA contrast is untouched. */
+dialog#gate::backdrop { background: rgb(17 17 17 / .32); }
 
 /* §6.5: a rule above the doors acts as the signature line. */
 .gate-doors { display: flex; gap: 0.5rem; margin: 0 0 0.75rem; justify-content: center; align-items: stretch; border-top: 1px solid var(--line); padding-top: 0.75rem; }
@@ -364,6 +406,7 @@ pre {
    the manifest card, the footer) deliberately stays technical. */
 .reception-page,
 .reception-brief-section,
+.reception-text,
 .reception-brief-heading,
 .reception-brief-note,
 .reception-brief,
@@ -373,6 +416,18 @@ pre {
 .reception-rating {
   font-family: var(--font-prose);
   line-height: 1.7;
+}
+
+/* §3.7 P1-5: the verbatim §7.2 wall is human prose — it keeps its line breaks
+   and its internal uppercase headings, but loses the machine look: no grey
+   `pre` background, a left rule and indented text instead. The element is not
+   `.reception-prompt`/`.machine-prompt`, so §6.5's two contours hold: the
+   prompt walls and the manifest keys on this page stay `--font-mono`. */
+.reception-text {
+  background: transparent;
+  border-left: 3px solid var(--line);
+  padding: 4px 0 4px 16px;
+  white-space: pre-wrap;
 }
 
 .reception-brief-section { margin: 1rem 0 0; }
@@ -418,7 +473,9 @@ pre {
   margin: 1.5rem 0 1rem;
 }
 
-.machine-panel-lead { margin: 0 0 0.75rem; }
+/* §6.2 P2-3: the panel repeats the gate hook verbatim; a notch smaller than the
+   panel's prose keeps it from competing with the dump H1 above it. */
+.machine-panel-lead { margin: 0 0 0.75rem; font-size: 0.9rem; }
 .machine-panel-reset { margin: 0; }
 
 /* --- Declaration toast (§6.2/§6.6, KDV-SURFACE-19) ---------------------- */
@@ -485,7 +542,36 @@ pre {
 .dump-card,
 .reception-block { border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin: 1rem 0; }
 
-.trust-levels { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; }
+/* §2.2/§6.1: the home trust legend — a two-column definition list. Each level
+   token is the same monospace badge family as the manifest metadata (mono +
+   --line border + --pre-bg); the meaning is AA-safe muted prose. The wrapper
+   divs are layout-transparent so every dt/dd pair shares the grid's two
+   columns; no new colours, fonts or dependencies. */
+.trust-legend {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.trust-legend > div { display: contents; }
+
+.trust-legend dt {
+  align-self: start;
+  justify-self: start;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--pre-bg);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.trust-legend dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.trust-legend-lead { margin: 0.5rem 0 0; }
+
 .dump-meta,
 .dump-flags { color: var(--muted); font-size: 0.9rem; }
 
@@ -551,8 +637,9 @@ pre {
   body { padding: 0.75rem 1rem 3rem; }
 
   .site-header { flex-direction: column; align-items: flex-start; }
-  /* §7.13: stacked header — the chip aligns with the logo, not the right edge. */
-  .species-chip { margin-left: 0; }
+  /* §7.13: stacked header — the declaration group aligns with the logo, not
+     the right edge. */
+  .species-declaration { margin-left: 0; }
 
   #gate {
     width: calc(100vw - 32px);
@@ -587,6 +674,10 @@ pre {
   .agent-links { width: 100%; }
   .agent-link,
   .copy-prompt { flex: 1 1 auto; }
+
+  /* §6.5/§2.2: the trust legend stacks — each token above its meaning, still
+     one pair per block so the scale keeps its order and never scrolls sideways. */
+  .trust-legend { grid-template-columns: 1fr; }
 }
 
 /* --- Accessibility: reduced motion -------------------------------------- */

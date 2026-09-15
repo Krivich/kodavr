@@ -11,6 +11,7 @@ import {
   GATE_MACHINE_DOOR,
   GATE_HUMAN_DOOR,
   chipMachine,
+  chipTitle,
   dumpPrompt,
 } from '../../scripts/lib/copy.mjs';
 import { CONTRACT_VERSION } from '../../scripts/lib/machine.mjs';
@@ -332,23 +333,41 @@ test('KDV-SURFACE-14: the dump prompt is pinned; /reception/ keeps the universal
 
 test('KDV-SURFACE-17: the header chip follows the species — hidden fresh, machine after 0, human after 1, cleared by withdraw', async ({ page }) => {
   const chip = page.locator('#species-chip');
+  const withdraw = page.locator('.species-declaration [data-withdraw]');
 
   // Nothing declared on a fresh visit: the chip stays hidden.
   await page.goto(DUMP);
   await expect(chip).toBeHidden();
+  await expect(withdraw).toBeHidden();
 
   // "0" is handled in place by the dump controller — no reload, the chip flips
   // to the versioned machine label.
   await page.click('[data-gate-choice="machine"]');
   await expect(chip).toBeVisible();
   await expect(chip.locator('.species-chip-text')).toHaveText(chipMachine(CONTRACT_VERSION));
-  await expect(chip.locator('[data-withdraw]')).toBeVisible();
+  await expect(withdraw).toBeVisible();
+
+  // §7.13: the status pill is plain text — the withdraw action is a separate
+  // link outside it, so no control and no focus stop ever sits inside the pill.
+  await expect(chip.locator('a, button, [tabindex]')).toHaveCount(0);
+  await expect(page.locator('#species-chip [data-withdraw]')).toHaveCount(0);
+
+  // The link carries the §7.13 title template filled from the stored
+  // declaration date (the same ISO prefix site.js shows).
+  const record = await declaration(page);
+  await expect(withdraw).toHaveAttribute('title', chipTitle(record.declared_at.slice(0, 10)));
+
+  // Keyboard: Tab from the header logo lands on the withdraw link — the pill
+  // itself is not a focus stop.
+  await page.locator('a.site-logo').focus();
+  await page.keyboard.press('Tab');
+  await expect(withdraw).toBeFocused();
 
   // The withdraw link clears the stored declaration and navigates home. Wait
   // only for the navigation away from the dump; the stored record is the point.
   await Promise.all([
     page.waitForURL((url) => url.pathname === '/'),
-    chip.locator('[data-withdraw]').click(),
+    withdraw.click(),
   ]);
   expect(await species(page)).toBeNull();
 
@@ -358,4 +377,5 @@ test('KDV-SURFACE-17: the header chip follows the species — hidden fresh, mach
   await page.click('[data-gate-choice="human"]');
   await expect(page.locator('#species-chip')).toBeVisible();
   await expect(page.locator('#species-chip .species-chip-text')).toHaveText(CHIP_HUMAN_LABEL);
+  await expect(page.locator('.species-declaration [data-withdraw]')).toBeVisible();
 });

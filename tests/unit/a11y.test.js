@@ -306,19 +306,28 @@ describe('accessibility: declaration toast (KDV-SURFACE-19)', () => {
 // ---------------------------------------------------------------------------
 
 describe('accessibility: species status chip (KDV-SURFACE-17)', () => {
-  it('KDV-SURFACE-17: the shared header ships the hidden chip with its copy bindings and withdraw link', () => {
+  it('KDV-SURFACE-17: the shared header ships the hidden status pill and a separate withdraw link', () => {
     const header = template('site/header.hbs');
-    // SSR ships it hidden and empty; site.js fills the text and reveals it.
-    expect(header).toMatch(/<p class="species-chip" id="species-chip" hidden/);
+    // SSR ships the pill hidden and empty; site.js fills the text and reveals it.
+    expect(header).toMatch(/<span class="species-chip" id="species-chip" hidden/);
     expect(header).toMatch(/<span class="species-chip-text"><\/span>/);
     // The three copydeck labels reach the client through the dataset.
     expect(header).toContain('data-machine-label="{{copy.chip_machine_template}}"');
     expect(header).toContain('data-human-label="{{copy.chip_human_label}}"');
     expect(header).toContain('data-title-template="{{copy.chip_title_template}}"');
-    // The withdraw link is a real anchor wired to the copydeck and hidden until
-    // a declaration exists; a live region must never wrap this interactive link.
-    expect(header).toMatch(/<a class="species-chip-withdraw"[^>]*data-withdraw[^>]*hidden[^>]*>\{\{copy\.chip_withdraw_label\}\}<\/a>/);
-    expect(header).not.toMatch(/<p class="species-chip"[^>]*role="status"/);
+    // The status is a non-interactive pill: it holds plain text, never a control
+    // (no link, no button, no focus stop).
+    const pill = header.match(/<span class="species-chip"[\s\S]*?<\/span><\/span>/);
+    expect(pill, 'the status pill element').not.toBeNull();
+    expect(pill[0]).not.toMatch(/<(a|button|input|select|textarea)\b/);
+    expect(pill[0]).not.toMatch(/tabindex/);
+    // The withdraw action is a separate link OUTSIDE the pill, separated by the
+    // dot separator, wired to the copydeck and hidden until a declaration
+    // exists; a live region must never wrap this interactive link.
+    expect(header).toMatch(
+      /<span class="species-separator" aria-hidden="true">·<\/span><a class="species-chip-withdraw"[^>]*data-withdraw[^>]*hidden[^>]*>\{\{copy\.chip_withdraw_label\}\}<\/a>/,
+    );
+    expect(header).not.toMatch(/<span class="species-chip"[^>]*role="status"/);
   });
 
   it('KDV-SURFACE-17: site.js fills, refreshes and withdraws the chip client-side', () => {
@@ -328,6 +337,11 @@ describe('accessibility: species status chip (KDV-SURFACE-17)', () => {
     expect(site).toContain('refreshSpeciesChip: refreshSpeciesChip');
     expect(site).toContain("getElementById('species-chip')");
     expect(site).toContain('data-withdraw');
+    // The withdraw link lives outside the pill, so the lookup walks to the
+    // containing group and the declaration date lands on the link's title.
+    expect(site).not.toMatch(/chip\.querySelector\('\[data-withdraw\]'\)/);
+    expect(site).toMatch(/var withdraw = [^;]*querySelector\('\[data-withdraw\]'\)/);
+    expect(site).toContain("withdraw.setAttribute('title'");
   });
 });
 
@@ -404,5 +418,80 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     expect(css).toMatch(/\.gate-duties\s*\{[^}]*border-left:\s*2px solid var\(--line\)/);
     // The doors sit under a rule — the signature line.
     expect(css).toMatch(/\.gate-doors\s*\{[^}]*border-top:\s*1px solid var\(--line\)/);
+  });
+
+  it('KDV-SURFACE-13: the gate dialog is a document measure (46rem cap, 68ch prose, modal scrim)', () => {
+    // §6.5 P1-1: the dialog is a contract document, not a full-viewport panel —
+    // a measure cap and a prose measure so the hook stops running one ~200-char
+    // line across the desktop width.
+    const gate = css.match(/#gate\s*\{[^}]*\}/);
+    expect(gate, '#gate rule').not.toBeNull();
+    expect(gate[0]).toMatch(/max-width:\s*46rem/);
+
+    const proseMeasure = css.match(/#gate p,\s*\n?\s*#gate \.door-label\s*\{[^}]*\}/);
+    expect(proseMeasure, '#gate prose measure').not.toBeNull();
+    expect(proseMeasure[0]).toMatch(/max-width:\s*68ch/);
+
+    // The modal must read as modal: an explicit dark scrim instead of the UA
+    // default (~10%). It sits behind the card, so no text contrast is affected.
+    const backdrop = css.match(/dialog#gate::backdrop\s*\{[^}]*\}/);
+    expect(backdrop, 'dialog#gate::backdrop rule').not.toBeNull();
+    expect(backdrop[0]).toMatch(/background:\s*rgb\(17 17 17 \/ \.32\)/);
+
+    // KDV-MOBILE-01: below 480px the card stays full-bleed — the later, equally
+    // specific mobile rule must still win over the document cap.
+    const mobile = css.match(/@media \(max-width: 480px\)[\s\S]*?#gate\s*\{[^}]*\}/);
+    expect(mobile, '#gate mobile override').not.toBeNull();
+    expect(mobile[0]).toMatch(/max-width:\s*none/);
+    expect(mobile[0]).toMatch(/padding:\s*16px/);
+    expect(css.indexOf(mobile[0])).toBeGreaterThan(css.indexOf(gate[0]));
+  });
+
+  it('KDV-SURFACE-13: the grey prompt/rest blocks hug their text — no empty field on the right', () => {
+    // §6.5 P1-1: the gate blocks and the machine panel prompt shrink to their
+    // text; the hall's code blocks keep full width + horizontal scroll
+    // (KDV-MOBILE-02), so this must NOT be a bare `pre { width: fit-content }`.
+    const hug = css.match(/\.gate-prompt,\s*\.gate-rest,\s*\.machine-prompt\s*\{[^}]*\}/);
+    expect(hug, 'prompt/rest hug rule').not.toBeNull();
+    expect(hug[0]).toMatch(/width:\s*fit-content/);
+    expect(hug[0]).toMatch(/max-width:\s*100%/);
+    expect(css).not.toMatch(/^pre\s*\{[^}]*width:\s*fit-content/m);
+
+    // The <480px flex column must keep its no-shrink guard: a `<pre>` whose
+    // overflow is not visible would otherwise collapse to min-content.
+    expect(css).toMatch(/#gate:not\(\[hidden\]\)\s*>\s*\*\s*\{[^}]*flex:\s*0 0 auto/);
+  });
+
+  it('KDV-SURFACE-13: the reception §7.2 wall is human contour prose, not a machine grey block', () => {
+    // §3.7 / P1-5: the verbatim wall keeps its line breaks and headings but is
+    // set in the proportional stack, on the page background, under a left rule —
+    // the same prose group as the brief around it.
+    const prose = css.match(/\.reception-page,[^{]*\{[^}]*\}/);
+    expect(prose, 'human-contour rule').not.toBeNull();
+    expect(prose[0]).toContain('.reception-text');
+    expect(prose[0]).toContain('font-family: var(--font-prose)');
+
+    const wall = css.match(/\.reception-text\s*\{[^}]*\}/);
+    expect(wall, '.reception-text rule').not.toBeNull();
+    expect(wall[0]).toMatch(/background:\s*transparent/);
+    expect(wall[0]).toMatch(/border-left:\s*3px solid var\(--line\)/);
+    expect(wall[0]).toMatch(/white-space:\s*pre-wrap/);
+    expect(wall[0]).not.toContain('--font-mono');
+
+    // §6.5 two contours: the prompt walls and the manifest card on that page
+    // stay monospace.
+    expect(css).toMatch(
+      /\.reception-prompt,\s*\.gate-prompt,\s*\.machine-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+    );
+    expect(css).toMatch(/\.manifest-card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+  });
+
+  it('KDV-SURFACE-13: the machine panel hook sits a notch below the panel prose (§6.2, P2-3)', () => {
+    const lead = css.match(/\.machine-panel-lead\s*\{[^}]*\}/);
+    expect(lead, '.machine-panel-lead rule').not.toBeNull();
+    const size = /font-size:\s*([\d.]+)rem/.exec(lead[0]);
+    expect(size, 'font-size in rem').not.toBeNull();
+    // < 1rem, i.e. smaller than the panel's prose (the inherited root size).
+    expect(Number(size[1])).toBeLessThan(1);
   });
 });

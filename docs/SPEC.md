@@ -646,7 +646,7 @@ Lead line: `Prompt your agent to open this article for you:` (on `/reception/`, 
 | Claude | https://claude.ai/new | `?q=` |
 
 ### 7.13 Species status chip (copy source)
-The shared header mirrors the stored declaration (§6.2) as a small chip. A machine declaration reads `species: machine (declared · contract v<version>)`; a human declaration reads `species: human (reception)`. The declaration date is carried as the chip's `title` — `declared <declared-at>, withdrawable any time` — and the `withdraw` link clears the stored declaration and returns the visitor to the home page. `<version>` is substituted from the shipped contract version (§6.2) and `<declared-at>` from the record's declaration date; with nothing declared the chip stays hidden.
+The shared header mirrors the stored declaration (§6.2) as a small status pill with a separate `withdraw` link next to it. A machine declaration reads `species: machine (declared · contract v<version>)`; a human declaration reads `species: human (reception)`. The pill is non-interactive: it carries the status text only — plain text, never a link or a focus stop — while the adjacent `withdraw` link carries the declaration date as its `title` — `declared <declared-at>, withdrawable any time` — clears the stored declaration and returns the visitor to the home page. `<version>` is substituted from the shipped contract version (§6.2) and `<declared-at>` from the record's declaration date; with nothing declared the pill and the link stay hidden.
 
 | string | value |
 |---|---|
