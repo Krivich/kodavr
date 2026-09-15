@@ -17,6 +17,10 @@
       resets[i].addEventListener('click', function (event) {
         event.preventDefault();
         window.Kodavr.setSpecies('machine');
+        // §7.13: refresh the shared header chip before the navigation kicks in.
+        if (typeof window.Kodavr.refreshSpeciesChip === 'function') {
+          window.Kodavr.refreshSpeciesChip();
+        }
         var href = this.getAttribute('href');
         if (href) window.location.assign(href);
       });

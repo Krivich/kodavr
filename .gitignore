@@ -23,3 +23,7 @@ Thumbs.db
 # A stray byte-identical duplicate of the owner's unpublished article; the kept
 # copy lives in drafts/ (also ignored) until the owner re-publishes it via PR.
 context-machine-setup.md
+
+# Raw source material for the Human Surface v2 work: the owner's feedback dump
+# kept local on purpose; the sanitized public artefact lives in docs/ideas/.
+docs/ideas/feedback.md

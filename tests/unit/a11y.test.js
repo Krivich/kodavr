@@ -166,6 +166,14 @@ describe('accessibility: keyboard and current state (KDV-A11Y-04)', () => {
     expect(page).toMatch(/aria-label="Previous page"/);
     expect(page).toMatch(/aria-label="Next page"/);
   });
+
+  it('the agent lane ships real, labelled controls (KDV-A11Y-04)', () => {
+    const lane = template('site/agent-lane.hbs');
+    expect(lane).toContain('class="copy-prompt"');
+    expect(lane).toContain('class="agent-link"');
+    expect(lane).toContain('target="_blank"');
+    expect(lane).toContain('rel="noopener noreferrer"');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -193,12 +201,13 @@ describe('accessibility: media and sr-only (KDV-A11Y-06)', () => {
 describe('accessibility: accessible gate modal (KDV-A11Y-02)', () => {
   const gate = template('site/gate.hbs');
 
-  it('names the dialog from the §7.1 statement and describes it with the gate text', () => {
+  it('names the dialog from the §7.1 statement and describes it with the gate hook', () => {
     expect(gate).toMatch(/<dialog id="gate"[^>]*hidden/);
     expect(gate).toMatch(/aria-labelledby="gate-title"/);
-    expect(gate).toMatch(/aria-describedby="gate-text"/);
+    expect(gate).toMatch(/aria-describedby="gate-hook"/);
     expect(gate).toContain('id="gate-title"');
-    expect(gate).toMatch(/<pre class="gate-text" id="gate-text">/);
+    expect(gate).toMatch(/<p class="gate-kicker" id="gate-kicker">/);
+    expect(gate).toMatch(/<p class="gate-hook" id="gate-hook">/);
     expect(gate).toContain('{{copy.gate_title}}');
   });
 
@@ -231,7 +240,7 @@ describe('accessibility: no-navigation announcements (KDV-A11Y-03)', () => {
     const dumps = template('dumps.hbs');
     expect(dumps).toContain('data-hall-announcement="{{copy.hall_announcement}}"');
     expect(dumps).toContain('data-reception-announcement="{{copy.reception_announcement}}"');
-    expect(template('site/reception-block.hbs')).toContain(
+    expect(template('site/agent-lane.hbs')).toContain(
       'data-copied-announcement="{{copy.copied_announcement}}"',
     );
     for (const text of [HALL_ANNOUNCEMENT, RECEPTION_ANNOUNCEMENT, COPIED_ANNOUNCEMENT, RECEPTION_TITLE]) {
@@ -243,6 +252,9 @@ describe('accessibility: no-navigation announcements (KDV-A11Y-03)', () => {
     const site = read('static/assets/site.js');
     expect(site).toMatch(/function announce\b/);
     expect(site).toContain('[role="status"]');
+    // §6.2 KDV-SURFACE-19: a dump page carries a second role="status" (the
+    // declaration toast), so the shared region is addressed by its id first.
+    expect(site).toContain("getElementById('a11y-status')");
     expect(site).toContain('data-copied-announcement');
     expect(site).toContain('announce: announce');
 
@@ -251,5 +263,137 @@ describe('accessibility: no-navigation announcements (KDV-A11Y-03)', () => {
     expect(controller).toContain('data-hall-announcement');
     expect(controller).toContain('data-reception-announcement');
     expect(controller).toMatch(/focusMain|getElementById\('main'\)/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// KDV-SURFACE-19: the one-shot declaration toast is its own live region.
+// ---------------------------------------------------------------------------
+
+describe('accessibility: declaration toast (KDV-SURFACE-19)', () => {
+  it('ships a hidden, dataset-wired role="status" region separate from #a11y-status', () => {
+    const dumps = template('dumps.hbs');
+    expect(dumps).toMatch(/<p class="declaration-toast"[^>]*hidden[^>]*role="status"/);
+    expect(dumps).toContain('data-toast-text="{{copy.declaration_toast}}"');
+    // The pre-existing announcement region keeps its id, role and data hooks.
+    expect(dumps).toMatch(/<p id="a11y-status"[^>]*role="status"[^>]*aria-live="polite"/);
+    expect(dumps).toContain('data-hall-announcement="{{copy.hall_announcement}}"');
+  });
+
+  it('declares the toast as a fixed overlay whose motion is disabled under reduced motion', () => {
+    const css = read('static/assets/styles.css');
+    expect(css).toMatch(/\.declaration-toast\s*\{[^}]*position:\s*fixed/);
+    // It must not create horizontal scroll: bounded on both sides.
+    expect(css).toMatch(/\.declaration-toast\s*\{[^}]*left:\s*1rem/);
+    expect(css).toMatch(/\.declaration-toast\s*\{[^}]*right:\s*1rem/);
+    const reduced = css.match(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*?)\n\}/);
+    expect(reduced, 'reduced-motion block').not.toBeNull();
+    expect(reduced[1]).toContain('.declaration-toast');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// KDV-SURFACE-17: the §7.13 species status chip in the shared header.
+// ---------------------------------------------------------------------------
+
+describe('accessibility: species status chip (KDV-SURFACE-17)', () => {
+  it('KDV-SURFACE-17: the shared header ships the hidden chip with its copy bindings and withdraw link', () => {
+    const header = template('site/header.hbs');
+    // SSR ships it hidden and empty; site.js fills the text and reveals it.
+    expect(header).toMatch(/<p class="species-chip" id="species-chip" hidden/);
+    expect(header).toMatch(/<span class="species-chip-text"><\/span>/);
+    // The three copydeck labels reach the client through the dataset.
+    expect(header).toContain('data-machine-label="{{copy.chip_machine_template}}"');
+    expect(header).toContain('data-human-label="{{copy.chip_human_label}}"');
+    expect(header).toContain('data-title-template="{{copy.chip_title_template}}"');
+    // The withdraw link is a real anchor wired to the copydeck and hidden until
+    // a declaration exists; a live region must never wrap this interactive link.
+    expect(header).toMatch(/<a class="species-chip-withdraw"[^>]*data-withdraw[^>]*hidden[^>]*>\{\{copy\.chip_withdraw_label\}\}<\/a>/);
+    expect(header).not.toMatch(/<p class="species-chip"[^>]*role="status"/);
+  });
+
+  it('KDV-SURFACE-17: site.js fills, refreshes and withdraws the chip client-side', () => {
+    const site = read('static/assets/site.js');
+    expect(site).toMatch(/function initSpeciesChip\b/);
+    expect(site).toMatch(/function refreshSpeciesChip\b/);
+    expect(site).toContain('refreshSpeciesChip: refreshSpeciesChip');
+    expect(site).toContain("getElementById('species-chip')");
+    expect(site).toContain('data-withdraw');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// §6.5 visual language: two contours, one building — the human surface is
+// proportional prose, the machine surface stays technical, and the gate dialog
+// is framed as a contract card. No external fonts (KDV-MOBILE-06).
+// ---------------------------------------------------------------------------
+
+describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-SURFACE-13)', () => {
+  const css = read('static/assets/styles.css');
+
+  it('KDV-MOBILE-06: the human contour uses a --font-prose system stack and references no external font', () => {
+    expect(css).toMatch(
+      /--font-prose\s*:\s*system-ui,\s*-apple-system,\s*'Segoe UI',\s*Roboto,\s*Helvetica,\s*Arial,\s*sans-serif/,
+    );
+    // No web font anywhere in the single stylesheet: no @font-face, no CDN, no URL.
+    expect(css).not.toMatch(/@font-face/i);
+    expect(css).not.toMatch(/fonts\.googleapis/i);
+    expect(css).not.toMatch(/https?:\/\//i);
+
+    // The human-contour classes inherit the prose stack from one grouped rule.
+    expect(css).toMatch(/\.reception-page,\s*\n\.reception-brief-section/);
+    const prose = css.match(/\.reception-brief-section[^{]*\{[^}]*\}/);
+    expect(prose, 'human-contour rule').not.toBeNull();
+    expect(prose[0]).toContain('font-family: var(--font-prose)');
+    for (const cls of [
+      '.reception-brief-section',
+      '.reception-brief-heading',
+      '.reception-brief-note',
+      '.reception-brief',
+      '.reception-brief-missing',
+      '.reception-brief-cta',
+      '.reception-brief-report',
+      '.reception-rating',
+    ]) {
+      expect(prose[0], cls).toContain(cls);
+    }
+  });
+
+  it('KDV-SURFACE-13: the machine contour reuses one --font-mono token while the reception prose keeps --font-prose', () => {
+    // §6.5: one source for the mono stack — declared once and never repeated.
+    expect((css.match(/--font-mono\s*:/g) || []).length).toBe(1);
+    expect(css).toMatch(
+      /--font-mono\s*:\s*ui-monospace,\s*SFMono-Regular,\s*Menlo,\s*Consolas,\s*monospace/,
+    );
+    // No literal mono list survives outside the token.
+    expect((css.match(/ui-monospace/g) || []).length).toBe(1);
+
+    // The prompt walls and code blocks reference the token, not a literal list.
+    expect(css).toMatch(
+      /\.reception-prompt,\s*\.gate-prompt,\s*\.machine-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+    );
+    expect(css).toMatch(/^pre\s*\{[^}]*font-family:\s*var\(--font-mono\)/m);
+
+    // The hall body (keeping its KDV-MOBILE-02 clamp) and the manifest card are
+    // machine contour: mono via the same token.
+    expect(css).toMatch(/\.dump-body\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(css).toMatch(/\.dump-body\s*\{[^}]*clamp\(1rem, 2\.5vw, 1\.125rem\)/);
+    expect(css).toMatch(/\.manifest-card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+
+    // The human contour stays proportional: the reception prose rule keeps the
+    // prose token and never picks up the mono one.
+    const prose = css.match(/\.reception-page,[^{]*\{[^}]*\}/);
+    expect(prose, 'human-contour rule').not.toBeNull();
+    expect(prose[0]).toContain('font-family: var(--font-prose)');
+    expect(prose[0]).not.toContain('--font-mono');
+  });
+
+  it('KDV-SURFACE-13: the gate dialog is framed as a contract card with a clause list and a signature rule', () => {
+    // A document frame around the dialog content.
+    expect(css).toMatch(/#gate\s*\{[^}]*border:\s*1px solid var\(--line\)/);
+    // The duties read as a clause — a left rule with indented text.
+    expect(css).toMatch(/\.gate-duties\s*\{[^}]*border-left:\s*2px solid var\(--line\)/);
+    // The 0/1 choices sit under a rule — the signature line.
+    expect(css).toMatch(/\.gate-choices\s*\{[^}]*border-top:\s*1px solid var\(--line\)/);
   });
 });

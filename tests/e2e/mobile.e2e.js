@@ -81,7 +81,7 @@ test.describe('mobile 375x667', () => {
     await expect(manifest).toContainText('Trust level');
   });
 
-  test('KDV-MOBILE-04: the reception prompt is 13px monospace and the copy button is full-width with a Copied state', async ({ page }) => {
+  test('KDV-MOBILE-04: the reception prompt is 13px monospace and the copy control is a lane chip with a Copied state', async ({ page }) => {
     await page.goto(DUMP);
     await page.click('[data-gate-choice="human"]');
     await expect(page.locator('.reception-block')).toBeVisible();
@@ -90,15 +90,48 @@ test.describe('mobile 375x667', () => {
     expect(await prompt.evaluate((el) => getComputedStyle(el).fontSize)).toBe('13px');
     expect((await prompt.evaluate((el) => getComputedStyle(el).fontFamily)).toLowerCase()).toContain('monospace');
 
-    const button = page.locator('.copy-prompt');
+    // §7.12: the copy control is a chip in the jump-links row — never a
+    // full-width banner — and shares the jump links' chrome.
+    const button = page.locator('.reception-block .copy-prompt');
     await expect(button).toBeVisible();
+    expect(await button.evaluate((el) => el.closest('.agent-links') !== null)).toBe(true);
     const buttonBox = await button.boundingBox();
+    expect(buttonBox.width).toBeGreaterThanOrEqual(44);
+    expect(buttonBox.height).toBeGreaterThanOrEqual(44);
+    expect(buttonBox.width).toBeLessThan((await prompt.boundingBox()).width);
+
+    const chrome = (el) => {
+      const style = getComputedStyle(el);
+      return [style.borderTopWidth, style.borderTopColor, style.borderTopLeftRadius, style.minHeight];
+    };
+    expect(await button.evaluate(chrome)).toEqual(
+      await page.locator('.reception-block .agent-link').first().evaluate(chrome),
+    );
+
+    // §7.12: the prompt renders below the lane on this surface.
+    const laneBox = await page.locator('.reception-block .agent-lane').boundingBox();
     const promptBox = await prompt.boundingBox();
-    // Full-width: the button matches the prompt's content width.
-    expect(Math.abs(buttonBox.width - promptBox.width)).toBeLessThanOrEqual(2);
+    expect(promptBox.y).toBeGreaterThanOrEqual(laneBox.y + laneBox.height - 1);
 
     await button.click();
     await expect(button).toHaveText(COPIED_LABEL);
+  });
+
+  test('KDV-MOBILE-09: the agent lane wraps with no horizontal scroll and every control is a >= 44px target', async ({ page }) => {
+    await page.goto(DUMP);
+    await page.click('[data-gate-choice="human"]');
+    await expect(page.locator('.reception-block .agent-lane')).toBeVisible();
+
+    expect(await noHorizontalScroll(page)).toBe(true);
+
+    const controls = page.locator('.reception-block .copy-prompt, .reception-block .agent-link');
+    const count = await controls.count();
+    expect(count).toBe(5);
+    for (let i = 0; i < count; i += 1) {
+      const box = await controls.nth(i).boundingBox();
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+    }
   });
 
   test('KDV-MOBILE-08: viewport-fit, touch-action, breakpoint tokens, reduced-motion CSS and the post-gate line', async ({ page }) => {

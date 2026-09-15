@@ -3,10 +3,34 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
   GATE_TEXT,
+  GATE_REST,
   GATE_BUTTONS,
+  GATE_TITLE,
+  GATE_KICKER,
+  GATE_HOOK,
+  GATE_LANE_BLOCK,
+  GATE_PROMPT_SLOT,
+  GATE_DUTIES,
+  GATE_DUTIES_BLOCK,
+  GATE_DUTIES_LEAD,
+  GATE_CHOICES_BLOCK,
+  GATE_MACHINE_LINE,
+  GATE_HUMAN_LINE,
+  DECLARATION_TOAST,
+  RECEPTION_RATING,
   RECEPTION_TEXT,
-  RECEPTION_COPY_LABEL,
+  RECEPTION_TITLE,
+  RECEPTION_WALL,
+  BRIEF_HEADING,
+  BRIEF_NOTE,
+  BRIEF_SLOT,
+  BRIEF_CTA,
+  BRIEF_REPORT,
+  BRIEF_FALLBACK,
+  BRIEF_BLOCK,
+  LANE_COPY_LABEL,
   FOOTER_TEXT,
+  FOOTER_REPORT_LABEL,
   PROMPT_TEXT,
   README_INTRO_TEXT,
   NOT_FOUND_TEXT,
@@ -16,7 +40,20 @@ import {
   DUMP_LEAD,
   DUMP_PROMPT,
   DUMP_TAIL,
+  AGENT_LINKS,
+  AGENT_LANE_LEAD,
+  AGENT_LANE_LEAD_KODAVR,
+  RESET_HUMAN_LABEL,
+  CHIP_MACHINE_TEMPLATE,
+  CHIP_HUMAN_LABEL,
+  CHIP_TITLE_TEMPLATE,
+  CHIP_WITHDRAW_LABEL,
+  chipMachine,
+  chipTitle,
+  agentLinks,
+  dumpPrompt,
 } from '../../scripts/lib/copy.mjs';
+import { AGENT_DUTIES } from '../../scripts/lib/machine.mjs';
 import { buildRouteDatasets } from '../../scripts/lib/pages.mjs';
 
 const SPEC = readFileSync(
@@ -38,29 +75,80 @@ function blockFor(section) {
 describe('copydeck', () => {
   it('KDV-COPY-01: gate text is verbatim from §7.1 and exposes the 0/1 buttons', () => {
     expect(GATE_TEXT).toBe(blockFor('7.1'));
+    // §7.1 v2: the visible body is the eight blocks, blank-line separated — the
+    // templates render kicker/title/hook/lane/prompt/duties/choices on the first
+    // screen and the long declaration (.gate-rest) below the fold.
+    expect(GATE_TEXT).toBe(
+      [
+        GATE_KICKER,
+        GATE_TITLE,
+        GATE_HOOK,
+        GATE_LANE_BLOCK,
+        GATE_PROMPT_SLOT,
+        GATE_DUTIES_BLOCK,
+        GATE_CHOICES_BLOCK,
+        GATE_REST,
+      ].join('\n\n'),
+    );
+    // §7.1 v2: the heading is the declaration itself; the standard CAPTCHA
+    // phrase is demoted to the muted kicker above it.
+    expect(GATE_TITLE).toBe('DECLARATION BEFORE ENTRY');
+    expect(GATE_KICKER).toBe('verifying that you are not human');
+    // §7.1: the duties block and its four tokens have one source (machine.mjs),
+    // so the gate can never drift from the discovery document.
+    expect(GATE_DUTIES).toBe(AGENT_DUTIES.join(' · '));
+    expect(GATE_DUTIES_BLOCK).toBe(`${GATE_DUTIES_LEAD}\n${GATE_DUTIES}`);
     expect(GATE_BUTTONS.map((b) => b.label)).toEqual(['0', '1']);
     for (const button of GATE_BUTTONS) expect(GATE_TEXT).toContain(button.text);
+    // The gate no longer ships a literal fake key affordance (§7.12).
+    expect(GATE_TEXT).not.toContain('[ 0 ]');
+    expect(GATE_TEXT).not.toContain('[ 1 ]');
   });
 
-  it('KDV-COPY-02: reception text is verbatim from §7.2 and carries the §7.4 prompt', () => {
+  it('KDV-COPY-02 + KDV-SURFACE-16: reception text is verbatim from §7.2, composes the brief tier and renders the prompt once per surface', () => {
     expect(RECEPTION_TEXT).toBe(blockFor('7.2'));
-
-    const lines = blockFor('7.2').split('\n');
-    const separators = lines
-      .map((line, i) => (line.includes('────') ? i : -1))
-      .filter((i) => i !== -1);
-    expect(separators).toHaveLength(2);
-    const prompt = lines
-      .slice(separators[0] + 1, separators[1])
-      .map((line) => line.replace(/^ {3}/, ''))
-      .join('\n');
-
-    expect(PROMPT_TEXT).toBe(prompt);
-    expect(RECEPTION_COPY_LABEL).toBe('copy');
+    // §7.2 v2: one composition, three separately-rendered parts — the wall, the
+    // brief tier and the 18+ rating — so each reaches the screen exactly once.
+    expect(RECEPTION_TEXT).toBe([RECEPTION_WALL, BRIEF_BLOCK, RECEPTION_RATING].join('\n\n'));
+    expect(RECEPTION_RATING).toBe('All content on the platform is rated 18+.');
+    // The wall is the v1 text: it never carries the brief tier or the rating,
+    // which the block renders as their own elements (no duplication).
+    expect(RECEPTION_WALL.startsWith(RECEPTION_TITLE)).toBe(true);
+    for (const value of [BRIEF_BLOCK, BRIEF_HEADING, BRIEF_NOTE, BRIEF_CTA, RECEPTION_RATING]) {
+      expect(RECEPTION_WALL, `wall must not carry "${value}"`).not.toContain(value);
+    }
+    // §7.2 v2: the brief tier is the tail of the composition, built from its
+    // own parts so the block and the fence can never drift apart.
+    expect(BRIEF_BLOCK).toBe(
+      [BRIEF_HEADING, BRIEF_NOTE, BRIEF_SLOT, BRIEF_CTA, BRIEF_REPORT].join('\n'),
+    );
+    expect(RECEPTION_TEXT).toContain(BRIEF_BLOCK);
+    expect(RECEPTION_TEXT.endsWith(`\n\n${BRIEF_BLOCK}\n\n${RECEPTION_RATING}`)).toBe(true);
+    expect(RECEPTION_TITLE).toBe(
+      'YOU ARE HUMAN. THIS IS NOT A DIAGNOSIS, IT IS AN ACCESS RESTRICTION',
+    );
+    // §7.2 v2 brief constants, pinned to their literal value and the spec text.
+    expect(BRIEF_HEADING).toBe('NO AGENT AT HAND?');
+    expect(BRIEF_SLOT).toBe('<brief — the dump summary.md, rendered here>');
+    expect(BRIEF_FALLBACK).toBe('brief not attached for this dump — manifest below');
+    for (const value of [BRIEF_HEADING, BRIEF_NOTE, BRIEF_SLOT, BRIEF_CTA, BRIEF_REPORT]) {
+      expect(RECEPTION_TEXT, `§7.2 carries "${value}"`).toContain(value);
+    }
+    // The old stand-alone manifest sentence folded into the brief tier.
+    expect(RECEPTION_TEXT).not.toContain('No agent at hand? The manifest of this dump is below');
+    // The prompt is its own block (§7.4 / §7.11), never embedded in §7.2.
+    expect(RECEPTION_TEXT).not.toContain(PROMPT_TEXT);
+    expect(PROMPT_TEXT).toBe(blockFor('7.4'));
+    expect(LANE_COPY_LABEL).toBe('Or copy & paste it yourself');
   });
 
-  it('KDV-COPY-03: footer text is verbatim from §7.3', () => {
-    expect(FOOTER_TEXT).toBe(blockFor('7.3'));
+  it('KDV-COPY-03: footer text is verbatim from §7.3 and carries the report line', () => {
+    // The first two fence lines are the two footer lines; the third is the
+    // §7.3/§9 report channel, whose `<issues-url>` the controller substitutes.
+    const fence = blockFor('7.3').split('\n');
+    expect(fence.slice(0, 2).join('\n')).toBe(FOOTER_TEXT);
+    expect(fence[2]).toBe(`${FOOTER_REPORT_LABEL}: <issues-url>`);
+    expect(FOOTER_REPORT_LABEL).toBe('Report illegal content or personal data');
   });
 
   it('KDV-COPY-04: README intro text is verbatim from §7.5', () => {
@@ -96,5 +184,49 @@ describe('copydeck', () => {
       );
       expect(template).toContain('{{what_is_a_dump.prompt}}');
     }
+  });
+
+  it('KDV-COPY-09 + KDV-SURFACE-14: the agent lane is one copydeck source and the dump prompt is pinned', () => {
+    expect(AGENT_LINKS.map((a) => a.id)).toEqual(['perplexity', 'grok', 'chatgpt', 'claude']);
+    expect(AGENT_LINKS.map((a) => a.label)).toEqual(['Perplexity', 'Grok', 'ChatGPT', 'Claude']);
+    expect(AGENT_LANE_LEAD).toBe('Prompt your agent to open this article for you:');
+    expect(AGENT_LANE_LEAD_KODAVR).toBe('Prompt your agent to read Kodavr for you:');
+
+    const links = agentLinks('hello world');
+    expect(links[0].href).toBe('https://www.perplexity.ai/search?q=hello%20world');
+    expect(links[1].href).toBe('https://grok.com/?q=hello%20world');
+    expect(links[2].href).toBe('https://chatgpt.com/?q=hello%20world');
+    expect(links[3].href).toBe('https://claude.ai/new?q=hello%20world');
+
+    const spec = blockFor('7.11');
+    expect(dumpPrompt('<dump>', '<index>')).toBe(
+      spec.replaceAll('<dump-url>', '<dump>').replaceAll('<index-url>', '<index>'),
+    );
+  });
+
+  it('KDV-SURFACE-15: the machine-panel reset label is the human counterpart of the reception reset', () => {
+    expect(RESET_HUMAN_LABEL).toBe('I changed my mind, I am human');
+  });
+
+  it('KDV-SURFACE-17: the species-chip copydeck matches SPEC §7.13 and substitutes by placeholder', () => {
+    // §7.13 is a prose + table section (like §7.12), so the constants are pinned
+    // to their literal values and to the spec's own text, not to a fenced block.
+    expect(CHIP_MACHINE_TEMPLATE).toBe('species: machine (declared · contract v<version>)');
+    expect(CHIP_HUMAN_LABEL).toBe('species: human (reception)');
+    expect(CHIP_TITLE_TEMPLATE).toBe('declared <declared-at>, withdrawable any time');
+    expect(CHIP_WITHDRAW_LABEL).toBe('withdraw');
+
+    expect(chipMachine('1.0')).toBe('species: machine (declared · contract v1.0)');
+    expect(chipTitle('2026-09-15')).toBe('declared 2026-09-15, withdrawable any time');
+
+    for (const value of [
+      CHIP_MACHINE_TEMPLATE,
+      CHIP_HUMAN_LABEL,
+      CHIP_TITLE_TEMPLATE,
+      CHIP_WITHDRAW_LABEL,
+    ]) {
+      expect(SPEC, `§7.13 carries "${value}"`).toContain(value);
+    }
+    expect(SPEC).toContain('### 7.13');
   });
 });

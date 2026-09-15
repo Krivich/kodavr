@@ -115,11 +115,21 @@ export async function readDumps(contentDir) {
       }
     }
 
+    // §A11/§6.3: summary.md is the author's brief for a human stranger. Read its
+    // markdown (when the optional layer is on disk) so the dataset can carry the
+    // rendered brief. Absent -> null; the dataset value stays falsy.
+    let summary = null;
+    const summaryPath = join(dir, 'summary.md');
+    if (presentFiles.has('summary.md')) {
+      summary = await readFile(summaryPath, 'utf8');
+    }
+
     dumps.push({
       slug: manifest.slug || entry.name,
       dir,
       manifest,
       raw,
+      summary,
       layers: buildLayers(presentFiles),
     });
   }
@@ -160,8 +170,24 @@ function isoTimestamp(value) {
   return /T/.test(value) ? value : `${value}T00:00:00Z`;
 }
 
+// §6.3/KDV-SURFACE-10: the author's brief rides inside the reception block,
+// below the block's own outline levels — the `sr-only` <h2 id="reception-title">
+// and the brief section's <h3 class="reception-brief-heading">. An author's
+// summary.md must never be able to break the page outline, so its headings are
+// demoted below those levels: h1->h4, h2->h5, h3->h6 (deeper levels are already
+// safe and are left as they are). The markdown renderer is the only producer of
+// this HTML, so a small transform over its sanitized output is the whole job.
+const BRIEF_HEADING_DEMOTION = { h1: 'h4', h2: 'h5', h3: 'h6' };
+
+function demoteBriefHeadings(html) {
+  return html.replace(/<(\/?)h([1-6])\b/g, (match, slash, level) => {
+    const demoted = BRIEF_HEADING_DEMOTION[`h${level}`];
+    return demoted ? `<${slash}${demoted}` : match;
+  });
+}
+
 export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repoUrl = null, builtAt = null } = {}) {
-  const { slug, manifest, raw } = dump;
+  const { slug, manifest, raw, summary } = dump;
   const base = String(baseUrl ?? '').replace(/\/+$/, '');
   // §5.6/§9: a withdrawn dump keeps its URL and manifest, but its body is
   // replaced by a stub stating the reason. The manifest card is a separate
@@ -267,8 +293,16 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     logo_svg: logo,
     // §6.6: a dump is not one of the primary-nav routes, so no item is current.
     nav: buildNav(null),
-    copy: dumpCopySlices(),
+    // §7.11: a dump page pins the prompt to its own canonical URL; `/reception/`
+    // keeps the universal §7.4 prompt.
+    copy: dumpCopySlices({ dumpUrl: canonical, indexUrl: `${base}/index.json` }),
     body_has_title,
     body_html,
+    // §6.3: the optional `summary.md` layer is the author's brief for a human
+    // stranger, rendered through the same sanitized markdown pipeline as the
+    // body, then demoted so it can never outrank the reception block's own
+    // headings (§6.3/KDV-SURFACE-10). No layer on disk -> null, so the template
+    // can tell the cases apart. `body_html` keeps the raw renderer output.
+    brief_html: summary ? demoteBriefHeadings(renderMarkdown(summary)) : null,
   };
 }

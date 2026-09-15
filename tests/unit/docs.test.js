@@ -37,6 +37,7 @@ const CONTRIBUTING_RULES = [
   'Release', //               9  heavy files in a Release
   'auto-merge', //            10 first PR manual, then owner-granted auto-merge
   'merged PR', //             11 attribution from the merged PR
+  'summary.md', //            12 human brief layer attached when an agent wrote it
 ];
 
 const ROOT_FILES = [
@@ -64,6 +65,19 @@ describe('project-facing docs', () => {
 
     const template = read('.github/PULL_REQUEST_TEMPLATE.md').replace(/\n$/, '');
     expect(template).toBe(blockFor('7.8'));
+  });
+
+  it('KDV-SURFACE-18: the risk/takedown Issue template exists and covers the takedown fields', () => {
+    const file = '.github/ISSUE_TEMPLATE/risk-report.md';
+    expect(exists(file), `${file} exists`).toBe(true);
+    const template = read(file);
+    // Standard GitHub issue-template front-matter.
+    expect(template).toMatch(/^---\nname: .+\nabout: .+\ntitle: .+\nlabels: .+\n---\n/);
+    // The takedown fields: the dump slug or URL, the reason (illegal content or
+    // personal data) and an optional contact.
+    expect(template).toContain('slug or URL');
+    expect(template).toContain('illegal content or personal data');
+    expect(template).toContain('Contact (optional)');
   });
 
   it('KDV-STRUCT-08: root carries the §3 docs and licence files', () => {

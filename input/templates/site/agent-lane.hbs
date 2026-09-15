@@ -1,0 +1,15 @@
+{{!-- Call at column 0. Human fast lane: open the prompt in an agent, or take it
+     along. `copyTarget` is the id of the prompt block on this surface — the gate
+     dialog passes "gate-prompt", the reception block "reception-prompt".
+     §7.12: the agent jump links come first (one press = a prefilled chat); the
+     copy control is the last, fallback chip. The prompt renders below the lane. --}}
+<div class="agent-lane">
+  <p class="agent-lane-lead">{{copy.lane_lead}}</p>
+  <ul class="agent-links">
+  {{#each copy.agent_links}}
+    <li><a class="agent-link" href="{{href}}" target="_blank" rel="noopener noreferrer" data-copy-target="{{../copyTarget}}" data-copy-share="off" data-copied-label="{{@root.copy.copied_label}}" data-copied-announcement="{{@root.copy.copied_announcement}}">{{label}}</a></li>
+  {{/each}}
+    <li><button type="button" class="copy-prompt" data-copy-target="{{copyTarget}}" data-copied-label="{{copy.copied_label}}" data-copied-announcement="{{copy.copied_announcement}}">{{copy.copy_label}}</button></li>
+  </ul>
+  <p class="agent-lane-hint">{{copy.agent_lane_hint}}</p>
+</div>

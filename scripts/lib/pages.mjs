@@ -16,7 +16,8 @@
  *   SITE_NAV — the primary navigation links
  *   buildNav — the nav array for a page whose path is current
  *   buildRouteDatasets — one dataset per layout route
- *   dumpCopySlices — the §7.10 copydeck slices a dump page needs
+ *   dumpCopySlices — the §7.1–7.12 copydeck slices a dump page needs
+ *   FOOTER_REPORT_URL — the §7.3 report link (new Issue, risk template preselected)
  *   readLogoSvg — reads the trusted wordmark for inlining
  * CONSUMES:
  *   ./copy.mjs — every human string (single source of truth)
@@ -37,28 +38,50 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   FOOTER_TEXT,
-  GATE_TEXT,
+  FOOTER_REPORT_LABEL,
   GATE_TITLE,
+  GATE_KICKER,
+  GATE_HOOK,
+  GATE_REST,
+  GATE_DUTIES_LEAD,
+  GATE_DUTIES,
   GATE_MACHINE_LABEL,
   GATE_HUMAN_LABEL,
-  RECEPTION_TEXT,
+  RECEPTION_RATING,
   RECEPTION_TITLE,
+  RECEPTION_WALL,
+  BRIEF_HEADING,
+  BRIEF_NOTE,
+  BRIEF_CTA,
+  BRIEF_REPORT,
+  BRIEF_FALLBACK,
   PROMPT_TEXT,
-  RECEPTION_COPY_LABEL,
+  LANE_COPY_LABEL,
   NOT_FOUND_TEXT,
   POST_GATE_LINE,
   COPIED_LABEL,
+  CHIP_MACHINE_TEMPLATE,
+  CHIP_HUMAN_LABEL,
+  CHIP_TITLE_TEMPLATE,
+  CHIP_WITHDRAW_LABEL,
   COPIED_ANNOUNCEMENT,
+  DECLARATION_TOAST,
   HALL_ANNOUNCEMENT,
   RECEPTION_ANNOUNCEMENT,
+  RESET_HUMAN_LABEL,
   RESET_LABEL,
   DISCUSS_LABEL,
   DUMP_DEFINITION,
   DUMP_LEAD,
   DUMP_PROMPT,
   DUMP_TAIL,
+  AGENT_LANE_LEAD,
+  AGENT_LANE_LEAD_KODAVR,
+  AGENT_LANE_HINT,
+  agentLinks,
+  dumpPrompt,
 } from './copy.mjs';
-import { buildIndexEntry, buildWellKnown } from './machine.mjs';
+import { ISSUES_URL, CONTRACT_VERSION, buildIndexEntry, buildWellKnown } from './machine.mjs';
 import {
   jsonldWebsite,
   jsonldWebpage,
@@ -106,6 +129,11 @@ export function buildNav(currentHref) {
   return SITE_NAV.map((item) => ({ ...item, current: item.href === currentHref }));
 }
 
+// §7.3/§9: the footer's visible report/takedown channel. GitHub's new-Issue form
+// with the risk template preselected — reachable in one click from every page;
+// the label is copy.mjs's one truth (`risk-report.md` matches the template file).
+export const FOOTER_REPORT_URL = `${ISSUES_URL}/new?template=risk-report.md`;
+
 // §6.4: one social card for the whole site — a real 1200x630 PNG, published
 // from `static/assets/og-default.png` (regenerate with `npm run og-image`).
 // Exported so the dump dataset and the head partial cannot drift from it.
@@ -140,6 +168,16 @@ export async function readLogoSvg(staticDir) {
 function normalizeBaseUrl(baseUrl) {
   return String(baseUrl ?? '').replace(/\/+$/, '');
 }
+
+// §7.13: the header species status chip's copydeck strings. They ride with
+// `copy.footer` so every route — including the 404 and the dump hall — renders
+// the same hidden skeleton from the one source in copy.mjs.
+const CHIP_COPY = {
+  chip_machine_template: CHIP_MACHINE_TEMPLATE,
+  chip_human_label: CHIP_HUMAN_LABEL,
+  chip_title_template: CHIP_TITLE_TEMPLATE,
+  chip_withdraw_label: CHIP_WITHDRAW_LABEL,
+};
 
 function commonPage({
   base,
@@ -181,7 +219,16 @@ function commonPage({
     logo_svg: logo,
     // §6.6: landmarks/nav are shared markup; the data says which route is current.
     nav: buildNav(currentHref),
-    copy: { footer: FOOTER_TEXT },
+    copy: {
+      // §6.2: the shipped contract version reaches head.hbs; site.js compares it
+      // with the stored declaration record and re-asks after a bump.
+      contract_version: CONTRACT_VERSION,
+      // §7.13: the header chip's copydeck strings, on every route.
+      ...CHIP_COPY,
+      footer: FOOTER_TEXT,
+      footer_report_label: FOOTER_REPORT_LABEL,
+      footer_report_url: FOOTER_REPORT_URL,
+    },
     ...(withJsonLd ? { jsonld: serializeJsonLd([website, webpage, ...extraGraph]) } : {}),
   };
 }
@@ -249,11 +296,28 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
       logo,
     }),
     copy: {
+      contract_version: CONTRACT_VERSION,
+      ...CHIP_COPY,
       footer: FOOTER_TEXT,
-      reception: RECEPTION_TEXT,
+      footer_report_label: FOOTER_REPORT_LABEL,
+      footer_report_url: FOOTER_REPORT_URL,
+      // §7.2 v2: the wall and the rating are separate from the brief tier, so
+      // the template renders each exactly once (no text on screen twice).
+      reception_wall: RECEPTION_WALL,
+      reception_rating: RECEPTION_RATING,
       reception_title: RECEPTION_TITLE,
+      // §6.3/§7.2 v2: the reception block's third tier. /reception/ has no dump,
+      // so `brief_html` is absent and the fallback is what shows (expected).
+      brief_heading: BRIEF_HEADING,
+      brief_note: BRIEF_NOTE,
+      brief_cta: BRIEF_CTA,
+      brief_report: BRIEF_REPORT,
+      brief_fallback: BRIEF_FALLBACK,
       prompt: PROMPT_TEXT,
-      copy_label: RECEPTION_COPY_LABEL,
+      lane_lead: AGENT_LANE_LEAD_KODAVR,
+      agent_lane_hint: AGENT_LANE_HINT,
+      agent_links: agentLinks(PROMPT_TEXT),
+      copy_label: LANE_COPY_LABEL,
       copied_label: COPIED_LABEL,
       copied_announcement: COPIED_ANNOUNCEMENT,
       reset_label: RESET_LABEL,
@@ -298,7 +362,14 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
       robots: 'noindex,follow',
       withJsonLd: false,
     }),
-    copy: { footer: FOOTER_TEXT, notFound: NOT_FOUND_TEXT },
+    copy: {
+      contract_version: CONTRACT_VERSION,
+      ...CHIP_COPY,
+      footer: FOOTER_TEXT,
+      footer_report_label: FOOTER_REPORT_LABEL,
+      footer_report_url: FOOTER_REPORT_URL,
+      notFound: NOT_FOUND_TEXT,
+    },
   };
 
   return { home, reception, about, contribute, notfound };
@@ -306,28 +377,66 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
 
 /**
  * Copy slices shared by dump pages: the §7 texts the hall must carry verbatim.
+ * §7.11: with a dump + index URL the prompt is pinned to the shared dump;
+ * without them it falls back to the universal §7.4 prompt.
  */
-export function dumpCopySlices() {
+export function dumpCopySlices({ dumpUrl = null, indexUrl = null } = {}) {
+  const prompt = dumpUrl && indexUrl ? dumpPrompt(dumpUrl, indexUrl) : PROMPT_TEXT;
   return {
-    // §6.6: the gate modal's accessible name/description and descriptive choice
-    // names; the visible §7.1 digits and prose stay verbatim.
-    gate: GATE_TEXT,
+    // §6.2: the shipped contract version reaches head.hbs on dump pages too;
+    // site.js compares it with the stored declaration record and re-asks on a bump.
+    contract_version: CONTRACT_VERSION,
+    // §7.13: the dump hall's header chip uses the same copydeck skeleton.
+    ...CHIP_COPY,
+    // §6.6: the gate modal's accessible name/description; the visible §7.1 v2
+    // prose stays verbatim — kicker, H1, hook and the duties line lead the
+    // first screen, the full declaration sits below the fold. The machine panel
+    // leads with the same hook.
+    gate_kicker: GATE_KICKER,
     gate_title: GATE_TITLE,
+    gate_hook: GATE_HOOK,
+    gate_duties_lead: GATE_DUTIES_LEAD,
+    gate_duties: GATE_DUTIES,
+    gate_rest: GATE_REST,
     gate_machine_label: GATE_MACHINE_LABEL,
     gate_human_label: GATE_HUMAN_LABEL,
-    reception: RECEPTION_TEXT,
+    // §7.2 v2: the wall, the brief tier and the 18+ rating render as separate
+    // elements, so the reception block never prints any line twice.
+    reception_wall: RECEPTION_WALL,
+    reception_rating: RECEPTION_RATING,
     reception_title: RECEPTION_TITLE,
-    prompt: PROMPT_TEXT,
-    copy_label: RECEPTION_COPY_LABEL,
+    // §6.3/§7.2 v2: the reception block's brief tier — the rendered `summary.md`
+    // (`brief_html`, wired by the dump dataset, falsy without the layer) is the
+    // real payload; these are the surrounding heading/note/CTA/report and the
+    // honest fallback for the missing layer.
+    brief_heading: BRIEF_HEADING,
+    brief_note: BRIEF_NOTE,
+    brief_cta: BRIEF_CTA,
+    brief_report: BRIEF_REPORT,
+    brief_fallback: BRIEF_FALLBACK,
+    prompt,
+    // §7.12: the human fast lane renders once per surface (the gate dialog and
+    // the reception block each pass their own copy target).
+    lane_lead: AGENT_LANE_LEAD,
+    agent_lane_hint: AGENT_LANE_HINT,
+    agent_links: agentLinks(prompt),
+    copy_label: LANE_COPY_LABEL,
     copied_label: COPIED_LABEL,
     copied_announcement: COPIED_ANNOUNCEMENT,
     // §6.6 announcements for the SSR role="status" region.
     hall_announcement: HALL_ANNOUNCEMENT,
     reception_announcement: RECEPTION_ANNOUNCEMENT,
     reset_label: RESET_LABEL,
+    // §6.2: the machine panel's reset link (hall header, machine-declared).
+    reset_human_label: RESET_HUMAN_LABEL,
     post_gate_line: POST_GATE_LINE,
+    // §6.2/§6.6: the one-shot declaration toast, shown when the visitor enters
+    // the hall by pressing "0". The text reaches the DOM through the dataset.
+    declaration_toast: DECLARATION_TOAST,
     discuss_label: DISCUSS_LABEL,
     footer: FOOTER_TEXT,
+    footer_report_label: FOOTER_REPORT_LABEL,
+    footer_report_url: FOOTER_REPORT_URL,
     labels: MANIFEST_LABELS,
   };
 }

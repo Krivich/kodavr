@@ -62,3 +62,8 @@ targeted: `Grep` by keywords/ID → `Read` of the needed region (`offset/limit`)
 7. The status in the file is updated in the same commit as the test.
 8. When adding — update the summary table at the end of the base.
 9. A refactoring that changes behavior covers existing IDs; new requirements — new IDs.
+10. **Draft until the first commit (the one window where rule 1 is relaxed).** An uncommitted
+    change is a draft, not a log: reworking the same concern edits its row in place (no new ID);
+    a requirement that died while polishing is deleted together with its tests — `DEPRECATED` is
+    for contracts that already shipped; a genuinely new concern appends a new `NN`. An ID that
+    never left the working tree may be reused; once the change is committed it is frozen.

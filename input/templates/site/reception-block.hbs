@@ -3,9 +3,21 @@
      /reception/ page passes reveal=true, where reception IS the page content. --}}
 <section class="reception-block"{{#unless reveal}} hidden{{/unless}} aria-labelledby="reception-title">
   <h2 id="reception-title" class="sr-only">{{copy.reception_title}}</h2>
-  <pre class="reception-text">{{copy.reception}}</pre>
+{{> site/agent-lane copyTarget="reception-prompt"}}
   <pre class="reception-prompt" id="reception-prompt">{{copy.prompt}}</pre>
-  <button type="button" class="copy-prompt" data-copy-target="reception-prompt" data-copied-label="{{copy.copied_label}}" data-copied-announcement="{{copy.copied_announcement}}">{{copy.copy_label}}</button>
+  <pre class="reception-text">{{copy.reception_wall}}</pre>
+  {{!-- §6.3/§7.2 v2: the third tier — the author's agent brief for a human
+       stranger. The optional summary.md layer arrives as `brief_html` (rendered
+       HTML, already sanitized); without it the block tells the truth instead of
+       promising a brief that is not there. --}}
+  <div class="reception-brief-section">
+    <h3 class="reception-brief-heading">{{copy.brief_heading}}</h3>
+    <p class="reception-brief-note">{{copy.brief_note}}</p>
+    <div class="reception-brief">{{#if brief_html}}{{{brief_html}}}{{else}}<p class="reception-brief-missing">{{copy.brief_fallback}}</p>{{/if}}</div>
+    <p class="reception-brief-cta">{{copy.brief_cta}}</p>
+    <p class="reception-brief-report">{{copy.brief_report}}</p>
+  </div>
+  <p class="reception-rating">{{copy.reception_rating}}</p>
 {{#unless reveal}}
   <p class="reset-link-wrap"><a href="/" class="reset-link" data-reset-machine>{{copy.reset_label}}</a></p>
 {{/unless}}

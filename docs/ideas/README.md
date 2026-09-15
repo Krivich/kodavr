@@ -14,7 +14,9 @@ the Status tail, anti-patterns).
 
 ## Active
 
-<empty for now — a list of active ideas with their status>
+- [human-surface-idea.md](human-surface-idea.md) — **retrospect** — seven human-surface
+  branches, all grounded and minted in one batch (KDV-SURFACE-04/07/13/16/17/18/19,
+  KDV-COPY-01/02/03/09, KDV-STRUCT-02, KDV-A11Y-02/03, KDV-MOBILE-06); no open branches.
 
 ## The lifecycle (mindmap → code → registry)
 

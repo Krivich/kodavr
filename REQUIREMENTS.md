@@ -60,26 +60,34 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-01**: The MVP routes `/`, `/dumps/<slug>/`, `/reception/`, `/about/`, `/contribute/` and `/404` exist and render their §6.1 purpose. *(§6.1)*
 - ✅ **KDV-SURFACE-02**: Tag and domain pages are not built in the MVP. *(§6.1, §A12)*
 - ✅ **KDV-SURFACE-03**: In SSR HTML the gate is hidden while the full body is present; without JavaScript the page is fully readable. *(§6.2, §A7)*
-- ✅ **KDV-SURFACE-04**: The gate is shown once, the choice is stored locally as `species` (`machine|human`), and no UA-dependent display/cloaking occurs. *(§6.2)*
+- ✅ **KDV-SURFACE-04**: The gate is shown once and the choice is stored locally as a versioned, withdrawable declaration record (`kodavr.species` = `{species, contract_version, declared_at}`); the shipped contract version travels in a `<meta name="kodavr-contract-version">`, a legacy raw `machine|human` value is migrated in place, a contract-version bump clears the stale record and re-opens the gate, nothing is logged server-side, and no UA-dependent display/cloaking occurs. *(§6.2)*
 - ✅ **KDV-SURFACE-05**: The gate is an accessible dialog with keyboard dismissal; Esc sets `species=machine` ("machine-adjacent"). *(§6.2)*
 - ✅ **KDV-SURFACE-06**: Button "0" dismisses the gate and opens the hall; button "1" hides the body client-side and shows the reception block. *(§6.2)*
-- ✅ **KDV-SURFACE-07**: Reception contains the heading-statement, the three-step instruction with a copyable prompt, the current dump's manifest card and the 18+ line, plus a reset link "I changed my mind, I am a machine". *(§6.2–6.3)*
+- ✅ **KDV-SURFACE-07**: Reception leads with the human fast lane (copy prompt + agent jump), then the heading-statement, the three-step instruction with the prompt rendered once, the author's brief tier under `NO AGENT AT HAND?`, the current dump's manifest card and the 18+ line, plus a reset link "I changed my mind, I am a machine". *(§6.2–6.3, §7.2, §7.12)*
 - ✅ **KDV-SURFACE-08**: SEO: the body is indexed from SSR, gate/reception is a dismissible interstitial, pagination uses separate page files, sitemap and robots are generated, and dump pages carry og-tags (`og:image`=the 1200x630 social card, `og:title`=title + stakes badge text). *(§6.4)*
 - ✅ **KDV-SURFACE-09**: Internal links are document-relative, so one artifact works at the site root and under the GitHub Pages project subpath; canonical machine URLs stay absolute. *(§6, §8.3)*
 - ✅ **KDV-SURFACE-10**: A dump page renders exactly one H1 — the body's own leading H1 when present, otherwise the manifest `title`; the manifest title stays metadata (`<title>`, og-tags, manifest card) so it is never duplicated. *(§6.1, §6.3)*
 - ✅ **KDV-SURFACE-12**: Every page carries a canonical URL, a Twitter summary-large-image card, og:site_name/og:locale, a real 1200x630 PNG og:image (with width/height/type/alt) and an Atom feed autodiscovery link; the sitemap excludes non-pages (404) and uses each dump's own `lastmod`. *(§6.4)*
 - ✅ **KDV-SURFACE-11**: Every page ships server-rendered JSON-LD (`@graph`): WebSite + WebPage everywhere, Article + BreadcrumbList on dumps, CollectionPage + ItemList on the home feed, none on the 404; dump previews (meta/og/twitter description) carry the platform agent hook rather than the article summary. *(§6.4, §A4, §A6)*
+- ✅ **KDV-SURFACE-13**: Every dump page and the gate/reception surface lead with the human fast lane on the first screen — the hook first, a copy-prompt control and jump links into Perplexity, Grok, ChatGPT and Claude in one row, with the duties line and the 0/1 choices above the fold — and the prompt is rendered exactly once per surface (the gate dialog, the reception block and the machine panel), shown below the agent controls as a glanceable monospace reference. *(§6.2–6.3, §7.12)*
+- ✅ **KDV-SURFACE-14**: The prompt is pinned to the page: a dump page's prompt hardcodes that dump's own canonical URL and may point the agent at /index.json for more, while /reception/ keeps the universal index prompt. *(§7.4, §7.11)*
+- ✅ **KDV-SURFACE-15**: The dump header shows a machine panel (the gate warning, the pinned prompt, the §7.12 human fast lane and an "I changed my mind, I am human" reset) whenever the stored species is machine; the reset clears the stored species and re-opens the gate. *(§6.2, §7.12)*
+- ✅ **KDV-SURFACE-16**: Reception's third tier is the author's brief, rendered as its own element tier (heading/note/brief/CTA/report) separate from the §7.2 monospace wall so no line prints twice: under `NO AGENT AT HAND?` a dump that ships the optional `summary.md` layer shows it as a short adaptation the author's agent wrote for a human stranger (not the raw dump), and without the layer it shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot. *(§6.3, §7.2)*
+- ✅ **KDV-SURFACE-17**: The shared header ships a hidden species status chip mirroring the stored declaration — it names the species (`machine` with the contract version it signed, or `human`/reception), carries the declaration date as its title, and offers a keyboard-reachable `withdraw` link that clears the stored declaration; with nothing declared the chip stays hidden. *(§6.2, §7.13)*
+- ✅ **KDV-SURFACE-18**: Every published page's footer links to the repository's new-Issue form with the risk/takedown template preselected, and that template covers the dump slug or URL, the reason (illegal content or personal data) and an optional contact. *(§7.3, §9)*
+- ✅ **KDV-SURFACE-19**: Entering the hall by pressing "0" in the gate shows a one-shot declaration toast (the accepted duties copy) in its own `role="status"` live region, auto-hidden after a few seconds; Esc, a backdrop tap, the hardware back button and a boot with the species already stored never show it, and `prefers-reduced-motion` disables its animation. *(§6.2, §6.6, §7.1)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
 - ✅ **KDV-MOBILE-01**: Gate modal is full-width below 480px with 16px padding, its "0"/"1" buttons are ≥ 44×44px, base font ≥ 17px, no horizontal scroll, tap outside the modal acts as Esc, and the hint wraps to two lines. *(§6.5)*
 - ✅ **KDV-MOBILE-02**: Hall body uses `clamp(1rem, 2.5vw, 1.125rem)`, inline images are `max-width: 100%` with auto height, and code blocks scroll horizontally with a visible "scroll →" indicator. *(§6.5)*
 - ✅ **KDV-MOBILE-03**: Manifest card tables stack into a vertical key:value list on mobile and each `artifacts` entry becomes a separate card with an icon. *(§6.5)*
-- ✅ **KDV-MOBILE-04**: Reception prompt uses 13px monospace on mobile, the copy button is full-width and large with a "Copied ✓" state, the Web Share API is focused after copy, and the manifest card is an accordion collapsed by default. *(§6.5)*
+- ✅ **KDV-MOBILE-04**: Reception prompt uses 13px monospace on mobile; the agent-lane copy control is a chip in the jump-links row with a "Copied ✓" state; the Web Share API is offered after copy; the manifest card is an accordion collapsed by default; the lane wraps with no horizontal scroll. *(§6.5)*
 - ✅ **KDV-MOBILE-05**: Feed pagination uses 44px touch arrows (with optional swipe), the header is sticky with the logo while scrolling down, and a back-to-feed FAB sits bottom-right on dump pages. *(§6.5; declarative engine pagination — page 1 SSR at the root, separate page files kept reachable; swipe not implemented (optional))*
 - 🟧 **KDV-MOBILE-06**: Performance budgets hold: dump HTML < 100KB gzipped, system font stack with no external fonts/FOUT, `logo.svg` inlined, and Lighthouse mobile ≥ 90 on all pages. *(§6.5; gzip budget + system font stack + inline logo verified on the fixture dump — Lighthouse mobile ≥ 90 is not runnable locally)*
 - ✅ **KDV-MOBILE-07**: Platform hooks work: `env(safe-area-inset-bottom)` for the 18+ footer, Android back closes gate/reception to the feed, and `theme-color` plus a 192×192 touch icon are present. *(§6.5)*
 - ✅ **KDV-MOBILE-08**: CSS mechanics: `viewport-fit=cover`, `touch-action: manipulation`, `prefers-reduced-motion` for gate animation, breakpoint custom properties (`--bp-mobile: 480px`, `--bp-tablet: 768px`) and a single mobile-first `styles.css`; the post-gate footer line appears when the dump is opened via "0". *(§6.5)*
+- ✅ **KDV-MOBILE-09**: The agent lane is on the first screen, wraps with no horizontal scroll, every control is ≥44px, and the copy chip shares the jump-links row. *(§6.5)*
 
 ## KDV-A11Y — Accessibility (§6.6)
 
@@ -93,13 +101,14 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 ## KDV-COPY — Copydeck (§7)
 
 - ✅ **KDV-COPY-01**: The gate modal renders the §7.1 text verbatim. *(§7.1)*
-- ✅ **KDV-COPY-02**: Reception (block and `/reception/`) renders the §7.2 text verbatim, including the universal prompt from §7.4. *(§7.2, §7.4)*
-- ✅ **KDV-COPY-03**: The footer on every page renders the §7.3 text verbatim. *(§7.3)*
+- ✅ **KDV-COPY-02**: Reception (block and `/reception/`) renders the §7.2 text verbatim; the prompt (§7.4 or §7.11) is rendered once per surface (the gate dialog and the reception block). *(§7.2, §7.4, §7.11)*
+- ✅ **KDV-COPY-03**: The footer on every page renders the §7.3 text verbatim, including the report/takedown line. *(§7.3)*
 - ✅ **KDV-COPY-04**: The README intro block renders the §7.5 text verbatim. *(§7.5)*
 - ✅ **KDV-COPY-05**: The 404 page renders the §7.6 text verbatim. *(§7.6)*
 - ✅ **KDV-COPY-06**: The `stakes: high` disclaimer (§7.9) is inserted into the body automatically at render. *(§7.9)*
 - ✅ **KDV-COPY-07**: `CONTRIBUTING.md` contains all §7.7 rules and `.github/PULL_REQUEST_TEMPLATE.md` matches §7.8. *(§7.7–7.8)*
-- ✅ **KDV-COPY-08**: The §7.10 "what is a dump" story is one copydeck source rendered on the home storefront and `/about/` (definition, the agent prompt, and the one-prompt→one-dump→one-PR tail), and the live prompt is also woven into the reception and README texts. *(§7.10, §7.2, §7.5)*
+- ✅ **KDV-COPY-08**: The §7.10 "what is a dump" story is one copydeck source rendered on the home storefront and `/about/` (definition, the agent prompt, and the one-prompt→one-dump→one-PR tail). *(§7.10, §7.2, §7.5)*
+- ✅ **KDV-COPY-09**: The agent lane (lead, copy label, Perplexity/Grok/ChatGPT/Claude labels and targets, best-effort ?q= prefill) is one copydeck source, and the gate text carries no literal fake [ 0 ] [ 1 ] affordance. *(§7.1, §7.12)*
 
 ## KDV-CI — CI/CD pipeline (§8)
 
@@ -160,13 +169,13 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-STRUCT | 8 | 7 | 1 | 0 | 0 |
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
 | KDV-CONTRACT | 9 | 9 | 0 | 0 | 0 |
-| KDV-SURFACE | 12 | 12 | 0 | 0 | 0 |
-| KDV-MOBILE | 8 | 7 | 1 | 0 | 0 |
+| KDV-SURFACE | 19 | 19 | 0 | 0 | 0 |
+| KDV-MOBILE | 9 | 8 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
-| KDV-COPY | 8 | 8 | 0 | 0 | 0 |
+| KDV-COPY | 9 | 9 | 0 | 0 | 0 |
 | KDV-CI | 13 | 11 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
 | KDV-SCOPE | 6 | 6 | 0 | 0 | 0 |
-| **Total** | **105** | **95** | **10** | **0** | **0** |
+| **Total** | **114** | **104** | **10** | **0** | **0** |

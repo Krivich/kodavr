@@ -46,6 +46,39 @@ describe('dumps controller', () => {
     expect(dataset.body_html).not.toContain('<pre class="raw">');
   });
 
+  it('KDV-STRUCT-02: the optional summary.md brief is read and rendered to brief_html; absent -> falsy', async () => {
+    const dumps = await readDumps(FIXTURES);
+    const withBrief = dumps.find((d) => d.slug === 'sample-dump');
+    const withoutBrief = dumps.find((d) => d.slug === 'sample-dump-two');
+
+    // The optional layer is on disk: its markdown is read, listed in `layers`
+    // and rendered to HTML through the shared sanitized markdown pipeline.
+    expect(withBrief.summary).toContain('Sample Dump brief');
+    expect(withBrief.layers.map((l) => l.name)).toEqual(['raw', 'summary']);
+    const rendered = toDataset(withBrief).brief_html;
+    // §6.3/KDV-SURFACE-10: the brief's own `#` heading is demoted below the
+    // reception block's own <h2>/<h3>, so an author can never break the outline.
+    expect(rendered).toContain('<h4>Sample Dump brief</h4>');
+    expect(rendered).not.toMatch(/<h[1-3]\b/);
+    expect(rendered).toContain('<strong>brief</strong>');
+
+    // The demotion rule across the heading levels: h1->h4, h2->h5, h3->h6;
+    // h4..h6 are already safe under the reception block and stay unchanged.
+    const demoted = toDataset({
+      ...withBrief,
+      summary: '# one\n\n## two\n\n### three\n\n#### four\n',
+    }).brief_html;
+    expect(demoted).toContain('<h4>one</h4>');
+    expect(demoted).toContain('<h5>two</h5>');
+    expect(demoted).toContain('<h6>three</h6>');
+    expect(demoted).toContain('<h4>four</h4>');
+
+    // No layer on disk: the dataset value is falsy, never invented.
+    expect(withoutBrief.summary).toBeNull();
+    expect(withoutBrief.layers.map((l) => l.name)).toEqual(['raw']);
+    expect(toDataset(withoutBrief).brief_html).toBeFalsy();
+  });
+
   it('KDV-BUILD-02 + KDV-BUILD-09: sanitized body cannot inject executable markup', async () => {
     const dumps = await readDumps(FIXTURES);
     const dump = dumps.find((d) => d.slug === 'sample-dump');

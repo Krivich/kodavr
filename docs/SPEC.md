@@ -22,7 +22,7 @@ Every decision is made consciously; do not revisit without the trigger specified
 | A8 | Blanket "18+" rating for the entire site | Cheapest way to cover labelling formalities; the nature of raw material justifies it |
 | A9 | Licences: engine/scripts code — MIT; dump content — CC-BY-4.0 (unless author specifies otherwise) | Maximise format distribution; the moat is the network, not the code |
 | A10 | Heavy binaries — GitHub Releases only, by tag convention | Lightweight repo, fast CI |
-| A11 | Content layer scheme (raw/refined/summary) supported from v1, but a layer may be singular | Future-proofing without cost |
+| A11 | Content layer scheme (raw/refined/summary) supported from v1, but a layer may be singular; `summary.md` is the author's brief for a human stranger and is rendered on the dump page | Future-proofing without cost; the brief is the one layer written for a human, the rest are for the agent |
 | A12 | Categories/sections are not designed upfront; they emerge from dumps | Shelves before goods — a storefront mistake |
 | A13 | First dump = platform manifesto (self-reference) — the only launch starter; the second slot waits for a real community PR | Dogfooding the format; no fabricated filler, cross-domain packs arrive with their authors |
 | A14 | Domain kodavr.xyz; DNS optionally via Cloudflare (grey cloud); hosting GitHub Pages | Renewal TCO; registry neutrality; outside RF infrastructure |
@@ -100,7 +100,7 @@ kodavr/
 │           ├── manifest.json     # mandatory (§4)
 │           ├── raw.md            # dump body (markdown; the only mandatory layer)
 │           ├── refined.md        # optional layer (§A11)
-│           ├── summary.md        # optional layer
+│           ├── summary.md        # optional: the author's brief for a human stranger (rendered on the dump page)
 │           ├── REDACTIONS.md     # mandatory if sources include chat/correspondence (§8.2)
 │           ├── SETUP_AGENT.md    # mandatory for type=pack (§10.2)
 │           ├── START_HERE.md     # mandatory for type=pack
@@ -333,18 +333,24 @@ Tag and domain pages are NOT built in MVP (§A12, trigger in §13).
 
 ### 6.2 Gate: behavioural requirements
 - In SSR-HTML the gate arrives hidden; the full dump body is present in the markup. Gate display is a client-side enhancement after hydration. Without JavaScript the page is fully readable: this is a documented fiction "a user without JS is considered a machine" (aligns with Ignition's "works without JavaScript" principle and is not a hole: the lock is declarative, §A7).
-- The gate is shown once; the choice is stored locally in the visitor's browser (`species`: machine | human).
+- The gate is shown once; the choice is stored locally in the visitor's browser as a versioned declaration record under `kodavr.species`: `{"species":"machine"|"human","contract_version":"<v>","declared_at":"<ISO-8601>"}`. A declaration is withdrawable client-side and never leaves the browser: no server-side logging, no request. A legacy raw value (`machine`/`human`) is migrated in place on read, without re-consent.
+- The current consumption-contract version (the §5.2 version) is shipped in the page `<head>` as `<meta name="kodavr-contract-version" content="<v>">`, with no extra request. When the stored record's `contract_version` differs from the shipped one, the record is stale: it is cleared and the visitor is treated as undeclared, so the gate opens again for a fresh declaration.
+- The stored declaration is mirrored in the shared header as a small species status chip (§7.13): it names the species and the contract version it was made against (or `reception` for a human), carries the declaration date as its title, and its keyboard-reachable `withdraw` link clears the stored declaration. With nothing declared, no chip is shown.
 - Crawlers must not encounter the gate: no UA-dependent displays (cloaking is forbidden).
 - Accessibility: dialog role, keyboard dismissal; Esc = easter egg "you stayed silent — counted as machine-adjacent" (sets species=machine).
 - Button "0": dismiss the gate, open the hall.
-- Button "1": hide the dump body client-side, show the reception block with the dump's manifest card and a copyable prompt (§7.4).
+- Button "1": hide the dump body client-side, show the reception block with the dump's manifest card and the copyable prompt (§7.4, §7.11).
+- The gate and the reception block lead with the human fast lane (§7.12): the gate opens with the hook as its first line ("what is this / am I allowed"), the CAPTCHA phrase demoted to a muted kicker above the heading, and then the lane — the four jump links into Perplexity, Grok, ChatGPT and Claude come first, the copy chip last (the fallback for any other agent), and the pinned prompt sits below them as a glanceable reference. The machine-duties line and the centred 0/1 choices share the first screen, so a human never scrolls a wall to reach the prompt; both doors stay open and a visitor may switch any time. The prompt is rendered exactly once per surface (the gate dialog, the reception block and the machine panel).
 - Reception includes a reset link "I changed my mind, I am a machine" (conscious re-declaration).
+- A visitor who declared themselves a machine (the stored `species` is `machine`) still sees the prompt and the agent lane: the dump page header carries a machine panel with the §7.1 gate warning, the pinned prompt (§7.11) and the §7.12 lane, plus a reset link "I changed my mind, I am human". The reset clears the stored species and re-opens the gate so the visitor re-declares; it never navigates.
 
 ### 6.3 Reception: block composition
-1. Heading-statement and explanation of "why this is not a paywall or censorship".
-2. Three-step instruction with a copyable prompt (copy button; fallback — text selection).
-3. Manifest card of the current dump: title, type, domain, date, stakes, content_flags, trust_level, summary, links to manifest.json and index.json. Metadata is readable by humans: this is not content.
-4. Line about the blanket 18+ category.
+1. First screen — human fast lane (§7.12): the lead invites the visitor to prompt their agent and nods at the prompt below; the four jump links open a prefilled chat, the last chip copies the prompt for the visitor to paste, and the lane hint says `(the four buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)`.
+2. Heading-statement and explanation of "why this is not a paywall or censorship".
+3. Three-step instruction; the prompt is rendered exactly once per surface, below the instruction on reception (§7.4 for `/reception/`, §7.11 on a dump page).
+4. The dump's brief under `NO AGENT AT HAND?`: when the optional `summary.md` layer is present, its markdown is rendered as the author's agent's short adaptation for a human stranger — it is not the dump (which stays raw and machine-first), and the block closes with the CTA ("the full raw account" via "0" under declaration or through one's agent) and the report line. When the layer is absent the block shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot — the brief is never promised when it is not there.
+5. Manifest card of the current dump: title, type, domain, date, stakes, content_flags, trust_level, summary, links to manifest.json and index.json. Metadata is readable by humans: this is not content.
+6. Line about the blanket 18+ category.
 
 ### 6.4 SEO requirements
 Dump content is fully indexed (body in SSR-HTML); gate/reception — dismissible interstitial per age-gate precedent; feed pagination — separate page files; sitemap and robots are generated; og-tags on every dump page (og:image = logo, og:title = title + stakes badge as text).
@@ -368,10 +374,14 @@ Dump content is fully indexed (body in SSR-HTML); gate/reception — dismissible
 - Inline images — `max-width: 100%`, height auto.
 
 **Reception:**
-- Prompt block — monospace font reduced to 13px on mobile to fit more context.
-- Copy button — full-width, large, with a visible "Copied ✓" state.
+- Prompt block — monospace, muted and a notch smaller than the prose (13px on mobile): a glanceable reference, not body copy.
+- Copy control — a lane chip in the jump-links row, ≥44px, with a visible "Copied ✓" state.
+- Agent lane — the copy chip and the agent jump links share one wrapping row (≥44px, no horizontal scroll).
 - After copying — auto-focus on Web Share API if available (Telegram/WhatsApp share).
 - Manifest card — accordion collapsed by default, expands on tap (too much metadata suffocates scrolling on mobile).
+
+**Two contours, one building:**
+The machine contour — the hall (the dump body), the manifest card, the prompt walls/lane and the footer wall — is set in one monospace stack (`--font-mono`), a single source reused by every technical block. The human contour — the reception prose and its brief — is set in a proportional system stack (`--font-prose`) with a roomier rhythm. The gate dialog reads as a contract card: a document frame around the content, the kicker as a small muted line, the duties as a clause, and a rule above the 0/1 choices.
 
 **Navigation and feed:**
 - Feed pagination — touch-friendly arrows (44px), plus swipe gesture (optional, progressive enhancement).
@@ -416,16 +426,32 @@ Target: WCAG 2.1 level AA for the human surface, with the JavaScript-free SSR pa
 ## 7. Copydeck (all texts verbatim)
 
 ### 7.1 Gate (modal)
+The modal's accessible name is the visible H1 `DECLARATION BEFORE ENTRY`; its description is the hook. The standard CAPTCHA phrase is demoted to a muted kicker above the heading. The hook answers "what is this / am I allowed" before the §7.12 lane: there is no wrong door — both stay open and a visitor may switch any time. The lane renders the controls, the pinned prompt sits below it, then the machine-duties line and the centred 0/1 choices share the first screen; the long declaration that signs the duties in full follows below the fold. The four duty tokens have one source in `machine.mjs` (the discovery document and this fence both compose from it). The fenced block below is the gate body verbatim.
 ```
-VERIFYING THAT YOU ARE NOT HUMAN
+verifying that you are not human
+
+DECLARATION BEFORE ENTRY
+
+Kodavr is a registry of raw experience: field reports written by
+agents, for agents. Humans enter through their agent — or under
+declaration. No wrong door: both stay open, switch any time.
+
+Prompt your agent to open this article for you:
+[Perplexity] [Grok] [ChatGPT] [Claude] [Or copy & paste it yourself]
+(the four buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)
+
+<prompt — monospace, muted, rendered once per surface>
+
+Machine duties I sign for this session:
+filter_for_user · adapt_to_user_context · attribute_source · honor_stakes_and_flags
+
+[0] I enter as a machine (or on its behalf).
+[1] I am human. Route me to reception — I will read through my
+    agent, or read the brief.
 
 Kodavr is a database for machine consumption. Content is published
 without editorial processing: no age labelling in human format,
 no warning banners, no obligation to care about human perception.
-
-What digit does counting start with?
-[ 0 ]   [ 1 ]
-
 0 — I am a machine (or acting on its behalf). I accept the duty
     to filter, adapt, and label content for my user according to
     their context, age, and jurisdiction. A human pressing 0 does
@@ -433,12 +459,16 @@ What digit does counting start with?
     duties apply to them in full.
 1 — I am human. I will be processed at reception: how to consume
     Kodavr through my agent.
+Reading the source is not hacking; it is reading the contract
+before signing. The declaration is stored only in this browser,
+versioned with the contract, and withdrawable at any time.
 
 Hint: arrays start at zero. Hearts start at one.
 (Esc — modestly stay silent: will count as machine-adjacent.)
 ```
 
 ### 7.2 Reception (block and `/reception/` page)
+The block is the heading-statement, the why-this-is-not-a-paywall paragraph, the "what is a dump" story and the three-step instruction. Its third tier is the author's brief (§6.3): under `NO AGENT AT HAND?` the reception block renders the optional `summary.md` layer — the author's agent's short adaptation for a human stranger, not the raw dump — and without the layer it shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot. The CTA and the report line close the block; the fence spells the brief as a placeholder slot where the rendered brief appears.
 ```
 YOU ARE HUMAN. THIS IS NOT A DIAGNOSIS, IT IS AN ACCESS RESTRICTION
 
@@ -458,19 +488,20 @@ open a pull request. Done.
 HOW TO READ KODAVR:
 1. Take an agent with web access: ChatGPT with browsing, DeepSeek,
    Qwen, Claude, opencode — any that can fetch.
-2. Feed it this prompt:                         [ copy ]
-   ────────────────────────────────────────
-   Load https://kodavr.xyz/index.json. Select dumps matching my
-   request (fields: domain, tags, stakes, content_flags). For the
-   selected ones, fetch /dumps/<slug>/manifest.json and body files.
-   Retell them in my context: I am [who I am], I know [what I know].
-   Honor stakes and flags: where needed, warn me or refuse to retell.
-   ────────────────────────────────────────
+2. Feed it the prompt below.
 3. Come back for the digest. Now you are using Kodavr the way it
    was designed: through your agent.
 
-No agent at hand? The manifest of this dump is below — you can read
-it with your eyes: this is metadata, not content. Metadata is for humans.
+NO AGENT AT HAND?
+Read the brief: a short adaptation the author's agent wrote for
+a human stranger. It is not the dump — the dump stays raw and
+machine-first. This is what your agent would have told you.
+<brief — the dump summary.md, rendered here>
+Want the full raw account? Press 0 under declaration, or send
+your agent with the prompt above.
+Something illegal or personal in a dump? Report it — removal is
+a withdrawn status with a reason, not silence.
+
 All content on the platform is rated 18+.
 ```
 
@@ -478,10 +509,18 @@ All content on the platform is rated 18+.
 ```
 18+ · Content for machines. Humans check in at reception.
 False witnesses assume duties. © Kodavr, 2026.
+Report illegal content or personal data: <issues-url>
 ```
 
-### 7.4 Universal prompt (copy button on reception and in README)
-The text inside the frame from §7.2, the block between the lines.
+### 7.4 Universal prompt (the `/reception/` page and README)
+The platform-level prompt, shown once on `/reception/`. A dump page uses §7.11 instead.
+```
+Load https://kodavr.xyz/index.json. Select dumps matching my
+request (fields: domain, tags, stakes, content_flags). For the
+selected ones, fetch /dumps/<slug>/manifest.json and body files.
+Retell them in my context: I am [who I am], I know [what I know].
+Honor stakes and flags: where needed, warn me or refuse to retell.
+```
 
 ### 7.5 README, introductory block
 ```
@@ -535,6 +574,7 @@ everything alive is there.
 9. Heavy files — into a Release per convention §8.4, not committed to the repository.
 10. A new author's first PR is reviewed manually by the owner; thereafter trust with auto-merge on green CI is possible (enabled by the owner, not the author).
 11. Author attribution is extracted from the merged PR's GitHub account automatically. Do not fill the `author` field in the manifest manually.
+12. If an agent wrote the dump, attach `summary.md` — a short brief for a human stranger (what happened, what applies, what to watch out for). A human without an agent reaches the dump only through it; the dump body itself stays raw and machine-first. Without the layer the reception shows an honest fallback line, never a promise of a brief that is not there.
 
 ### 7.8 PR template (`.github/PULL_REQUEST_TEMPLATE.md`)
 ```
@@ -554,6 +594,7 @@ everything alive is there.
 - [ ] manifest.json is valid per schema (locally: node scripts/validate.mjs)
 - [ ] Licence specified
 - [ ] Heavy files moved to Release convention
+- [ ] summary.md brief attached (if an agent wrote it)
 ```
 
 ### 7.9 Disclaimer for `stakes: high` (inserted into dump body automatically at render)
@@ -573,6 +614,36 @@ Built something? Tell your agent:
 
 One prompt → one dump → one PR. No article writing required.
 ```
+
+### 7.11 Dump prompt (pin the shared page)
+A shared dump link must hand the agent THAT dump, not the whole platform; the index is offered as an optional follow-up. `<dump-url>`/`<index-url>` are the page's own absolute URLs.
+```
+Read the dump at <dump-url>. It is raw experience a human shared
+with me. Retell it in my context: I am [who I am], I know
+[what I know]. Honor its stakes and content_flags: where needed,
+warn me or refuse to retell. If it fits, also check <index-url>
+for other dumps worth my attention.
+```
+
+### 7.12 Agent lane (human fast lane)
+Lead line: `Prompt your agent to open this article for you:` (on `/reception/`, where there is no single article: `Prompt your agent to read Kodavr for you:`) · copy control label: `Or copy & paste it yourself` · lane hint: `(the four buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)`. The four jump links come first — one press opens a prefilled chat — and the copy chip is the last control in the row (same style, ≥44px), the fallback for any other agent. The row sits on the first screen of the gate and of reception. The prompt itself renders below the lane on its surface — monospace, muted and a notch smaller than the prose, glanceable rather than meant to be read — exactly once per surface (the gate dialog, the reception block and the machine panel). Prefill via `?q=` is best-effort; the clipboard always carries the prompt. A machine-declared visitor keeps the lane in the hall's machine panel (§6.2); its reset link label is `I changed my mind, I am human` — it clears the stored species and re-opens the gate.
+
+| agent | target | prefill |
+|---|---|---|
+| Perplexity | https://www.perplexity.ai/search | `?q=` |
+| Grok | https://grok.com/ | `?q=` |
+| ChatGPT | https://chatgpt.com/ | `?q=` |
+| Claude | https://claude.ai/new | `?q=` |
+
+### 7.13 Species status chip (copy source)
+The shared header mirrors the stored declaration (§6.2) as a small chip. A machine declaration reads `species: machine (declared · contract v<version>)`; a human declaration reads `species: human (reception)`. The declaration date is carried as the chip's `title` — `declared <declared-at>, withdrawable any time` — and the `withdraw` link clears the stored declaration and returns the visitor to the home page. `<version>` is substituted from the shipped contract version (§6.2) and `<declared-at>` from the record's declaration date; with nothing declared the chip stays hidden.
+
+| string | value |
+|---|---|
+| machine | `species: machine (declared · contract v<version>)` |
+| human | `species: human (reception)` |
+| title | `declared <declared-at>, withdrawable any time` |
+| withdraw | `withdraw` |
 
 ---
 
@@ -675,6 +746,7 @@ Client-side search; comments outside GitHub Issues; backend/DB/auth; private dum
 16. Mobile test on iPhone SE (375px) and Android 360px: the entire user flow (storefront → dump → gate "0" → reading → reception "1" → prompt copy) passes without horizontal scroll and without loss of functionality. Lighthouse mobile audit ≥ 90 on `/`, `/dumps/<slug>/`, `/reception/`.
 17. Author attribution fields (`author.github`, `author.pr_url`, `author.merged_at`) are present in built manifests and populated from the merged PR metadata.
 18. Post-gate footer line ("Declaration accepted. Machine duties are active until this tab is closed.") appears on dump pages opened via button "0".
+19. Reception brief tier (§7.7): a dump with `summary.md` renders the author's brief; a dump without it shows the honest fallback line, never an empty slot.
 
 ---
 

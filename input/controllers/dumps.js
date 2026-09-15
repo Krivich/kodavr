@@ -16,11 +16,19 @@
 (function () {
   'use strict';
 
+  // §6.2/§6.6 KDV-SURFACE-19: the declaration toast is one-shot per page load —
+  // the flag lives at module scope so a later explicit choice (the reception
+  // reset, a re-opened gate) cannot replay it.
+  var declarationToastShown = false;
+  var TOAST_MS = 4000;
+
   window.ignition.controller(function () {
     var gate = document.getElementById('gate');
     var body = document.querySelector('.dump-body');
     var reception = document.querySelector('.reception-block');
     var postGate = document.querySelector('.post-gate-line');
+    var machinePanel = document.querySelector('.machine-panel');
+    var toast = document.querySelector('.declaration-toast');
     var status = document.getElementById('a11y-status');
 
     // §6.6: focus must never fall to <body> when an overlay closes — hand it
@@ -35,6 +43,16 @@
     function announceFrom(attr) {
       if (!status || !window.Kodavr || typeof window.Kodavr.announce !== 'function') return;
       window.Kodavr.announce(status.getAttribute(attr));
+    }
+
+    // §7.13: the shared header chip mirrors the stored declaration. site.js
+    // fills it on load; every species transition here refreshes it in place so
+    // the chip follows the gate without a reload. Guarded — the helper may be
+    // absent on an older asset tree.
+    function refreshChip() {
+      if (window.Kodavr && typeof window.Kodavr.refreshSpeciesChip === 'function') {
+        window.Kodavr.refreshSpeciesChip();
+      }
     }
 
     function focusFirstChoice() {
@@ -75,6 +93,12 @@
       if (reception) reception.hidden = true;
     }
 
+    // §6.2: the machine panel shares the post-gate line's visibility — it is
+    // shown for a stored/committed machine choice and stays hidden otherwise.
+    function showMachinePanel() {
+      if (machinePanel) machinePanel.hidden = false;
+    }
+
     function showReception() {
       if (body) body.hidden = true;
       if (reception) reception.hidden = false;
@@ -109,19 +133,41 @@
       }
     });
 
-    function applyMachine() {
+    // §6.2/§6.6: the declaration toast is its own live region. It shows once,
+    // only for the explicit "0" choice, and hides itself after a few seconds.
+    // Setting textContent after the region exists (rather than pre-filling it
+    // in SSR) is what makes a screen reader announce the acceptance.
+    function showDeclarationToast() {
+      if (declarationToastShown || !toast) return;
+      declarationToastShown = true;
+      var text = toast.getAttribute('data-toast-text');
+      if (text) toast.textContent = text;
+      toast.hidden = false;
+      window.setTimeout(function () {
+        toast.hidden = true;
+      }, TOAST_MS);
+    }
+
+    function applyMachine(options) {
       window.Kodavr.setSpecies('machine');
+      refreshChip();
       closeGate();
       showBody();
       if (postGate) postGate.hidden = false;
+      showMachinePanel();
       // The gate was dismissed by an explicit choice: no overlay entry left.
       clearOverlay();
       announceFrom('data-hall-announcement');
+      // KDV-SURFACE-19: only the explicit gate choice shows the toast — Esc, a
+      // backdrop tap, hardware back and the machine reset stay silent.
+      if (options && options.declared) showDeclarationToast();
     }
 
     function applyHuman() {
       window.Kodavr.setSpecies('human');
+      refreshChip();
       closeGate();
+      if (machinePanel) machinePanel.hidden = true;
       showReception();
       // Reception is a new overlay; back dismisses it back to the hall.
       pushOverlay('reception');
@@ -133,6 +179,7 @@
     if (species === 'machine') {
       showBody();
       if (postGate) postGate.hidden = false;
+      showMachinePanel();
     } else if (species === 'human') {
       showReception();
       pushOverlay('reception');
@@ -143,7 +190,13 @@
 
     var machineButton = document.querySelector('[data-gate-choice="machine"]');
     var humanButton = document.querySelector('[data-gate-choice="human"]');
-    if (machineButton) machineButton.addEventListener('click', applyMachine);
+    // KDV-SURFACE-19: pressing "0" is the only path that counts as accepting the
+    // declaration, so it is the only one that shows the toast.
+    if (machineButton) {
+      machineButton.addEventListener('click', function () {
+        applyMachine({ declared: true });
+      });
+    }
     if (humanButton) humanButton.addEventListener('click', applyHuman);
 
     // Esc (cancel) and a tap on the dimmed backdrop both count as
@@ -163,6 +216,22 @@
       resets[i].addEventListener('click', function (event) {
         event.preventDefault();
         applyMachine();
+      });
+    }
+
+    // §6.2: the machine panel's reset forgets the stored species and re-opens
+    // the gate so the visitor re-declares. It must never navigate.
+    var humanResets = document.querySelectorAll('[data-reset-human]');
+    for (var j = 0; j < humanResets.length; j++) {
+      humanResets[j].addEventListener('click', function (event) {
+        event.preventDefault();
+        if (window.Kodavr && typeof window.Kodavr.clearSpecies === 'function') {
+          window.Kodavr.clearSpecies();
+          refreshChip();
+        }
+        if (machinePanel) machinePanel.hidden = true;
+        openGate();
+        pushOverlay('gate');
       });
     }
 

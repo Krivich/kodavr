@@ -14,3 +14,4 @@
 - [ ] manifest.json is valid per schema (locally: node scripts/validate.mjs)
 - [ ] Licence specified
 - [ ] Heavy files moved to Release convention
+- [ ] summary.md brief attached (if an agent wrote it)

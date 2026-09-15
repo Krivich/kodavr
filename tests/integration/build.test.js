@@ -5,19 +5,36 @@ import { gzipSync } from 'node:zlib';
 import { mkdtemp, mkdir, cp, readFile, readdir, stat, rm, writeFile } from 'node:fs/promises';
 import { XMLValidator } from 'fast-xml-parser';
 import { buildProject } from '../../scripts/lib/build.mjs';
-import { ROUTE_PAGES } from '../../scripts/lib/pages.mjs';
+import { ROUTE_PAGES, FOOTER_REPORT_URL } from '../../scripts/lib/pages.mjs';
 import { ROBOTS_TXT, HUMANS_TXT } from '../../scripts/lib/verbatim.mjs';
+import { CONTRACT_VERSION } from '../../scripts/lib/machine.mjs';
 import {
-  GATE_TEXT,
+  GATE_KICKER,
   GATE_TITLE,
+  GATE_HOOK,
+  GATE_DUTIES_LEAD,
+  GATE_DUTIES,
+  GATE_REST,
   GATE_MACHINE_LABEL,
   GATE_HUMAN_LABEL,
-  RECEPTION_TEXT,
-  PROMPT_TEXT,
+  RESET_HUMAN_LABEL,
+  DECLARATION_TOAST,
+  RECEPTION_WALL,
+  RECEPTION_RATING,
+  BRIEF_HEADING,
+  BRIEF_NOTE,
+  BRIEF_CTA,
+  BRIEF_REPORT,
+  BRIEF_FALLBACK,
+  dumpPrompt,
   FOOTER_TEXT,
+  FOOTER_REPORT_LABEL,
   NOT_FOUND_TEXT,
   HIGH_STAKES_DISCLAIMER,
   AGENT_HOOK,
+  CHIP_MACHINE_TEMPLATE,
+  CHIP_HUMAN_LABEL,
+  CHIP_TITLE_TEMPLATE,
 } from '../../scripts/lib/copy.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -35,6 +52,19 @@ function decodeEntities(html) {
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
+}
+
+// The engine inlines the whole dataset and the registered template sources as
+// `<script>` JSON blobs (`__IGNITION_INITIAL_DATA__` / `__IGNITION_TEMPLATES__`).
+// Their `<`/`>` are escaped (`\u003c`), but plain author prose still rides in
+// them verbatim: a substring count over the whole file would double-count it
+// (e.g. the brief heading text appears in both the DOM and the dataset). This
+// drops the blobs so counts and matches describe the rendered DOM only.
+function stripInlineBoot(html) {
+  return html.replace(
+    /<script>window\.__IGNITION_(?:INITIAL_DATA|TEMPLATES)__[\s\S]*?<\/script>/g,
+    '',
+  );
 }
 
 async function setupProject(slugs, inlineDumps = [], { repoFiles = [] } = {}) {
@@ -129,7 +159,9 @@ describe('build controller (integration)', () => {
     expect(html).toContain('<title>Sample Dump · Kodavr</title>');
     // KDV-SURFACE-10: exactly one page H1 — the body's own title; the manifest
     // title is metadata (it stays in <title>, og-tags and the manifest card).
-    expect(html.match(/<h1\b/g) ?? []).toHaveLength(1);
+    // Counted on the rendered DOM (the inlined dataset is stripped), never over
+    // raw substrings of the whole file.
+    expect(stripInlineBoot(html).match(/<h1\b/g) ?? []).toHaveLength(1);
     expect(html).toContain('<h1>Sample Heading</h1>');
     expect(html).not.toMatch(/<h1[^>]*>Sample Dump<\/h1>/);
     expect(html).toContain('<ul>');
@@ -268,15 +300,23 @@ describe('build controller (integration)', () => {
     // §4.1 layers: raw always listed, derived from raw.md; optional layers only if on disk.
     expect(manifest.layers).toEqual([
       { name: 'raw', file: 'raw.md', fact_checked: false, author_voice: true },
+      { name: 'summary', file: 'summary.md', fact_checked: false, author_voice: false },
     ]);
     // §4.1 provenance/contract defaults.
     expect(manifest.derived_from).toBeNull();
     expect(manifest.consumption_contract).toEqual({ see: '/.well-known/kodavr.json' });
     expect(manifest.commit_sha).toBe('deadbeef');
     expect(typeof manifest.built_at).toBe('string');
+
+    // §6.3/KDV-STRUCT-02: only the dump that ships the optional summary.md
+    // layer carries a rendered brief in its dataset; the other stays falsy.
+    const withBrief = JSON.parse(await readFile(join(tmpRoot, 'input', 'data', 'dumps', 'sample-dump.json'), 'utf8'));
+    const withoutBrief = JSON.parse(await readFile(join(tmpRoot, 'input', 'data', 'dumps', 'sample-dump-two.json'), 'utf8'));
+    expect(withBrief.brief_html).toContain('<h4>Sample Dump brief</h4>');
+    expect(withoutBrief.brief_html).toBeFalsy();
   });
 
-  it('KDV-SURFACE-01 + KDV-COPY-03 + KDV-COPY-05: publishes every §6.1 route with the verbatim footer and 404 copy', async () => {
+  it('KDV-SURFACE-01 + KDV-SURFACE-18 + KDV-COPY-03 + KDV-COPY-05: publishes every §6.1 route with the verbatim footer, report link and 404 copy', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
 
@@ -299,10 +339,15 @@ describe('build controller (integration)', () => {
     expect(await exists(join(publicDir, 'home', 'main', 'page', '1.html'))).toBe(true);
     expect(await exists(join(publicDir, 'notfound'))).toBe(false);
 
-    // §7.3 footer is on every page.
+    // §7.3 footer is on every page; §7.3/§9 adds a real, JS-free report link.
+    // The href is HTML-escaped in the attribute, so decode before comparing.
     for (const route of routes) {
-      const html = await readFile(join(publicDir, ...route.split('/')), 'utf8');
-      expect(html).toContain(FOOTER_TEXT);
+      const raw = await readFile(join(publicDir, ...route.split('/')), 'utf8');
+      expect(raw).toContain(FOOTER_TEXT);
+      const html = decodeEntities(raw);
+      expect(html, route).toContain('class="footer-report"');
+      expect(html, route).toContain(`href="${FOOTER_REPORT_URL}"`);
+      expect(html, route).toContain(`>${FOOTER_REPORT_LABEL}</a>`);
     }
 
     // §7.6 404 copy on /404.
@@ -331,7 +376,27 @@ describe('build controller (integration)', () => {
     expect(sitemap).not.toContain(`${BASE_URL}/404`);
   });
 
-  it('KDV-SURFACE-03 + KDV-COPY-01 + KDV-COPY-02: the dump page carries the full body in SSR behind a hidden gate with reception, manifest card and og-tags', async () => {
+  it('KDV-SURFACE-04: every page ships the current consumption-contract version in <head> as a meta tag (sourced from machine.mjs)', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    const routes = [
+      'index.html',
+      'reception/index.html',
+      'about/index.html',
+      'contribute/index.html',
+      '404.html',
+      'dumps/sample-dump/index.html',
+    ];
+    for (const route of routes) {
+      const html = await readFile(join(publicDir, ...route.split('/')), 'utf8');
+      expect(html, route).toContain(
+        `<meta name="kodavr-contract-version" content="${CONTRACT_VERSION}">`,
+      );
+    }
+  });
+
+  it('KDV-SURFACE-03 + KDV-SURFACE-15 + KDV-COPY-01 + KDV-COPY-02: the dump page carries the full body in SSR behind a hidden gate with reception, manifest card and og-tags', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const html = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
@@ -341,21 +406,45 @@ describe('build controller (integration)', () => {
     expect(html).toContain('<h1>Sample Heading</h1>');
     expect(html).toContain('Body text with');
 
-    // The gate ships hidden with the §7.1 copy and the 0/1 buttons.
+    // The gate ships hidden with the §7.1 copy — kicker, statement, hook, the
+    // lane + prompt and the duties line on the first screen, the long
+    // declaration below the fold — and the 0/1 buttons.
     expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
-    expect(text).toContain(GATE_TEXT);
+    expect(html).toContain('id="gate-prompt"');
+    expect(text).toContain(GATE_KICKER);
+    expect(text).toContain(GATE_TITLE);
+    expect(text).toContain(GATE_HOOK);
+    expect(text).toContain(GATE_DUTIES_LEAD);
+    expect(text).toContain(GATE_DUTIES);
+    expect(text).toContain(GATE_REST);
     expect(html).toContain('data-gate-choice="machine"');
     expect(html).toContain('data-gate-choice="human"');
+    // §6.2 KDV-SURFACE-15: the hall header ships a hidden machine panel with the
+    // gate warning, the pinned prompt, the §7.12 lane and the human reset link.
+    expect(html).toMatch(/<section class="machine-panel" hidden>/);
+    expect(html).toContain('id="machine-prompt"');
+    expect(html).toContain('data-reset-human');
+    expect(text).toContain(RESET_HUMAN_LABEL);
+    // The prompt is rendered exactly once per surface: the machine panel adds a
+    // third surface, so the pinned prompt reaches it as well.
+    expect(html).toContain('class="machine-panel"');
     // The dump page is now live: the runtime and the page controller are wired
     // (SSR still ships the full body and the hidden gate, per §6.2).
     expect(html).toContain('src="../../assets/ignition-runtime.js"');
     expect(html).toContain('src="../../assets/controllers/dumps.js"');
     expect(html).toContain('src="../../assets/site.js"');
 
-    // Reception block: §7.2 text, §7.4 prompt and a copy button.
-    expect(text).toContain(RECEPTION_TEXT);
-    expect(text).toContain(PROMPT_TEXT);
+    // Reception block: §7.2 wall + brief tier + 18+ rating, the dump-pinned
+    // prompt (§7.11) and the agent fast lane (§7.12). The prompt is rendered
+    // exactly once per surface; the wall never carries the brief copy.
+    expect(text).toContain(RECEPTION_WALL);
+    expect(text).toContain(BRIEF_HEADING);
+    expect(text).toContain(RECEPTION_RATING);
+    expect(text).not.toContain(`${RECEPTION_WALL}\n\n${BRIEF_HEADING}`);
+    expect(text).toContain(dumpPrompt('https://example.test/dumps/sample-dump/', 'https://example.test/index.json'));
+    expect(html).toContain('class="agent-lane"');
     expect(html).toContain('class="copy-prompt"');
+    expect(text).not.toContain('[ 0 ]');
 
     // Manifest card links to the manifest and to index.json — document-relative
     // after the P2c pass (KDV-SURFACE-09).
@@ -375,11 +464,14 @@ describe('build controller (integration)', () => {
     const text = decodeEntities(html);
 
     // The gate is a modal with an accessible name (the §7.1 statement) and a
-    // description pointing at the gate text (KDV-A11Y-02).
+    // description pointing at the hook (KDV-A11Y-02).
     expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
     expect(html).toContain('aria-labelledby="gate-title"');
-    expect(html).toContain('aria-describedby="gate-text"');
-    expect(html).toMatch(/<pre class="gate-text" id="gate-text">/);
+    expect(html).toContain('aria-describedby="gate-hook"');
+    expect(html).toMatch(/<p class="gate-kicker" id="gate-kicker">/);
+    expect(html).toMatch(/<h2 id="gate-title" class="gate-title">/);
+    // §7.1 v2: the heading is the plain declaration; the CAPTCHA phrase is the
+    // muted kicker above it (the modal's accessible name is the declaration).
     expect(text).toContain(GATE_TITLE);
 
     // The bare digits stay visible; the accessible names are descriptive.
@@ -396,6 +488,105 @@ describe('build controller (integration)', () => {
     expect(html).toContain('data-reception-announcement=');
     expect(html).toContain('aria-labelledby="reception-title"');
     expect(html).toContain('data-copied-announcement=');
+  });
+
+  it('KDV-SURFACE-16: the reception block renders the author brief tier (or the honest fallback) as real elements', async () => {
+    tmpRoot = await setupProject(['sample-dump', 'sample-dump-two']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    // §6.3/§7.2 v2: the brief tier lives inside the reception block, after the
+    // §7.2 wall; heading/note/CTA/report are real elements from the copydeck.
+    const withBrief = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
+    const briefText = decodeEntities(withBrief);
+    // §7.2 v2: the monospace wall holds only the v1 prose — the brief tier and
+    // the rating render as their own elements, so nothing appears twice.
+    const wallMatch = withBrief.match(/<pre class="reception-text">([\s\S]*?)<\/pre>/);
+    expect(wallMatch, '§7.2 wall inside <pre>').not.toBeNull();
+    const wallText = decodeEntities(wallMatch[1]);
+    expect(wallText).toBe(RECEPTION_WALL);
+    expect(wallText).not.toContain(BRIEF_HEADING);
+    expect(wallText).not.toContain(BRIEF_CTA);
+    expect(briefText).toContain(`<p class="reception-rating">${RECEPTION_RATING}</p>`);
+    // The brief heading is exactly one DOM element, not one substring of the
+    // file: the inlined dataset also carries the raw copy text, so count the
+    // rendered element on the boot-stripped markup.
+    const briefHeadingElements =
+      stripInlineBoot(withBrief).match(/<h3 class="reception-brief-heading">/g) ?? [];
+    expect(briefHeadingElements).toHaveLength(1);
+    expect(briefText).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
+    expect(briefText).toContain(`<p class="reception-brief-note">${BRIEF_NOTE}</p>`);
+    expect(briefText).toContain(`<p class="reception-brief-cta">${BRIEF_CTA}</p>`);
+    expect(briefText).toContain(`<p class="reception-brief-report">${BRIEF_REPORT}</p>`);
+    // The dump that ships summary.md shows the rendered brief, never the fallback.
+    expect(withBrief).toContain('<div class="reception-brief"><h4>Sample Dump brief</h4>');
+    expect(withBrief).not.toContain('class="reception-brief-missing"');
+
+    // §6.3/KDV-SURFACE-10: an author's brief can never smuggle a top-level
+    // heading into the page — the rendered DOM keeps exactly one <h1> (the body
+    // title) and the brief block carries no <h1>/<h2>/<h3> of its own.
+    const domPage = stripInlineBoot(withBrief);
+    expect(domPage.match(/<h1\b/g) ?? []).toHaveLength(1);
+    const briefBlock = domPage.match(/<div class="reception-brief">([\s\S]*?)<\/div>/);
+    expect(briefBlock, 'reception-brief block').not.toBeNull();
+    expect(briefBlock[1]).not.toMatch(/<h[1-3]\b/);
+    expect(briefBlock[1]).toContain('<h4>Sample Dump brief</h4>');
+
+    // The dump without the layer tells the truth instead of leaving an empty slot.
+    const withoutBrief = decodeEntities(
+      await readFile(join(publicDir, 'dumps', 'sample-dump-two', 'index.html'), 'utf8'),
+    );
+    expect(withoutBrief).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
+    expect(withoutBrief).toContain(`<p class="reception-brief-missing">${BRIEF_FALLBACK}</p>`);
+
+    // /reception/ carries no dump, so the fallback is what shows there (expected).
+    const receptionPage = decodeEntities(
+      await readFile(join(publicDir, 'reception', 'index.html'), 'utf8'),
+    );
+    expect(receptionPage).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
+    expect(receptionPage).toContain(`<p class="reception-brief-missing">${BRIEF_FALLBACK}</p>`);
+  });
+
+  it('KDV-SURFACE-19: the dump SSR ships the one-shot declaration toast as a hidden, dataset-wired live region', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+    const html = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
+
+    // §6.2/§6.6: a separate role="status" region, hidden in SSR, with its text
+    // carried through the dataset (a pre-filled region would not announce).
+    const toast = html.match(/<p class="declaration-toast"[^>]*>/);
+    expect(toast, 'declaration toast element').not.toBeNull();
+    expect(toast[0]).toContain('hidden');
+    expect(toast[0]).toContain('role="status"');
+    expect(decodeEntities(toast[0])).toContain(`data-toast-text="${DECLARATION_TOAST}"`);
+    // It is not the pre-existing announcement region — that one keeps its ids.
+    expect(toast[0]).not.toContain('a11y-status');
+    expect(html).toMatch(/<p id="a11y-status"[^>]*role="status"/);
+  });
+
+  it('KDV-SURFACE-17: every built route ships the hidden species chip with its copy bindings', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    const routes = [
+      'index.html',
+      'reception/index.html',
+      'about/index.html',
+      'contribute/index.html',
+      '404.html',
+      'dumps/sample-dump/index.html',
+    ];
+    for (const route of routes) {
+      const raw = await readFile(join(publicDir, ...route.split('/')), 'utf8');
+      // §7.13: the chip lives in the shared header, so every route carries it.
+      expect(raw, route).toContain('class="species-chip"');
+      expect(raw, route).toContain('id="species-chip"');
+      // The copydeck labels reach the client through the dataset (Handlebars
+      // escapes the `<version>`/`<declared-at>` placeholders — decode first).
+      const html = decodeEntities(raw);
+      expect(html, route).toContain(`data-machine-label="${CHIP_MACHINE_TEMPLATE}"`);
+      expect(html, route).toContain(`data-human-label="${CHIP_HUMAN_LABEL}"`);
+      expect(html, route).toContain(`data-title-template="${CHIP_TITLE_TEMPLATE}"`);
+    }
   });
 
   it('KDV-SURFACE-08: dump pages carry canonical + article og/twitter meta and a real PNG card; 404 is noindex and out of the sitemap', async () => {
@@ -778,6 +969,9 @@ describe('build controller (integration)', () => {
     const dumpData = JSON.parse(await readFile(join(dataDir, 'dumps', 'sample-dump.json'), 'utf8'));
     expect(dumpData.slug).toBe('sample-dump');
     expect(dumpData.body_html).toContain('<h1>Sample Heading</h1>');
+    // §6.3: the optional summary.md brief is rendered into the dataset.
+    expect(dumpData.brief_html).toContain('<h4>Sample Dump brief</h4>');
+    expect(dumpData.brief_html).toContain('<strong>brief</strong>');
 
     // One route dataset per layout: input/data/<layout>/main.json.
     for (const layout of ['home', 'reception', 'about', 'contribute', 'notfound']) {
@@ -790,9 +984,11 @@ describe('build controller (integration)', () => {
     expect(home.dumps[0].slug).toBe('sample-dump');
     expect(home.dumps[0].manifest_url).toBe(`${BASE_URL}/dumps/sample-dump/manifest.json`);
 
-    // …and the reception dataset carries the prompt/human copy.
+    // …and the reception dataset carries the prompt/human copy: the §7.2 wall
+    // and rating ride as separate keys from the brief tier.
     const reception = JSON.parse(await readFile(join(dataDir, 'reception', 'main.json'), 'utf8'));
-    expect(typeof reception.copy.reception).toBe('string');
+    expect(reception.copy.reception_wall).toBe(RECEPTION_WALL);
+    expect(reception.copy.reception_rating).toBe(RECEPTION_RATING);
     expect(typeof reception.copy.prompt).toBe('string');
   });
 

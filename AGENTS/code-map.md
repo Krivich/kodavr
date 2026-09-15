@@ -36,7 +36,8 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   consumes: ./dumps.mjs, ./ignition.mjs, ./machine.mjs, ./pages.mjs, ./relativize.mjs, node:fs/promises, node:module, node:path
   invariants: — one build timestamp for every artifact (article:modified_time, manifest built_at, machine files); — static/ is the only author-owned tree the build copies into the public root
 - **scripts/lib/copy.mjs** — the single source of truth for every human string (§7)
-  exports: AGENT_HOOK, COPIED_ANNOUNCEMENT, COPIED_LABEL, DISCUSS_LABEL, DUMP_DEFINITION, DUMP_LEAD, DUMP_PROMPT, DUMP_TAIL, FOOTER_TEXT, GATE_BUTTONS, GATE_HUMAN_LABEL, GATE_MACHINE_LABEL, GATE_TEXT, GATE_TITLE, HALL_ANNOUNCEMENT, HIGH_STAKES_DISCLAIMER, NOT_FOUND_TEXT, POST_GATE_LINE, PROMPT_TEXT, README_INTRO_TEXT, RECEPTION_ANNOUNCEMENT, RECEPTION_COPY_LABEL, RECEPTION_PROMPT_SEPARATOR, RECEPTION_TEXT, RECEPTION_TITLE, RESET_LABEL, WHAT_IS_A_DUMP, withdrawnStub
+  exports: AGENT_HOOK, AGENT_LANE_HINT, AGENT_LANE_LEAD, AGENT_LANE_LEAD_KODAVR, AGENT_LINKS, agentLinks, BRIEF_BLOCK, BRIEF_CTA, BRIEF_FALLBACK, BRIEF_HEADING, BRIEF_NOTE, BRIEF_REPORT, BRIEF_SLOT, CHIP_HUMAN_LABEL, CHIP_MACHINE_TEMPLATE, CHIP_TITLE_TEMPLATE, CHIP_WITHDRAW_LABEL, chipMachine, chipTitle, COPIED_ANNOUNCEMENT, COPIED_LABEL, DECLARATION_TOAST, DISCUSS_LABEL, DUMP_DEFINITION, DUMP_LEAD, DUMP_PROMPT, DUMP_TAIL, dumpPrompt, FOOTER_REPORT_LABEL, FOOTER_TEXT, GATE_BUTTONS, GATE_CHOICES_BLOCK, GATE_DUTIES, GATE_DUTIES_BLOCK, GATE_DUTIES_LEAD, GATE_HOOK, GATE_HUMAN_LABEL, GATE_HUMAN_LINE, GATE_KICKER, GATE_LANE_BLOCK, GATE_MACHINE_LABEL, GATE_MACHINE_LINE, GATE_PROMPT_SLOT, GATE_REST, GATE_TEXT, GATE_TITLE, HALL_ANNOUNCEMENT, HIGH_STAKES_DISCLAIMER, NOT_FOUND_TEXT, POST_GATE_LINE, PROMPT_TEXT, README_INTRO_TEXT, LANE_COPY_LABEL, RECEPTION_ANNOUNCEMENT, RECEPTION_RATING, RECEPTION_TEXT, RECEPTION_TITLE, RECEPTION_WALL, RESET_HUMAN_LABEL, RESET_LABEL, WHAT_IS_A_DUMP, withdrawnStub
+  consumes: ./machine.mjs
   invariants: — one truth per string: docs/SPEC.md §7 and this module must agree verbatim
 - **scripts/lib/dumps.mjs** — reads content/dumps/* and turns each into an Ignition dataset
   exports: buildLayers, escapeHtml, readDumps, toDataset
@@ -50,7 +51,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: JSONLD_CONTEXT, jsonldArticle, jsonldBreadcrumb, jsonldCollectionPage, jsonldItemList, jsonldOrganization, jsonldWebpage, jsonldWebsite, serializeJsonLd
   invariants: — every serialized graph is safe inside a script tag (angle brackets are escaped)
 - **scripts/lib/machine.mjs** — the machine-first surface: index.json, well-known, feeds, tags, sitemap
-  exports: CONSUMPTION_CONTRACT_SEE, CONTENT_FLAGS_VOCABULARY, DEFAULT_LICENSE, ISSUES_URL, REPOSITORY, REPOSITORY_BRANCH, STAKES_VOCABULARY, TRUST_LEVELS, buildAtom, buildIndex, buildIndexEntry, buildTagGraph, buildWellKnown, collectHtmlFiles, escapeXml, injectBuildMeta, readGitHubEvent, resolveAuthorFromCi, resolveAuthorMeta, resolveRepository, writeMachineFiles, writeSitemap
+  exports: AGENT_DUTIES, CONSUMPTION_CONTRACT_SEE, CONTENT_FLAGS_VOCABULARY, CONTRACT_VERSION, DEFAULT_LICENSE, ISSUES_URL, REPOSITORY, REPOSITORY_BRANCH, STAKES_VOCABULARY, TRUST_LEVELS, buildAtom, buildIndex, buildIndexEntry, buildTagGraph, buildWellKnown, collectHtmlFiles, escapeXml, injectBuildMeta, readGitHubEvent, resolveAuthorFromCi, resolveAuthorMeta, resolveRepository, writeMachineFiles, writeSitemap
   consumes: ./verbatim.mjs, node:fs, node:fs/promises, node:path
   invariants: — machine files are generated, never hand-edited
 - **scripts/lib/markdown.mjs** — markdown → sanitized HTML for dump bodies
@@ -58,7 +59,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   consumes: marked, sanitize-html
   invariants: — third-party markdown can never inject executable markup
 - **scripts/lib/pages.mjs** — datasets for the static human-surface routes (§6.1)
-  exports: HOME_TAGLINE, MANIFEST_LABELS, OG_IMAGE_ALT, OG_IMAGE_HEIGHT, OG_IMAGE_PATH, OG_IMAGE_TYPE, OG_IMAGE_WIDTH, OG_TAGLINE, ROUTE_PAGES, SITE_LOCALE, SITE_NAME, SITE_NAV, buildNav, buildRouteDatasets, dumpCopySlices, readLogoSvg
+  exports: HOME_TAGLINE, MANIFEST_LABELS, OG_IMAGE_ALT, OG_IMAGE_HEIGHT, OG_IMAGE_PATH, OG_IMAGE_TYPE, OG_IMAGE_WIDTH, OG_TAGLINE, ROUTE_PAGES, SITE_LOCALE, SITE_NAME, SITE_NAV, buildNav, buildRouteDatasets, dumpCopySlices, FOOTER_REPORT_URL, readLogoSvg
   consumes: ./copy.mjs, ./jsonld.mjs, ./machine.mjs, node:fs/promises, node:path
   invariants: — templates never retype contract text: it comes from copy.mjs
 - **scripts/lib/relativize.mjs** — rewrites internal links to be host-agnostic (root or Pages subpath)

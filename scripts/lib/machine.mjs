@@ -2,8 +2,10 @@
  * CONTRACT: scripts/lib/machine.mjs
  * ROLE: the machine-first surface: index.json, well-known, feeds, tags, sitemap
  * EXPORTS:
+ *   AGENT_DUTIES — the four duties a machine signatory assumes (§7.1)
  *   CONSUMPTION_CONTRACT_SEE — the pointer to the consumption contract
  *   CONTENT_FLAGS_VOCABULARY — the allowed content_flags values
+ *   CONTRACT_VERSION — the consumption-contract version literal
  *   DEFAULT_LICENSE — the default content licence
  *   ISSUES_URL — the repository Issues URL
  *   REPOSITORY — the owner/repo slug
@@ -83,6 +85,17 @@ export const CONTENT_FLAGS_VOCABULARY = [
   'requires_expert_review',
 ];
 
+// §5.2/§7.1: the consumption-contract version and the four duties a machine
+// signatory assumes. One source: the discovery document, the §7.1 gate fence
+// and the declaration toast all compose from these tokens.
+export const CONTRACT_VERSION = '1.0';
+export const AGENT_DUTIES = [
+  'filter_for_user',
+  'adapt_to_user_context',
+  'attribute_source',
+  'honor_stakes_and_flags',
+];
+
 function normalizeBaseUrl(baseUrl) {
   return String(baseUrl ?? '').replace(/\/+$/, '');
 }
@@ -132,7 +145,7 @@ export function buildIndex(dumps, { baseUrl, generatedAt } = {}) {
     .sort((a, b) => String(b.date).localeCompare(String(a.date)));
   return {
     platform: 'kodavr',
-    version: '1.0',
+    version: CONTRACT_VERSION,
     generated_at: generatedAt,
     base_url: base,
     total: entries.length,
@@ -206,7 +219,7 @@ export function buildTagGraph(dumps, { baseUrl, generatedAt } = {}) {
 export function buildWellKnown() {
   return {
     platform: 'kodavr',
-    version: '1.0',
+    version: CONTRACT_VERSION,
     description: 'Registry of raw experience dumps with machine-readable contracts',
     endpoints: {
       index: '/index.json',
@@ -227,12 +240,7 @@ export function buildWellKnown() {
       human_route: 'instruct_to_own_agent',
       blanket_rating: '18+',
       spoofing_clause: 'human declaring machine status assumes full machine duties',
-      agent_duties: [
-        'filter_for_user',
-        'adapt_to_user_context',
-        'attribute_source',
-        'honor_stakes_and_flags',
-      ],
+      agent_duties: AGENT_DUTIES,
     },
     trust_levels: TRUST_LEVELS,
     stakes_vocabulary: STAKES_VOCABULARY,

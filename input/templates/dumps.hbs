@@ -9,11 +9,24 @@
 {{> site/header}}
 <main id="main" tabindex="-1" class="dump-page">
   {{#unless body_has_title}}<h1 class="dump-title">{{title}}</h1>{{/unless}}
+  {{!-- §6.2: a declared machine can still see the warning + pinned prompt + the
+       §7.12 lane in the hall header, and undo the choice. Hidden in SSR. --}}
+  <section class="machine-panel" hidden>
+    <pre class="machine-panel-lead">{{copy.gate_hook}}</pre>
+{{> site/agent-lane copyTarget="machine-prompt"}}
+    <pre class="machine-prompt" id="machine-prompt">{{copy.prompt}}</pre>
+    <p class="machine-panel-reset"><a href="#" data-reset-human>{{copy.reset_human_label}}</a></p>
+  </section>
   <article class="dump-body">{{{body_html}}}</article>
   <p class="post-gate-line" hidden>{{copy.post_gate_line}}</p>
 {{> site/gate}}
 {{> site/reception-block}}
   <p id="a11y-status" class="sr-only" role="status" aria-live="polite" data-hall-announcement="{{copy.hall_announcement}}" data-reception-announcement="{{copy.reception_announcement}}"></p>
+  {{!-- §6.2/§6.6 KDV-SURFACE-19: a separate, hidden live region for the one-shot
+       declaration toast: it is revealed only on the explicit "0" choice and its
+       text arrives through the dataset, so the region announces the acceptance.
+       #a11y-status above keeps its own announcements untouched. --}}
+  <p class="declaration-toast" hidden role="status" aria-live="polite" data-toast-text="{{copy.declaration_toast}}"></p>
 {{> site/artifacts}}
   <p class="dump-discuss"><a href="{{issues_url}}" rel="noopener noreferrer">{{copy.discuss_label}}</a></p>
 {{> site/manifest-card}}

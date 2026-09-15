@@ -67,6 +67,6 @@ test('KDV-A11Y-03: choosing 1 opens reception and announces it; a copy sets the 
   await expect(page.locator('.dump-body')).toBeHidden();
   await expect(status).toHaveText(RECEPTION_ANNOUNCEMENT);
 
-  await page.locator('.copy-prompt').click();
+  await page.locator('.reception-block .copy-prompt').click();
   await expect(status).toHaveText(COPIED_ANNOUNCEMENT);
 });

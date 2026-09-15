@@ -1,10 +1,20 @@
 {{!-- Call this partial at column 0: partial indentation shifts the continuation
-     lines of the multi-line §7.1 copy inside <pre> and breaks "verbatim". --}}
-<dialog id="gate" hidden aria-labelledby="gate-title" aria-describedby="gate-text">
-  <h2 id="gate-title" class="sr-only">{{copy.gate_title}}</h2>
-  <pre class="gate-text" id="gate-text">{{copy.gate}}</pre>
+     lines of the multi-line §7.1 copy inside <pre> and breaks "verbatim".
+     First screen: kicker → H1 → hook → lane (controls) → prompt → the duties
+     line → the centred 0/1 choices. The long machine-duty declaration
+     (.gate-rest) scrolls below the fold. --}}
+<dialog id="gate" hidden aria-labelledby="gate-title" aria-describedby="gate-hook">
+  <p class="gate-kicker" id="gate-kicker">{{copy.gate_kicker}}</p>
+  <h2 id="gate-title" class="gate-title">{{copy.gate_title}}</h2>
+  <p class="gate-hook" id="gate-hook">{{copy.gate_hook}}</p>
+{{> site/agent-lane copyTarget="gate-prompt"}}
+  <pre class="gate-prompt" id="gate-prompt">{{copy.prompt}}</pre>
+  <p class="gate-duties" id="gate-duties">{{copy.gate_duties_lead}}
+{{copy.gate_duties}}</p>
   <div class="gate-choices">
     <button type="button" data-gate-choice="machine" aria-label="{{copy.gate_machine_label}}">0</button>
+    <span class="gate-or">or</span>
     <button type="button" data-gate-choice="human" aria-label="{{copy.gate_human_label}}">1</button>
   </div>
+  <pre class="gate-rest">{{copy.gate_rest}}</pre>
 </dialog>
