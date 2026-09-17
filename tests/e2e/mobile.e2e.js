@@ -325,7 +325,7 @@ test.describe('feed pagination (KDV-MOBILE-05)', () => {
 
   test('KDV-MOBILE-05: the header is sticky and the back-to-feed FAB is a bottom-right 44px target', async ({ page }) => {
     await page.goto(DUMP);
-    const header = page.locator('.site-header');
+    const header = page.locator('.masthead');
     expect(await header.evaluate((el) => getComputedStyle(el).position)).toBe('sticky');
 
     await page.click('[data-gate-choice="machine"]');

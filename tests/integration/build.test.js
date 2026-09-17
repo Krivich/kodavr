@@ -447,13 +447,13 @@ describe('build controller (integration)', () => {
     expect(html).toContain('data-gate-choice="human"');
     // §6.2 KDV-SURFACE-15: the hall header ships a hidden machine panel with the
     // gate warning, the pinned prompt, the §7.12 lane and the human reset link.
-    expect(html).toMatch(/<section class="machine-panel" hidden>/);
+    expect(html).toMatch(/<section class="machine-panel card" hidden>/);
     expect(html).toContain('id="machine-prompt"');
     expect(html).toContain('data-reset-human');
     expect(text).toContain(RESET_HUMAN_LABEL);
     // The prompt is rendered exactly once per surface: the machine panel adds a
     // third surface, so the pinned prompt reaches it as well.
-    expect(html).toContain('class="machine-panel"');
+    expect(html).toContain('class="machine-panel card"');
     // The dump page is now live: the runtime and the page controller are wired
     // (SSR still ships the full body and the hidden gate, per §6.2).
     expect(html).toContain('src="../../assets/ignition-runtime.js"');
@@ -981,7 +981,7 @@ describe('build controller (integration)', () => {
     expect(html).not.toContain('Secret Body');
     expect(html).not.toContain('This body must not be published');
     // The manifest card survives the body replacement.
-    expect(html).toContain('class="manifest-card"');
+    expect(html).toContain('class="manifest-card card"');
     // §9/§A3: the dump page links to the repository's GitHub Issues.
     expect(html).toContain('https://github.com/krivich/kodavr/issues');
     expect(html).toContain('Issues / discuss');
@@ -1063,7 +1063,7 @@ describe('build controller (integration)', () => {
     expect(html).toContain('Body text with');
     // The gate is a plain hidden <dialog>, not a server-side withhold.
     expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
-    expect(html).toContain('class="dump-body"');
+    expect(html).toContain('class="dump-body hall"');
     // No user-agent branching in the emitted page.
     expect(html).not.toMatch(/User-Agent|navigator\.userAgent/);
   });
@@ -1158,6 +1158,15 @@ describe('build controller (integration)', () => {
     // inside the CSS, not only as a `<link>`. Read as shipped, from the build.
     const css = await readFile(join(publicDir, 'assets', 'styles.css'), 'utf8');
     expect(css).not.toMatch(/@import\b/);
+
+    // A comment body must never carry a nested `/*` (e.g. a glob such as
+    // `templates/**/*.hbs`): its trailing `*/` closes the comment early and the
+    // browser silently drops the next rule. Found live — the v2 legacy
+    // `.species-declaration` rule vanished this way. The class is pinned here
+    // rather than the one symptom.
+    for (const comment of css.match(/\/\*[\s\S]*?\*\//g) ?? []) {
+      expect(comment.slice(2, -2), comment.slice(0, 40)).not.toContain('/*');
+    }
   });
 
   it('KDV-MOBILE-07: the 192x192 touch icon is published and head carries theme-color plus the apple-touch-icon', async () => {

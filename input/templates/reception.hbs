@@ -6,13 +6,19 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
+<div class="sheet">
 {{> site/header}}
-<main id="main" tabindex="-1" class="reception-page">
-  <h1>{{title}}</h1>
+<main id="main" tabindex="-1" class="reception-page sheet-inner">
+  <section class="plate" data-plate="01 · check-in">
+    <p class="kicker">human surface · check-in</p>
+    <h1>{{title}}</h1>
+    <p class="lead">You are at the human desk: instructions and metadata live here; the raw content stays machine-first.</p>
 {{> site/reception-block reveal=true}}
-  <p id="a11y-status" class="sr-only" role="status" aria-live="polite"></p>
-  <p class="reset-link-wrap"><a href="/" class="reset-link" data-reset-machine>{{copy.reset_label}}</a></p>
+    <p id="a11y-status" class="sr-only" role="status" aria-live="polite"></p>
+    <p class="reset-link-wrap resetline"><a href="/" class="reset-link" data-reset-machine>{{copy.reset_label}}</a></p>
+  </section>
 </main>
 {{> site/footer}}
+</div>
 </body>
 </html>

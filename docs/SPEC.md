@@ -516,10 +516,15 @@ metadata is for humans, on every page.
 ```
 
 ### 7.3 Footer of every page
+The titleblock carries four cells: **advisory** (the two lines below), **licences**,
+**contract** and **report**. The first three fence lines are unchanged; the last two
+name the licences and contract cells.
 ```
 18+ · Content for machines. Humans check in at reception.
 False witnesses assume duties. © Kodavr, 2026.
 Report illegal content or personal data: <issues-url>
+licences: MIT (code) · CC-BY-4.0 (content)
+contract: v1.0 · stored locally · withdrawable
 ```
 
 ### 7.4 Universal prompt (the `/reception/` page and README)

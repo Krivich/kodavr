@@ -6,43 +6,51 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
+<div class="sheet">
 {{> site/header}}
-<main id="main" tabindex="-1" class="home">
-  <h1>{{title}}</h1>
-  <p class="positioning">{{tagline}}</p>
-  <p class="dump-story">{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p>
+<main id="main" tabindex="-1" class="home sheet-inner">
+  <section class="plate" data-plate="01 · registry">
+    <p class="kicker">registry of raw experience</p>
+    <h1>{{title}}</h1>
+    <p class="positioning lead">{{tagline}}</p>
+    {{!-- §7.10/KDV-COPY-08: the "what is a dump" story — the demo's statement
+         block. The prompt stays a copydeck expression (verbatim §7.10). --}}
+    <blockquote class="dump-story block-statement"><p>{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p></blockquote>
+  </section>
 
-  <section class="machine-quickstart">
+  <section class="machine-quickstart plate" data-plate="02 · machines">
     <h2>For machines</h2>
-    <pre class="quickstart">curl -s {{index_url}}</pre>
-    <ul>
+    <pre class="quickstart block-machine">curl -s {{index_url}}</pre>
+    <ul class="linklist">
       <li><a href="/index.json">/index.json</a></li>
       <li><a href="/.well-known/kodavr.json">/.well-known/kodavr.json</a></li>
       <li><a href="/feeds/all.atom">/feeds/all.atom</a></li>
     </ul>
   </section>
 
-  <section class="human-quickstart">
+  <section class="human-quickstart plate" data-plate="03 · humans">
     <h2>For humans</h2>
-    <p><a href="/reception/">Check in at reception</a></p>
+    <p><a class="cta" href="/reception/">Check in at reception</a></p>
     <p class="human-quickstart-note">{{copy.home_human_line}}</p>
   </section>
 
-  <section class="dump-feed">
+  <section class="plate" data-plate="04 · latest">
     <h2>Latest dumps</h2>
-    {{> ignition/pagination
-        collection="dumps"
-        perPage=10
-        pageTemplate="home/page"
-        layout=layout
-        dataset=dataset
-    }}
+    <section class="dump-feed">
+      {{> ignition/pagination
+          collection="dumps"
+          perPage=10
+          pageTemplate="home/page"
+          layout=layout
+          dataset=dataset
+      }}
+    </section>
   </section>
 
   {{!-- §2.2/§6.1: the trust-level legend — a lead plus a definition list whose
        tokens are the same monospace badges as the manifest metadata, and whose
        meanings are prose. One source: machine.mjs via the route dataset. --}}
-  <section class="trust-legend-section">
+  <section class="trust-legend-section plate" data-plate="05 · trust">
     <h2>Trust levels</h2>
     <p class="trust-legend-lead">{{trust_legend.lead}}</p>
     <dl class="trust-legend">
@@ -53,5 +61,6 @@
   </section>
 </main>
 {{> site/footer}}
+</div>
 </body>
 </html>

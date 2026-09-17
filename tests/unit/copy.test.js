@@ -33,6 +33,8 @@ import {
   BRIEF_BLOCK,
   LANE_COPY_LABEL,
   FOOTER_TEXT,
+  FOOTER_LICENCES,
+  FOOTER_CONTRACT,
   FOOTER_REPORT_LABEL,
   PROMPT_TEXT,
   README_INTRO_TEXT,
@@ -218,6 +220,25 @@ describe('copydeck', () => {
     expect(fence.slice(0, 2).join('\n')).toBe(FOOTER_TEXT);
     expect(fence[2]).toBe(`${FOOTER_REPORT_LABEL}: <issues-url>`);
     expect(FOOTER_REPORT_LABEL).toBe('Report illegal content or personal data');
+    // §7.3 titleblock: the advisory two lines stay first (v1 contract), and the
+    // licences/contract cells are named in the same fence, verbatim from the demo.
+    expect(FOOTER_LICENCES).toBe('MIT (code) · CC-BY-4.0 (content)');
+    expect(FOOTER_CONTRACT).toBe('v1.0 · stored locally · withdrawable');
+    expect(fence).toContain(`licences: ${FOOTER_LICENCES}`);
+    expect(fence).toContain(`contract: ${FOOTER_CONTRACT}`);
+    // §7.3: the four cells ride on every route dataset (one shared slice), not
+    // retyped per route, and the footer partial renders them as a titleblock.
+    const routes = buildRouteDatasets([], { baseUrl: 'https://example.test' });
+    for (const route of ['home', 'reception', 'about', 'contribute', 'notfound']) {
+      expect(routes[route].copy.footer_licences, route).toBe(FOOTER_LICENCES);
+      expect(routes[route].copy.footer_contract, route).toBe(FOOTER_CONTRACT);
+    }
+    const footer = readFileSync(
+      fileURLToPath(new URL('../../input/templates/site/footer.hbs', import.meta.url)),
+      'utf8',
+    );
+    expect(footer).toContain('{{copy.footer_licences}}');
+    expect(footer).toContain('{{copy.footer_contract}}');
   });
 
   it('KDV-COPY-04: README intro text is verbatim from §7.5', () => {

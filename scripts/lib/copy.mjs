@@ -34,6 +34,8 @@
  *   DUMP_PROMPT — the canonical one-prompt dump prompt
  *   DUMP_TAIL — the one-prompt → one-dump → one-PR tail
  *   dumpPrompt — the §7.11 dump-pinned prompt (dump URL + index URL)
+ *   FOOTER_CONTRACT — the §7.3 titleblock contract cell (version · storage · withdrawal)
+ *   FOOTER_LICENCES — the §7.3 titleblock licences cell (code · content)
  *   FOOTER_REPORT_LABEL — the §7.3 report/takedown link label
  *   FOOTER_TEXT — the global footer lines (include the 18+ line)
  *   GATE_BUTTONS — the two §7.1 declaration clauses (0/1) reused below the fold
@@ -372,6 +374,14 @@ export const FOOTER_TEXT = [
   '18+ · Content for machines. Humans check in at reception.',
   'False witnesses assume duties. © Kodavr, 2026.',
 ].join('\n');
+
+// §7.3: the titleblock's licences cell (demo `docs/qwen/*.html` footer, verbatim).
+// Code and content ship under two licences; the cell is one line, never re-wrapped.
+export const FOOTER_LICENCES = 'MIT (code) · CC-BY-4.0 (content)';
+
+// §7.3: the titleblock's contract cell (demo footer, verbatim): the version the
+// declaration is bound to, stored only in this browser, withdrawable any time.
+export const FOOTER_CONTRACT = 'v1.0 · stored locally · withdrawable';
 
 // §7.3/§9: the report/takedown link label. The pages controller pairs it with the
 // repository's new-Issue URL (risk template preselected) so the §7.3 fence's third

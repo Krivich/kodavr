@@ -38,6 +38,8 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   FOOTER_TEXT,
+  FOOTER_LICENCES,
+  FOOTER_CONTRACT,
   FOOTER_REPORT_LABEL,
   GATE_TITLE,
   GATE_KICKER,
@@ -147,6 +149,18 @@ export function buildNav(currentHref) {
 // the label is copy.mjs's one truth (`risk-report.md` matches the template file).
 export const FOOTER_REPORT_URL = `${ISSUES_URL}/new?template=risk-report.md`;
 
+// §7.3: the titleblock's four cells are ONE dataset slice carried by every route
+// (the shared `commonPage`, the reception/404 overrides and the dump slices all
+// spread it), so the footer cannot drift between surfaces. The cell values are
+// the copydeck's one truth (copy.mjs); only the report URL is assembled here.
+const FOOTER_COPY = Object.freeze({
+  footer: FOOTER_TEXT,
+  footer_licences: FOOTER_LICENCES,
+  footer_contract: FOOTER_CONTRACT,
+  footer_report_label: FOOTER_REPORT_LABEL,
+  footer_report_url: FOOTER_REPORT_URL,
+});
+
 // §6.4: one social card for the whole site — a real 1200x630 PNG, published
 // from `static/assets/og-default.png` (regenerate with `npm run og-image`).
 // Exported so the dump dataset and the head partial cannot drift from it.
@@ -239,9 +253,8 @@ function commonPage({
       contract_version: CONTRACT_VERSION,
       // §7.13: the header chip's copydeck strings, on every route.
       ...CHIP_COPY,
-      footer: FOOTER_TEXT,
-      footer_report_label: FOOTER_REPORT_LABEL,
-      footer_report_url: FOOTER_REPORT_URL,
+      // §7.3: the titleblock's four cells, one source for every route.
+      ...FOOTER_COPY,
       // Route-specific copydeck strings (e.g. the home human line, the About
       // slogans) ride in through `extraCopy`, so the shared skeleton stays one place.
       ...extraCopy,
@@ -324,9 +337,8 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
     copy: {
       contract_version: CONTRACT_VERSION,
       ...CHIP_COPY,
-      footer: FOOTER_TEXT,
-      footer_report_label: FOOTER_REPORT_LABEL,
-      footer_report_url: FOOTER_REPORT_URL,
+      // §7.3: the titleblock's four cells (advisory · licences · contract · report).
+      ...FOOTER_COPY,
       // §7.2 v2: the wall and the rating are separate from the brief tier, so
       // the template renders each exactly once (no text on screen twice).
       reception_wall: RECEPTION_WALL,
@@ -397,9 +409,8 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
     copy: {
       contract_version: CONTRACT_VERSION,
       ...CHIP_COPY,
-      footer: FOOTER_TEXT,
-      footer_report_label: FOOTER_REPORT_LABEL,
-      footer_report_url: FOOTER_REPORT_URL,
+      // §7.3: the titleblock's four cells (advisory · licences · contract · report).
+      ...FOOTER_COPY,
       notFound: NOT_FOUND_TEXT,
     },
   };
@@ -470,9 +481,8 @@ export function dumpCopySlices({ dumpUrl = null, indexUrl = null } = {}) {
     // the hall by pressing "0". The text reaches the DOM through the dataset.
     declaration_toast: DECLARATION_TOAST,
     discuss_label: DISCUSS_LABEL,
-    footer: FOOTER_TEXT,
-    footer_report_label: FOOTER_REPORT_LABEL,
-    footer_report_url: FOOTER_REPORT_URL,
+    // §7.3: the titleblock's four cells, the same one source every route spreads.
+    ...FOOTER_COPY,
     labels: MANIFEST_LABELS,
   };
 }

@@ -498,7 +498,7 @@ test('KDV-SURFACE-17: the header chip follows the species — hidden fresh, mach
 
   // Keyboard: Tab from the header logo lands on the withdraw link — the pill
   // itself is not a focus stop.
-  await page.locator('a.site-logo').focus();
+  await page.locator('a.mark').focus();
   await page.keyboard.press('Tab');
   await expect(withdraw).toBeFocused();
 

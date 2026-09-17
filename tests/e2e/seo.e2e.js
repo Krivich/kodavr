@@ -52,7 +52,7 @@ test('KDV-SURFACE-12: a Googlebot request gets the readable SSR body with the ga
   expect(html).toContain('Body text with');
   // The gate and the reception block stay hidden, and nothing branches on the UA.
   expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
-  expect(html).toMatch(/class="reception-block"[^>]*hidden/);
+  expect(html).toMatch(/class="reception-block card"[^>]*hidden/);
   expect(html).not.toMatch(/Googlebot|navigator\.userAgent/);
 
   // canonical/og are absolute and on the build's own origin, never a bare path.

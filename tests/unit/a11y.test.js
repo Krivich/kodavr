@@ -119,8 +119,8 @@ describe('accessibility: landmarks and skip link (KDV-A11Y-01)', () => {
   }
 
   it('preserves the existing main classes', () => {
-    expect(template('dumps.hbs')).toContain('<main id="main" tabindex="-1" class="dump-page">');
-    expect(template('home.hbs')).toContain('<main id="main" tabindex="-1" class="home">');
+    expect(template('dumps.hbs')).toContain('<main id="main" tabindex="-1" class="dump-page sheet-inner">');
+    expect(template('home.hbs')).toContain('<main id="main" tabindex="-1" class="home sheet-inner">');
   });
 });
 
@@ -131,7 +131,7 @@ describe('accessibility: landmarks and skip link (KDV-A11Y-01)', () => {
 describe('accessibility: keyboard and current state (KDV-A11Y-04)', () => {
   it('the header nav is labelled and renders the current item from data', () => {
     const header = template('site/header.hbs');
-    expect(header).toMatch(/<nav class="site-nav" aria-label="Primary">/);
+    expect(header).toMatch(/<nav class="nav" aria-label="Primary">/);
     expect(header).toMatch(/\{\{#each nav\}\}/);
     expect(header).toMatch(/aria-current="page"/);
   });
@@ -355,9 +355,12 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
   const css = read('static/assets/styles.css');
 
   it('KDV-MOBILE-06: the human contour uses a --font-prose system stack and references no external font', () => {
+    // The v2 "contract sheet" demo stack (docs/qwen/styles.css --sans), renamed
+    // to --font-prose and declared exactly once.
     expect(css).toMatch(
-      /--font-prose\s*:\s*system-ui,\s*-apple-system,\s*'Segoe UI',\s*Roboto,\s*Helvetica,\s*Arial,\s*sans-serif/,
+      /--font-prose\s*:\s*system-ui,\s*-apple-system,\s*"Segoe UI",\s*Roboto,\s*"Helvetica Neue",\s*sans-serif/,
     );
+    expect((css.match(/--font-prose\s*:/g) || []).length).toBe(1);
     // No web font anywhere in the single stylesheet: no @font-face, no CDN, no URL.
     expect(css).not.toMatch(/@font-face/i);
     expect(css).not.toMatch(/fonts\.googleapis/i);

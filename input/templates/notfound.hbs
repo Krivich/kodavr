@@ -6,13 +6,20 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
+<div class="sheet">
 {{> site/header}}
-<main id="main" tabindex="-1" class="not-found">
-  {{!-- §6.6: the visible §7.6 block is a <pre>; this sr-only H1 still gives the
-       page exactly one heading for assistive tech without changing the copy. --}}
-  <h1 class="sr-only">{{title}}</h1>
-  <pre class="not-found-text">{{copy.notFound}}</pre>
+<main id="main" tabindex="-1" class="not-found sheet-inner void">
+  <section class="plate" data-plate="00 · void">
+    <p class="kicker">error sheet</p>
+    {{!-- §6.6: the visible §7.6 block is a <pre>; this sr-only H1 still gives the
+         page exactly one heading for assistive tech without changing the copy. --}}
+    <h1 class="sr-only">{{title}}</h1>
+    <pre class="not-found-text">{{copy.notFound}}</pre>
+    <p class="gate-hint">(Attribution is one of the four machine duties. The agent forgot. The agent is sorry.)</p>
+    <p><a class="cta" href="/">Return to the storefront</a></p>
+  </section>
 </main>
 {{> site/footer}}
+</div>
 </body>
 </html>

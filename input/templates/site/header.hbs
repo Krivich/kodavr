@@ -1,15 +1,18 @@
-<header class="site-header">
+<header class="masthead">
   {{!-- §6.5: inline the trusted logo (triple-stash) — no separate request.
        The <img> is the build-time fallback when the controller supplies no
        logo_svg (e.g. a dataset built without the static tree). --}}
-  <a class="site-logo" href="/">{{#if logo_svg}}{{{logo_svg}}}{{else}}<img src="/logo.svg" alt="Kodavr" width="32" height="32">{{/if}}</a>
+  <a class="mark" href="/">{{#if logo_svg}}{{{logo_svg}}}{{else}}<img src="/logo.svg" alt="Kodavr" width="32" height="32">{{/if}}</a>
   {{!-- §6.2/§7.13: the species status — a non-interactive status pill next to
        the separate withdraw action. The pill mirrors the stored declaration
        (§6.2); SSR ships both the pill and the link hidden and empty, and
        site.js fills the status text, carries the declaration date as the
        link's title and clears the declaration when the link is followed. No
        role="status": a live region must not wrap an interactive link, and it
-       would capture the announce() role fallback. --}}
+       would capture the announce() role fallback. The wrapper is the group
+       site.js walks to find the withdraw link (the link stays OUTSIDE the
+       pill); `.nav` owns the masthead's auto margin, so the species group sits
+       left of the nav (demo layout). --}}
   <p class="species-declaration">
     <span class="species-chip" id="species-chip" hidden
        data-machine-label="{{copy.chip_machine_template}}"
@@ -18,7 +21,7 @@
   </p>
   {{!-- §6.6: the nav is data-driven (route datasets carry `nav` with a `current`
        flag rendered as aria-current="page"); the static list is the fallback. --}}
-  <nav class="site-nav" aria-label="Primary">
+  <nav class="nav" aria-label="Primary">
     {{#if nav}}
     {{#each nav}}
     <a href="{{href}}"{{#if current}} aria-current="page"{{/if}}>{{label}}</a>

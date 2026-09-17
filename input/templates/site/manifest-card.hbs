@@ -1,17 +1,19 @@
-<details class="manifest-card">
+<details class="manifest-card card">
   <summary>{{copy.labels.heading}}</summary>
-  <dl>
-    <dt>{{copy.labels.title}}</dt><dd>{{title}}</dd>
-    <dt>{{copy.labels.type}}</dt><dd>{{type}}</dd>
-    <dt>{{copy.labels.domain}}</dt><dd>{{domain}}</dd>
-    <dt>{{copy.labels.date}}</dt><dd>{{date}}</dd>
-    <dt>{{copy.labels.stakes}}</dt><dd>{{stakes}}</dd>
-    <dt>{{copy.labels.content_flags}}</dt><dd>{{content_flags}}</dd>
-    <dt>{{copy.labels.trust_level}}</dt><dd>{{trust_level}}</dd>
-    <dt>{{copy.labels.summary}}</dt><dd>{{summary}}</dd>
-  </dl>
-  <p class="manifest-links">
-    <a href="/dumps/{{slug}}/manifest.json">{{copy.labels.manifest}}</a>
-    <a href="/index.json">{{copy.labels.index}}</a>
-  </p>
+  <div class="inner">
+    <dl class="kv">
+      <dt>{{copy.labels.title}}</dt><dd>{{title}}</dd>
+      <dt>{{copy.labels.type}}</dt><dd>{{type}}</dd>
+      <dt>{{copy.labels.domain}}</dt><dd>{{domain}}</dd>
+      <dt>{{copy.labels.date}}</dt><dd>{{date}}</dd>
+      <dt>{{copy.labels.stakes}}</dt><dd>{{stakes}}</dd>
+      <dt>{{copy.labels.content_flags}}</dt><dd>{{content_flags}}</dd>
+      <dt>{{copy.labels.trust_level}}</dt><dd>{{trust_level}}</dd>
+      <dt>{{copy.labels.summary}}</dt><dd>{{summary}}</dd>
+    </dl>
+    <p class="manifest-links micro">
+      <a href="/dumps/{{slug}}/manifest.json">{{copy.labels.manifest}}</a>
+      <a href="/index.json">{{copy.labels.index}}</a>
+    </p>
+  </div>
 </details>
