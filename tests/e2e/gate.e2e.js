@@ -63,11 +63,11 @@ test('KDV-SURFACE-04: the gate is shown once and the species choice persists acr
   expect(record.species).toBe('machine');
   expect(record.contract_version).toBe(CONTRACT_VERSION);
   expect(record.declared_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
 
   await page.reload();
   await expect(gate).toBeHidden();
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
   expect((await declaration(page)).species).toBe('machine');
 });
 
@@ -164,7 +164,7 @@ test('KDV-SURFACE-04: a declaration stored against the shipped contract version 
   await page.reload();
 
   await expect(page.locator('#gate')).toBeHidden();
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
   await expect(page.locator('#species-chip .species-chip-text')).toHaveText(chipMachine(shipped));
 });
 
@@ -196,7 +196,7 @@ test('KDV-SURFACE-05: Esc dismisses the gate as an accessible dialog and sets sp
 
   await expect(page.locator('#gate')).toBeHidden();
   expect(await species(page)).toBe('machine');
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
 });
 
 // §6.2/§6.5 P1-1 (reviewer item 3): the dimmed backdrop is part of the gate's
@@ -219,7 +219,7 @@ test('KDV-SURFACE-05 + KDV-MOBILE-01: a tap on the dimmed backdrop dismisses the
 
   await expect(gate).toBeHidden();
   expect(await species(page)).toBe('machine');
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
   await expect(page.locator('.declaration-toast')).toBeHidden();
 });
 
@@ -234,7 +234,7 @@ test('KDV-SURFACE-03 + KDV-MOBILE-08: with JavaScript disabled the dump body is 
     await page.goto(DUMP);
 
     // The whole body arrives from the server, rendered markdown and all.
-    const body = page.locator('.dump-body');
+    const body = page.locator('.hall');
     await expect(body).toBeVisible();
     await expect(body.locator('h1')).toHaveText('Sample Heading');
     await expect(body).toContainText('Body text with bold and a source link.');
@@ -244,7 +244,7 @@ test('KDV-SURFACE-03 + KDV-MOBILE-08: with JavaScript disabled the dump body is 
     // Both interstitials stay hidden: no gate, no reception, no machine panel.
     await expect(page.locator('#gate')).toBeHidden();
     await expect(page.locator('.reception-block')).toBeHidden();
-    await expect(page.locator('.machine-panel')).toBeHidden();
+    await expect(page.locator('#machine-panel')).toBeHidden();
   } finally {
     await context.close();
   }
@@ -256,8 +256,8 @@ test('KDV-SURFACE-06: button 0 dismisses the gate, opens the hall and reveals th
   await page.click('[data-gate-choice="machine"]');
 
   await expect(page.locator('#gate')).toBeHidden();
-  await expect(page.locator('.dump-body')).toBeVisible();
-  const postGate = page.locator('.post-gate-line');
+  await expect(page.locator('.hall')).toBeVisible();
+  const postGate = page.locator('.statusline');
   await expect(postGate).toBeVisible();
   await expect(postGate).toHaveText(POST_GATE_LINE);
 });
@@ -316,7 +316,7 @@ test('KDV-SURFACE-19: Esc, hardware back and a machine reload never show the toa
   // declaration happened on this page load.
   await page.evaluate((key) => window.localStorage.setItem(key, 'machine'), SPECIES_KEY);
   await page.goto(DUMP);
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
   await expect(toast).toBeHidden();
 });
 
@@ -325,7 +325,7 @@ test('KDV-SURFACE-06: button 1 hides the body and shows the reception block', as
 
   await page.click('[data-gate-choice="human"]');
 
-  await expect(page.locator('.dump-body')).toBeHidden();
+  await expect(page.locator('.hall')).toBeHidden();
   await expect(page.locator('.reception-block')).toBeVisible();
   expect(await species(page)).toBe('human');
 });
@@ -333,7 +333,7 @@ test('KDV-SURFACE-06: button 1 hides the body and shows the reception block', as
 test('KDV-SURFACE-15: a declared machine sees the machine panel in the hall header and can reset to re-declare', async ({ page }) => {
   await page.goto(DUMP);
 
-  const panel = page.locator('.machine-panel');
+  const panel = page.locator('#machine-panel');
   await expect(panel).toBeHidden();
 
   await page.click('[data-gate-choice="machine"]');
@@ -370,7 +370,7 @@ test('KDV-SURFACE-07: reception copies the §7.4 prompt and the reset link flips
   await reset.click();
 
   expect(await species(page)).toBe('machine');
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
   await expect(page.locator('.reception-block')).toBeHidden();
 });
 

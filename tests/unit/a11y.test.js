@@ -402,9 +402,9 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
 
     // The hall body (keeping its KDV-MOBILE-02 clamp) and the manifest card are
     // machine contour: mono via the same token.
-    expect(css).toMatch(/\.dump-body\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
-    expect(css).toMatch(/\.dump-body\s*\{[^}]*clamp\(1rem, 2\.5vw, 1\.125rem\)/);
-    expect(css).toMatch(/\.manifest-card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(css).toMatch(/\.hall\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(css).toMatch(/\.hall\s*\{[^}]*clamp\(1rem, 2\.5vw, 1\.125rem\)/);
+    expect(css).toMatch(/details\.card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
 
     // The human contour stays proportional: the reception prose rule keeps the
     // prose token and never picks up the mono one.
@@ -486,12 +486,12 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     expect(css).toMatch(
       /\.reception-prompt,\s*\.gate-prompt,\s*\.machine-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
     );
-    expect(css).toMatch(/\.manifest-card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
+    expect(css).toMatch(/details\.card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
   });
 
   it('KDV-SURFACE-13: the machine panel hook sits a notch below the panel prose (§6.2, P2-3)', () => {
-    const lead = css.match(/\.machine-panel-lead\s*\{[^}]*\}/);
-    expect(lead, '.machine-panel-lead rule').not.toBeNull();
+    const lead = css.match(/#machine-panel \.block-machine\s*\{[^}]*\}/);
+    expect(lead, '#machine-panel .block-machine rule').not.toBeNull();
     const size = /font-size:\s*([\d.]+)rem/.exec(lead[0]);
     expect(size, 'font-size in rem').not.toBeNull();
     // < 1rem, i.e. smaller than the panel's prose (the inherited root size).

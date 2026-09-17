@@ -2,11 +2,11 @@
      Rendered server-side by `ignition/pagination` (with basePath/items/pagination)
      and client-side by `ignition-pagination.js` (items/pagination only). --}}
 {{#each items}}
-<article class="dump-card card">
+<article class="card">
   <h3><a href="/dumps/{{slug}}/">{{title}}</a></h3>
-  <p class="dump-meta meta">{{date}} · {{domain}} · {{stakes}} · {{trust_level}}</p>
-  <p class="dump-flags badges">{{content_flags}}</p>
-  <p class="dump-summary summary">{{summary}}</p>
+  <p class="meta">{{date}} · {{domain}} · {{stakes}} · {{trust_level}}</p>
+  <p class="flags">{{content_flags}}</p>
+  <p class="summary">{{summary}}</p>
 </article>
 {{/each}}
 <nav class="pagination" aria-label="Pagination">

@@ -24,10 +24,10 @@
 
   window.ignition.controller(function () {
     var gate = document.getElementById('gate');
-    var body = document.querySelector('.dump-body');
+    var body = document.querySelector('.hall');
     var reception = document.querySelector('.reception-block');
-    var postGate = document.querySelector('.post-gate-line');
-    var machinePanel = document.querySelector('.machine-panel');
+    var postGate = document.querySelector('.statusline');
+    var machinePanel = document.getElementById('machine-panel');
     var toast = document.querySelector('.declaration-toast');
     var status = document.getElementById('a11y-status');
 

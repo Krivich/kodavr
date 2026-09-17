@@ -12,24 +12,24 @@
   <section class="plate" data-plate="01 · manifesto">
     <p class="kicker">about the platform</p>
     <h1>{{title}}</h1>
-    <p class="manifesto lead"><strong>Kodavr</strong> is a registry of raw experience — "dumps" — with a machine-readable contract, open to any field: engineering, design, finance, construction, sales, and everything in between. Authors publish dumps without polishing; readers' agents adapt them to their own context.</p>
+    <p class="lead"><strong>Kodavr</strong> is a registry of raw experience — "dumps" — with a machine-readable contract, open to any field: engineering, design, finance, construction, sales, and everything in between. Authors publish dumps without polishing; readers' agents adapt them to their own context.</p>
     {{!-- §7.10/KDV-COPY-08: the "what is a dump" story — the demo's left-ruled
          statement block. The prompt stays a copydeck expression (verbatim §7.10). --}}
-    <blockquote class="dump-story block-statement">
+    <blockquote class="block-statement">
       <p>{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p>
     </blockquote>
-    <ul class="principles prose">
+    <ul class="prose">
       <li>Dumps are raw: no polishing, no tailoring to an audience.</li>
       <li>The contract is machine-readable, the source is open.</li>
       <li>Readers meet dumps through their own agent, not through the platform — and the agent picks which dumps are worth its user's attention.</li>
     </ul>
-    <blockquote class="publish-note block-statement emph">
+    <blockquote class="block-statement emph">
       <p>So publish without fear: your dump does not have to find its reader on its own. The agent selects what is interesting for its particular user, and then rewrites the dump for that user — longer or shorter, in this or another style, with explanations or without. Your raw text becomes exactly what the reader needs; both the selection and the adaptation happen on their side.</p>
     </blockquote>
-    <div class="about-logo mark-lg"><img src="/logo.svg" alt="Kodavr" width="64" height="64"></div>
+    <div class="mark-lg"><img src="/logo.svg" alt="Kodavr" width="64" height="64"></div>
     <p class="slogan">{{copy.brand_slogan_lead}}</p>
     <p class="slogan-muted">{{copy.brand_slogans_muted}}</p>
-    <p class="adr micro"><a href="/docs/decisions.md">Architecture decisions</a></p>
+    <p class="micro"><a href="/docs/decisions.md">Architecture decisions</a></p>
   </section>
 </main>
 {{> site/footer}}

@@ -75,11 +75,6 @@ pre{font-family:var(--font-mono);white-space:pre-wrap;word-break:break-word;
   color:var(--paper);font:700 15px/1 var(--font-mono);text-decoration:none}
 .mark:hover{text-decoration:none;opacity:.88}
 .mark svg,.mark img{width:28px;height:28px;display:block}
-.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;
-  padding:4px 12px;font:400 11px/1.4 var(--font-mono);color:var(--muted)}
-.chip::before{content:"";width:6px;height:6px;flex:none;background:var(--accent)}
-body[data-species="human"] .chip::before{background:transparent;box-shadow:inset 0 0 0 1px var(--muted)}
-body:not([data-species]) .chip::before{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2)}
 .nav{margin-left:auto;display:flex;gap:var(--sp-4);flex-wrap:wrap}
 .nav a{font:500 12px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:6px 2px}
 .nav a:hover{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px}
@@ -112,6 +107,9 @@ p{max-width:var(--measure)}
 /* statement / contract: left rule, no fill */
 .block-statement{border-left:3px solid var(--ink);padding:var(--sp-1) 0 var(--sp-1) var(--sp-4);
   margin:var(--sp-5) 0;font-style:italic;color:var(--ink-2)}
+/* the plain statement keeps the prose measure; the emphasised publish-note fills
+   its column (as the demo does) */
+.block-statement:not(.emph){max-width:var(--measure)}
 .block-statement p{margin:0 0 var(--sp-3)}
 .block-statement p:last-child{margin-bottom:0}
 .block-statement p strong{font-style:normal;letter-spacing:.02em}
@@ -129,7 +127,6 @@ p{max-width:var(--measure)}
 .linklist{list-style:none;margin:var(--sp-4) 0 0;padding:0;font:400 13px/2 var(--font-mono)}
 .linklist li{padding-left:var(--sp-4);text-indent:calc(-1 * var(--sp-4))}
 .linklist li::before{content:"· ";color:var(--muted)}
-.tablewrap{overflow-x:auto;margin:var(--sp-4) 0;border:1px solid var(--line-2)}
 table{border-collapse:collapse;width:100%;font:400 13px/1.6 var(--font-mono)}
 th{text-align:left;font-weight:500;background:var(--block);border-bottom:1px solid var(--line)}
 th,td{padding:8px 12px;border-right:1px solid var(--line-2);vertical-align:top}
@@ -156,18 +153,17 @@ th:last-child,td:last-child{border-right:0}
 .card h3 a{text-decoration:none}
 .card h3 a:hover{text-decoration:underline;text-decoration-color:var(--accent)}
 .card .meta{font:400 11px/1.6 var(--font-mono);letter-spacing:.06em;color:var(--muted);margin:0 0 var(--sp-2)}
-.badges{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 var(--sp-3);padding:0;list-style:none}
-.badges li{border:1px solid var(--line);border-radius:4px;padding:2px 8px;font:400 10px/1.6 var(--font-mono);
-  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+/* the feed row's flag line (a plain <p>, not the demo <ul>) */
+.flags{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 var(--sp-3);padding:0;list-style:none;
+  font:400 10px/1.6 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .card .summary{font:400 .95rem/1.6 var(--font-prose);color:var(--ink-2);margin:0}
 .row{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-4);align-items:start;padding:var(--sp-4) var(--sp-5)}
 .row + .row{border-top:1px solid var(--line-2)}
 .row p{margin:var(--sp-1) 0 0;font:400 13px/1.6 var(--font-prose);color:var(--muted)}
 .filechip{border:1px solid var(--line);border-radius:999px;padding:2px 10px;font:400 10px/1.6 var(--font-mono);
   letter-spacing:.1em;text-transform:uppercase;color:var(--muted);justify-self:start}
-/* `.manifest-card` is the legacy hook on the same `<details>`: aliased here so
-   the tested machine-contour (mono) contract still matches. */
-details.card,.manifest-card{padding:0;font-family:var(--font-mono)}
+/* the manifest accordion: a demo `details.card` — no padding, machine contour. */
+details.card{padding:0;font-family:var(--font-mono)}
 details.card summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;
   padding:var(--sp-4) var(--sp-5);font:700 13px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase}
 details.card summary::-webkit-details-marker{display:none}
@@ -179,23 +175,10 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
 .kv dd{margin:0}
 .resetline{margin:var(--sp-5) 0 0}
 
-/* agent lane (§7.12) — the demo `.lane`; every control ≥44px and its label is
-   vertically centred (the demo leaves the text top-aligned: fixed here). */
-.lane-title{font:700 .95rem/1.4 var(--font-prose);margin:0 0 var(--sp-3)}
-.lane{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin:0;padding:0}
-.lane a,.lane button{border:1px solid var(--line);background:transparent;color:var(--ink);
-  padding:9px 14px;font:400 14px/1 var(--font-prose);cursor:pointer;text-decoration:none;min-height:44px;
-  display:inline-flex;align-items:center;justify-content:center}
-.lane a:hover,.lane button:hover{border-color:var(--ink)}
-.lane-hint{font:400 12px/1.6 var(--font-prose);color:var(--muted);margin:var(--sp-2) 0 0}
-
 /* legal group */
 .legal-group{border-top:1px solid var(--line-2);margin-top:var(--sp-5);padding-top:var(--sp-3);
   font:400 12px/1.7 var(--font-mono);color:var(--muted);display:grid;gap:var(--sp-2)}
 .legal-group p{margin:0}
-/* §1: the machine-room status line */
-.status{font:400 13px/1.6 var(--font-mono);color:var(--muted)}
-
 /* ============ 08 · TRUST SCALE ============ */
 /* `.trust-legend` is the tested home hook (class="trust-legend" is pinned by
    build.test.js); it is aliased onto the demo `.trust` scale so the storefront
@@ -214,9 +197,14 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
 }
 
 /* ============ 09 · PAGINATION ============ */
-.pager{display:flex;justify-content:center;gap:var(--sp-2);margin-top:var(--sp-5)}
-.pager a,.pager span{font:400 12px/1 var(--font-mono);padding:6px 10px;border:1px solid transparent;text-decoration:none}
-.pager [aria-current="page"]{color:var(--accent);border-color:var(--accent);font-weight:700}
+/* §6.5: touch-sized arrows and numbers (KDV-MOBILE-05). */
+.pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--sp-2);margin:var(--sp-5) 0}
+.pagination a{display:inline-flex;align-items:center;justify-content:center;min-width:var(--tap);min-height:var(--tap);
+  padding:0 .5rem;border:1px solid var(--line);text-decoration:none;color:var(--ink);
+  font:400 12px/1 var(--font-mono);background:transparent}
+.pagination-arrow{min-width:var(--tap);min-height:var(--tap);font-size:1.25rem}
+.pagination-number{min-width:var(--tap);min-height:var(--tap)}
+.pagination-number.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 /* ============ 10 · TITLEBLOCK ============ */
 .titleblock{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;border:1px solid var(--line);
@@ -232,43 +220,65 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
 }
 
 /* ============ 11 · HALL (machine room) ============ */
-/* `.dump-body` is the legacy hook the layout still carries; it is aliased here
-   so the KDV-MOBILE-02 mono/clamp contract matches on either selector. */
-.hall, .dump-body{font-family:var(--font-mono);font-size:clamp(1rem, 2.5vw, 1.125rem);line-height:1.7}
+/* the machine room body (KDV-MOBILE-02): mono with a fluid clamp. */
+.hall{font-family:var(--font-mono);font-size:clamp(1rem, 2.5vw, 1.125rem);line-height:1.7}
 .hall h1{font:700 clamp(1.5rem,4vw,2.25rem)/1.25 var(--font-mono);letter-spacing:0}
 .hall h2{font:700 1.25rem/1.35 var(--font-mono);margin-top:var(--sp-7)}
 .hall h2::after{display:none}
 .hall p{max-width:78ch}
 /* `.post-gate-line` is the hook the hall still ships (SSR hidden) */
-.statusline,
-.post-gate-line{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0 0 var(--sp-5);
+.statusline{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0 0 var(--sp-5);
   font:400 13px/1.6 var(--font-mono);color:var(--ink-2)}
 
 /* ============ 12 · GATE ============ */
-dialog.gate{border:0;padding:0;background:transparent;width:min(92vw,44rem);max-width:44rem}
-dialog.gate::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
-.gate-doc{position:relative;background:var(--paper);border:1px solid var(--ink);
-  outline:1px solid var(--line);outline-offset:4px;padding:clamp(20px,4.5vw,44px)}
-.gate-formno{position:absolute;top:10px;right:14px;font:400 10px/1.4 var(--font-mono);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
-.gate h2{font:800 clamp(1.35rem,3vw,1.7rem)/1.2 var(--font-prose);letter-spacing:.01em;margin:0 0 var(--sp-4);text-transform:uppercase}
-.gate h2::after{display:none}
-.gate .hook{font:400 1rem/1.6 var(--font-prose);color:var(--ink-2);margin:0 0 var(--sp-5)}
-.duties{border-left:3px solid var(--ink);padding:var(--sp-2) 0 var(--sp-2) var(--sp-4);margin:var(--sp-5) 0;font:400 13px/1.7 var(--font-mono)}
-.duties p{margin:0}
-.doors{display:flex;gap:var(--sp-3);align-items:stretch;margin:var(--sp-5) 0}
-.doors .or{align-self:center;font:400 12px/1 var(--font-mono);color:var(--muted)}
-.door{flex:1;display:grid;grid-template-columns:auto 1fr;gap:var(--sp-3);align-items:center;border:1px solid var(--line);
-  background:transparent;color:var(--ink);padding:var(--sp-4);text-align:left;cursor:pointer;min-height:44px;
+/* The demo's own gate markup (.gate/.gate-doc/.gate-formno/.doors/.duties/
+   .declaration) was never ported — the live dialog is `#gate` with the
+   `.gate-*` / `.door*` hooks below. `.gate-hint` survives on the 404. */
+/* §6.5: a contract document — a framed card with a document measure, capped to
+   the viewport so the long duties clause stays reachable. */
+#gate{max-height:calc(100vh - 2rem);max-width:46rem;width:min(92vw,46rem);overflow-y:auto;margin:auto;
+  border:1px solid var(--line);outline:1px solid var(--line-2);outline-offset:4px;
+  padding:clamp(16px,3vw,32px);background:var(--paper);color:var(--ink);transition:opacity .15s ease}
+/* §3.7 P1-1: a modal must read as modal — the pinned #111 scrim at 32% (the
+   UA default ~10% is too faint to separate the ceremony from the page). */
+dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
+#gate p,
+#gate .door-label{max-width:68ch}
+#gate h2{font:800 clamp(1.35rem,3vw,1.7rem)/1.2 var(--font-prose);letter-spacing:.01em;
+  text-transform:uppercase;margin:0 0 var(--sp-3)}
+#gate h2::after{display:none}
+/* §7.1 v2: the standard phrase is demoted to a muted kicker above the title. */
+.gate-kicker{font:500 11px/1.4 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 var(--sp-1)}
+.gate-hook{margin:0 0 var(--sp-3);font:400 1rem/1.6 var(--font-prose);color:var(--ink-2);max-width:var(--measure)}
+/* §7.1: duties are lead + tokens on two physical lines (`pre-line` keeps the
+   split) and read as a clause — a left rule with indented text. */
+.gate-duties{margin:0 0 var(--sp-2);white-space:pre-line;border-left:2px solid var(--line);
+  padding:4px 0 4px var(--sp-4);font:400 13px/1.7 var(--font-mono);max-width:var(--measure)}
+/* §6.5: a rule above the doors is the signature line. */
+.gate-doors{display:flex;gap:var(--sp-3);align-items:stretch;justify-content:center;
+  border-top:1px solid var(--line);padding-top:var(--sp-2);margin:0 0 var(--sp-4)}
+.gate-or{align-self:center;font:400 12px/1 var(--font-mono);color:var(--muted)}
+/* §6.5 P0-1: each door is a labelled contract card — the digit is a badge, the
+   label (the accessible name) is prose. */
+.door{flex:1;display:grid;grid-template-columns:auto 1fr;gap:var(--sp-3);align-items:center;min-height:var(--tap);
+  padding:var(--sp-3);border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;
+  text-align:left;cursor:pointer;touch-action:manipulation;
   transition:border-color .15s ease,background .15s ease}
 .door:hover{border-color:var(--ink);background:var(--block)}
-.door .digit{width:2.2rem;height:2.2rem;display:grid;place-items:center;border:1px solid var(--ink);font:500 15px/1 var(--font-mono)}
-.door[data-enter="machine"] .digit{border-color:var(--accent);color:var(--accent)}
-.door .label{font:400 .95rem/1.45 var(--font-prose)}
-@media (max-width:520px){.doors{flex-direction:column}.doors .or{align-self:flex-start}}
-.declaration{border:1px solid var(--line-2);background:transparent;padding:var(--sp-4);margin:0;
-  font:400 12.5px/1.75 var(--font-mono);color:var(--ink-2);width:fit-content;max-width:100%}
-.declaration p{margin:0 0 var(--sp-3)}
-.declaration p:last-child{margin-bottom:0}
+.door-digit{flex:0 0 auto;width:2.2rem;height:2.2rem;display:grid;place-items:center;
+  border:1px solid var(--ink);font:500 15px/1 var(--font-mono)}
+.door[data-gate-choice="machine"] .door-digit{border-color:var(--accent);color:var(--accent)}
+.door-label{font-family:var(--font-prose);font-size:.95rem;text-align:left;white-space:normal}
+
+/* §6.2/§6.6 KDV-SURFACE-19: the one-shot declaration toast. Fixed so it never
+   shifts layout; inset on both sides so it cannot introduce horizontal scroll. */
+.declaration-toast{position:fixed;left:1rem;right:1rem;bottom:calc(4.5rem + env(safe-area-inset-bottom));
+  z-index:40;max-width:32rem;margin:0 auto;padding:var(--sp-3) var(--sp-4);
+  background:var(--ink);color:var(--paper);border-left:3px solid var(--accent);
+  font:400 12px/1.6 var(--font-mono);animation:declaration-toast-in .2s ease-out}
+@keyframes declaration-toast-in{from{opacity:0}to{opacity:1}}
+
 .gate-hint{font:400 12px/1.7 var(--font-mono);color:var(--muted);margin:var(--sp-4) 0 0;padding-left:var(--sp-4);border-left:1px solid var(--line-2)}
 
 /* ============ 13 · MISC ============ */
@@ -281,8 +291,7 @@ dialog.gate::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
 .fab:hover{text-decoration:none;opacity:.88}
 .mark-lg{width:64px;height:64px;display:grid;place-items:center;background:var(--ink);color:var(--paper);
   font:700 26px/1 var(--font-mono);margin:var(--sp-6) 0 var(--sp-3)}
-.slogans{font:400 13px/1.8 var(--font-mono);color:var(--muted);margin:var(--sp-3) 0 0}
-/* the About page's muted slogans: the demo `.slogans` role (was left unstyled) */
+/* the About page's muted slogans group */
 .slogan-muted{font:400 13px/1.8 var(--font-mono);color:var(--muted);margin:var(--sp-3) 0 0}
 .void::after{content:"404";position:absolute;right:-8px;top:56px;pointer-events:none;opacity:.5;
   font:700 clamp(6rem,18vw,14rem)/1 var(--font-mono);color:transparent;-webkit-text-stroke:1px var(--line-2)}
@@ -291,19 +300,18 @@ dialog.gate::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
 /* ============ 14 · PRINT ============ */
 @media print{
   body{padding:0}
-  .gate,.toast,.nav,.chip,.fab{display:none!important}
+  #gate,.toast,.nav,.fab{display:none!important}
   .sheet{border:1px solid #000;outline:0}
   .plate::before{color:#000}
 }
 
 /* =====================================================================
-   15 · LEGACY COMPATIBILITY — TEMPORARY
-   The ported templates still carry the hooks below. Each rule exists only
-   because its element is still on a template (or pinned by a test) where the
-   demo sheet has no equivalent or names the role differently. Delete a rule
-   only together with its last hook: verify the selector is absent from
-   input/templates (all .hbs files) AND tests (all specs) first. No colour, font or spacing
-   value here is new — every one is a token declared above.
+   15 · APP COMPONENTS — our extensions over the demo sheet
+   Everything the demo vocabulary has no equivalent for (or names differently):
+   the species chrome, the reception surface, the agent lane, the feed and the
+   hall extras. Every value is a token declared above. To delete a rule, first
+   prove its selector is absent from input/templates (all .hbs), input/controllers
+   and tests (all specs). The demo roles themselves live in §03–§13.
    ===================================================================== */
 
 /* --- chrome: species declaration + the two footer cells ---------------- */
@@ -327,11 +335,7 @@ dialog.gate::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
 .footer-report{display:inline-block;margin-top:var(--sp-2);font:400 11px/1.6 var(--font-mono)}
 
 /* --- home / about prose ---------------------------------------------- */
-.positioning{font:400 1.0625rem/1.6 var(--font-prose);color:var(--ink-2);
-  max-width:var(--measure);margin:0 0 var(--sp-5)}
-/* §7.10: what a dump is, woven into the prose */
-.dump-story{border-left:3px solid var(--ink);padding:var(--sp-1) 0 var(--sp-1) var(--sp-4);
-  margin:var(--sp-5) 0;font-style:italic;color:var(--ink-2);max-width:var(--measure)}
+/* §7.10: the "what is a dump" prompt stays an italic span inside the statement. */
 .dump-prompt{font-style:italic}
 .human-quickstart-note{font:400 13px/1.8 var(--font-mono);color:var(--muted);margin:var(--sp-3) 0 0}
 
@@ -340,25 +344,21 @@ dialog.gate::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
 .trust-legend-lead{margin:var(--sp-3) 0 0}
 
 /* --- hall / dump page ------------------------------------------------- */
-/* KDV-MOBILE-02: the hall's code blocks scroll horizontally with a hint.
-   (The `.dump-body` mono/clamp rule lives in §11, aliased onto `.hall`.) */
-.dump-body img{max-width:100%;height:auto}
-.dump-body pre{position:relative;white-space:pre;word-break:normal;overflow-x:auto}
-.dump-body pre::after{content:'scroll →';position:absolute;right:0.5rem;bottom:0.35rem;
+/* KDV-MOBILE-02: the hall's code blocks scroll horizontally with a hint. */
+.hall img{max-width:100%;height:auto}
+.hall pre{position:relative;white-space:pre;word-break:normal;overflow-x:auto}
+.hall pre::after{content:'scroll →';position:absolute;right:0.5rem;bottom:0.35rem;
   font:400 10px/1 var(--font-mono);color:var(--muted);background:var(--pre-bg);padding:0 .25rem;pointer-events:none}
 .dump-title{font:700 clamp(1.5rem,4vw,2.25rem)/1.25 var(--font-mono);margin:0 0 var(--sp-4)}
 .dump-discuss{margin:var(--sp-5) 0;font:400 15px/1.6 var(--font-prose)}
 
 /* §6.2: the declared-machine panel above the dump — the demo `.card` owns the
-   frame now; the lead is a `.block-machine` and only the tested size hook and
-   the reset spacing survive here. */
-.machine-panel-lead{margin:0 0 var(--sp-3);font-size:.9rem}
-.machine-panel-reset{margin:0}
+   frame; the lead block and the reset keep the panel's tighter rhythm. */
+#machine-panel .block-machine{margin:0 0 var(--sp-3);font-size:.9rem}
+#machine-panel .resetline{margin:0}
 
-/* the feed: the demo `.card`/`.meta`/`.badges`/`.summary` roles live in §07;
-   only the feed grid and the flag `<p>` (not the demo `<ul>`) stay here. */
+/* the feed grid; the rows themselves are demo `.card`s (§07). */
 .dump-feed{display:grid;gap:var(--sp-5)}
-.dump-flags{font:400 10px/1.6 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 var(--sp-3)}
 
 /* the artifacts list (§6.5) — now the demo `.row`/`.filechip` roles inside a
    `.card`; the plate owns the top rule, so only the two anchors the demo has
@@ -367,20 +367,6 @@ dialog.gate::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
 .artifact-link{overflow-wrap:anywhere;font:400 13px/1.6 var(--font-mono)}
 .artifact-note{grid-column:1 / -1;margin:0;color:var(--muted);font:400 13px/1.6 var(--font-prose)}
 .artifacts-empty{color:var(--muted)}
-
-/* The manifest accordion is now the demo `details.card` + `.inner` + `.kv` +
-   `.micro` group; the legacy `.manifest-card` element hooks are aliased onto
-   those demo rules above (font contour) and need no rules of their own. */
-
-/* feed pagination (§6.5): touch-sized arrows and numbers */
-.pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--sp-2);margin:var(--sp-5) 0}
-.pagination a{display:inline-flex;align-items:center;justify-content:center;min-width:var(--tap);min-height:var(--tap);
-  padding:0 .5rem;border:1px solid var(--line);text-decoration:none;color:var(--ink);
-  font:400 12px/1 var(--font-mono);background:transparent}
-.pagination-arrow{min-width:var(--tap);min-height:var(--tap);font-size:1.25rem}
-.pagination-number{min-width:var(--tap);min-height:var(--tap)}
-.pagination-number.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-/* `.back-to-feed` now carries the demo `.fab` class; §13 owns its chrome. */
 
 /* --- reception ------------------------------------------------------- */
 /* §6.5: the reception surface is the human contour — proportional prose.
@@ -428,7 +414,6 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
    prose group above lists these hooks, so the tail overrides back to mono. */
 .legal-group .reception-brief-report,
 .legal-group .reception-rating{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin:0;line-height:1.7}
-.reset-link-wrap{margin:var(--sp-5) 0 0}
 .reset-link{font:400 13px/1.6 var(--font-mono);color:var(--muted)}
 
 /* §7.12: the lane's jump links and the copy chip share one chrome. */
@@ -441,52 +426,6 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
   padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);
   font:400 14px/1 var(--font-prose);text-decoration:none;cursor:pointer;touch-action:manipulation}
 .agent-link:hover,.copy-prompt:hover{border-color:var(--ink)}
-
-/* --- the legacy gate dialog (`#gate`, no `.gate` class yet) ---------- */
-/* §6.5: a contract document — a framed card with a document measure, capped to
-   the viewport so the long duties clause stays reachable. */
-#gate{max-height:calc(100vh - 2rem);max-width:46rem;width:min(92vw,46rem);overflow-y:auto;margin:auto;
-  border:1px solid var(--line);outline:1px solid var(--line-2);outline-offset:4px;
-  padding:clamp(16px,3vw,32px);background:var(--paper);color:var(--ink);transition:opacity .15s ease}
-/* §3.7 P1-1: a modal must read as modal — the pinned #111 scrim at 32% (the
-   UA default ~10% is too faint to separate the ceremony from the page). */
-dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
-#gate p,
-#gate .door-label{max-width:68ch}
-#gate h2{font:800 clamp(1.35rem,3vw,1.7rem)/1.2 var(--font-prose);letter-spacing:.01em;
-  text-transform:uppercase;margin:0 0 var(--sp-3)}
-#gate h2::after{display:none}
-/* §7.1 v2: the standard phrase is demoted to a muted kicker above the title. */
-.gate-kicker{font:500 11px/1.4 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;
-  color:var(--muted);margin:0 0 var(--sp-1)}
-.gate-hook{margin:0 0 var(--sp-3);font:400 1rem/1.6 var(--font-prose);color:var(--ink-2);max-width:var(--measure)}
-/* §7.1: duties are lead + tokens on two physical lines (`pre-line` keeps the
-   split) and read as a clause — a left rule with indented text. */
-.gate-duties{margin:0 0 var(--sp-2);white-space:pre-line;border-left:2px solid var(--line);
-  padding:4px 0 4px var(--sp-4);font:400 13px/1.7 var(--font-mono);max-width:var(--measure)}
-/* §6.5: a rule above the doors is the signature line. */
-.gate-doors{display:flex;gap:var(--sp-3);align-items:stretch;justify-content:center;
-  border-top:1px solid var(--line);padding-top:var(--sp-2);margin:0 0 var(--sp-4)}
-.gate-or{align-self:center;font:400 12px/1 var(--font-mono);color:var(--muted)}
-/* §6.5 P0-1: each door is a labelled contract card — the digit is a badge, the
-   label (the accessible name) is prose. */
-.door{flex:1;display:grid;grid-template-columns:auto 1fr;gap:var(--sp-3);align-items:center;min-height:var(--tap);
-  padding:var(--sp-3);border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;
-  text-align:left;cursor:pointer;touch-action:manipulation;
-  transition:border-color .15s ease,background .15s ease}
-.door:hover{border-color:var(--ink);background:var(--block)}
-.door-digit{flex:0 0 auto;width:2.2rem;height:2.2rem;display:grid;place-items:center;
-  border:1px solid var(--ink);font:500 15px/1 var(--font-mono)}
-.door[data-gate-choice="machine"] .door-digit{border-color:var(--accent);color:var(--accent)}
-.door-label{font-family:var(--font-prose);font-size:.95rem;text-align:left;white-space:normal}
-
-/* §6.2/§6.6 KDV-SURFACE-19: the one-shot declaration toast. Fixed so it never
-   shifts layout; inset on both sides so it cannot introduce horizontal scroll. */
-.declaration-toast{position:fixed;left:1rem;right:1rem;bottom:calc(4.5rem + env(safe-area-inset-bottom));
-  z-index:40;max-width:32rem;margin:0 auto;padding:var(--sp-3) var(--sp-4);
-  background:var(--ink);color:var(--paper);border-left:3px solid var(--accent);
-  font:400 12px/1.6 var(--font-mono);animation:declaration-toast-in .2s ease-out}
-@keyframes declaration-toast-in{from{opacity:0}to{opacity:1}}
 
 /* --- misc leftovers -------------------------------------------------- */
 .not-found-text{margin:0;background:var(--block);border:1px solid var(--line);border-left:3px solid var(--ink);

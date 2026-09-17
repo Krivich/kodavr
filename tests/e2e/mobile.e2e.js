@@ -52,10 +52,10 @@ test.describe('mobile 375x667', () => {
     await page.goto(DUMP);
     const css = await stylesheet(page);
     expect(css).toContain('clamp(1rem, 2.5vw, 1.125rem)');
-    expect(css).toMatch(/\.dump-body img\s*\{[^}]*max-width:\s*100%/);
-    expect(css).toMatch(/\.dump-body pre\s*\{[^}]*overflow-x:\s*auto/);
+    expect(css).toMatch(/\.hall img\s*\{[^}]*max-width:\s*100%/);
+    expect(css).toMatch(/\.hall pre\s*\{[^}]*overflow-x:\s*auto/);
 
-    const pre = page.locator('.dump-body pre').first();
+    const pre = page.locator('.hall pre').first();
     await expect(pre).toBeVisible();
     expect(await pre.evaluate((el) => getComputedStyle(el).overflowX)).toBe('auto');
     expect(await pre.evaluate((el) => getComputedStyle(el, '::after').content)).toContain('scroll');
@@ -67,14 +67,14 @@ test.describe('mobile 375x667', () => {
     await page.goto(DUMP);
     await page.click('[data-gate-choice="machine"]');
 
-    const cards = page.locator('.artifact-card');
+    const cards = page.locator('.row');
     await expect(cards).toHaveCount(1);
     const card = cards.first();
     await expect(card).toContainText('url');
     await expect(card.locator('a')).toHaveAttribute('href', 'https://example.test/docs');
     await expect(card).toContainText('component docs');
 
-    const manifest = page.locator('.manifest-card');
+    const manifest = page.locator('details.card');
     await expect(manifest).toBeVisible();
     expect(await manifest.evaluate((el) => el.tagName)).toBe('DETAILS');
     expect(await manifest.evaluate((el) => el.open)).toBe(false);
@@ -161,7 +161,7 @@ test.describe('mobile 375x667', () => {
     );
 
     await page.click('[data-gate-choice="machine"]');
-    const postGate = page.locator('.post-gate-line');
+    const postGate = page.locator('.statusline');
     await expect(postGate).toBeVisible();
     await expect(postGate).toHaveText(POST_GATE_LINE);
   });
@@ -285,7 +285,7 @@ test.describe('platform hooks (KDV-MOBILE-07)', () => {
     await page.goBack();
 
     await expect(page.locator('#gate')).toBeHidden();
-    await expect(page.locator('.dump-body')).toBeVisible();
+    await expect(page.locator('.hall')).toBeVisible();
   });
 
   test('KDV-MOBILE-07: Android back dismisses reception back to the hall', async ({ page }) => {
@@ -296,7 +296,7 @@ test.describe('platform hooks (KDV-MOBILE-07)', () => {
     await page.goBack();
 
     await expect(page.locator('.reception-block')).toBeHidden();
-    await expect(page.locator('.dump-body')).toBeVisible();
+    await expect(page.locator('.hall')).toBeVisible();
   });
 });
 
@@ -308,7 +308,7 @@ test.describe('feed pagination (KDV-MOBILE-05)', () => {
 
   test('KDV-MOBILE-05: the feed paginates with 44px arrows and tapping next swaps the visible items', async ({ page }) => {
     await page.goto('/');
-    const cards = page.locator('.dump-feed .dump-card');
+    const cards = page.locator('.dump-feed .card');
     await expect(cards).toHaveCount(10);
     await expect(cards.first()).toContainText('Feed Dump 01');
 
@@ -329,7 +329,7 @@ test.describe('feed pagination (KDV-MOBILE-05)', () => {
     expect(await header.evaluate((el) => getComputedStyle(el).position)).toBe('sticky');
 
     await page.click('[data-gate-choice="machine"]');
-    const fab = page.locator('.back-to-feed');
+    const fab = page.locator('.fab');
     await expect(fab).toBeVisible();
     const box = await fab.boundingBox();
     expect(box.width).toBeGreaterThanOrEqual(44);

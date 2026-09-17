@@ -58,7 +58,7 @@ test('KDV-A11Y-03: choosing 0 by keyboard opens the hall and announces it', asyn
   await page.getByRole('button', { name: flat(GATE_MACHINE_DOOR) }).focus();
   await page.keyboard.press('Enter');
 
-  await expect(page.locator('.dump-body')).toBeVisible();
+  await expect(page.locator('.hall')).toBeVisible();
   await expect(status).toHaveText(HALL_ANNOUNCEMENT);
 });
 
@@ -70,7 +70,7 @@ test('KDV-A11Y-03: choosing 1 opens reception and announces it; a copy sets the 
   await page.keyboard.press('Enter');
 
   await expect(page.locator('.reception-block')).toBeVisible();
-  await expect(page.locator('.dump-body')).toBeHidden();
+  await expect(page.locator('.hall')).toBeHidden();
   await expect(status).toHaveText(RECEPTION_ANNOUNCEMENT);
 
   await page.locator('.reception-block .copy-prompt').click();

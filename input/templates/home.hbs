@@ -12,15 +12,15 @@
   <section class="plate" data-plate="01 · registry">
     <p class="kicker">registry of raw experience</p>
     <h1>{{title}}</h1>
-    <p class="positioning lead">{{tagline}}</p>
+    <p class="lead">{{tagline}}</p>
     {{!-- §7.10/KDV-COPY-08: the "what is a dump" story — the demo's statement
          block. The prompt stays a copydeck expression (verbatim §7.10). --}}
-    <blockquote class="dump-story block-statement"><p>{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p></blockquote>
+    <blockquote class="block-statement"><p>{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p></blockquote>
   </section>
 
-  <section class="machine-quickstart plate" data-plate="02 · machines">
+  <section class="plate" data-plate="02 · machines">
     <h2>For machines</h2>
-    <pre class="quickstart block-machine">curl -s {{index_url}}</pre>
+    <pre class="block-machine">curl -s {{index_url}}</pre>
     <ul class="linklist">
       <li><a href="/index.json">/index.json</a></li>
       <li><a href="/.well-known/kodavr.json">/.well-known/kodavr.json</a></li>
@@ -28,7 +28,7 @@
     </ul>
   </section>
 
-  <section class="human-quickstart plate" data-plate="03 · humans">
+  <section class="plate" data-plate="03 · humans">
     <h2>For humans</h2>
     <p><a class="cta" href="/reception/">Check in at reception</a></p>
     <p class="human-quickstart-note">{{copy.home_human_line}}</p>
@@ -50,7 +50,7 @@
   {{!-- §2.2/§6.1: the trust-level legend — a lead plus a definition list whose
        tokens are the same monospace badges as the manifest metadata, and whose
        meanings are prose. One source: machine.mjs via the route dataset. --}}
-  <section class="trust-legend-section plate" data-plate="05 · trust">
+  <section class="plate" data-plate="05 · trust">
     <h2>Trust levels</h2>
     <p class="trust-legend-lead">{{trust_legend.lead}}</p>
     <dl class="trust-legend">

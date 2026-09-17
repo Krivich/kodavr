@@ -12,14 +12,14 @@
   {{#unless body_has_title}}<h1 class="dump-title">{{title}}</h1>{{/unless}}
   {{!-- §6.2: a declared machine can still see the warning + pinned prompt + the
        §7.12 lane in the hall header, and undo the choice. Hidden in SSR. --}}
-  <section class="machine-panel card" hidden>
-    <pre class="machine-panel-lead block-machine">{{copy.gate_hook}}</pre>
+  <section class="card" id="machine-panel" hidden>
+    <pre class="block-machine">{{copy.gate_hook}}</pre>
 {{> site/agent-lane copyTarget="machine-prompt"}}
     <pre class="machine-prompt" id="machine-prompt">{{copy.prompt}}</pre>
-    <p class="machine-panel-reset"><a href="#" data-reset-human>{{copy.reset_human_label}}</a></p>
+    <p class="resetline"><a href="#" data-reset-human>{{copy.reset_human_label}}</a></p>
   </section>
-  <article class="dump-body hall">{{{body_html}}}</article>
-  <p class="post-gate-line statusline" hidden>{{copy.post_gate_line}}</p>
+  <article class="hall">{{{body_html}}}</article>
+  <p class="statusline" hidden>{{copy.post_gate_line}}</p>
 {{> site/gate}}
 {{> site/reception-block}}
   <p id="a11y-status" class="sr-only" role="status" aria-live="polite" data-hall-announcement="{{copy.hall_announcement}}" data-reception-announcement="{{copy.reception_announcement}}"></p>
@@ -33,7 +33,7 @@
   <p class="dump-discuss"><a href="{{issues_url}}" rel="noopener noreferrer">{{copy.discuss_label}}</a></p>
 {{> site/manifest-card}}
   </section>
-  <a class="back-to-feed fab" href="/" aria-label="Back to feed">&#x2190;</a>
+  <a class="fab" href="/" aria-label="Back to feed">&#x2190;</a>
 </main>
 {{> site/footer}}
 </div>
