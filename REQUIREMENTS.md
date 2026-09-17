@@ -78,6 +78,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-19**: Entering the hall by pressing "0" in the gate shows a one-shot declaration toast (the accepted duties copy) in its own `role="status"` live region, auto-hidden after a few seconds; Esc, a backdrop tap, the hardware back button and a boot with the species already stored never show it, and `prefers-reduced-motion` disables its animation. *(§6.2, §6.6, §7.1)*
 - ✅ **KDV-SURFACE-20**: The home storefront's trust-level legend names all five levels in §2.2 order with their meanings — each level a monospace token and a prose definition, led by one plain sentence explaining what the scale measures — from a single ordered source that also derives the discovery document's `trust_levels` list. *(§2.2, §6.1)*
 - ✅ **KDV-SURFACE-22**: The stylesheet is a documented design system: `docs/design-system.md` names every `:root` token and the role/component vocabulary (demo roles plus our extensions), and a guard test proves every class selector in `styles.css` is backed by a shipped hook (template, controller, page script or test) and that no selector is declared twice at the top level. *(§6.5)*
+- ✅ **KDV-SURFACE-23**: Every human route (`/`, `/reception/`, `/about/`, `/contribute/`) opens with one header block — a muted kicker naming the page, exactly one `h1` carrying its title and a `lead` opening sentence, in that order; the 404 shares the kicker and keeps exactly one screen-reader-only `h1`. *(§6.5)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -174,7 +175,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-STRUCT | 8 | 7 | 1 | 0 | 0 |
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
 | KDV-CONTRACT | 9 | 9 | 0 | 0 | 0 |
-| KDV-SURFACE | 21 | 21 | 0 | 0 | 0 |
+| KDV-SURFACE | 22 | 22 | 0 | 0 | 0 |
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 11 | 11 | 0 | 0 | 0 |
@@ -183,4 +184,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
 | KDV-SCOPE | 6 | 6 | 0 | 0 | 0 |
-| **Total** | **119** | **109** | **10** | **0** | **0** |
+| **Total** | **120** | **110** | **10** | **0** | **0** |

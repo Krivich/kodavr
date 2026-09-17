@@ -375,7 +375,7 @@ export const FOOTER_TEXT = [
   'False witnesses assume duties. © Kodavr, 2026.',
 ].join('\n');
 
-// §7.3: the titleblock's licences cell (demo `docs/qwen/*.html` footer, verbatim).
+  // §7.3: the titleblock's licences cell (the v2 contract-sheet footer, verbatim).
 // Code and content ship under two licences; the cell is one line, never re-wrapped.
 export const FOOTER_LICENCES = 'MIT (code) · CC-BY-4.0 (content)';
 

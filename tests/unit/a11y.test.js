@@ -355,8 +355,8 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
   const css = read('static/assets/styles.css');
 
   it('KDV-MOBILE-06: the human contour uses a --font-prose system stack and references no external font', () => {
-    // The v2 "contract sheet" demo stack (docs/qwen/styles.css --sans), renamed
-    // to --font-prose and declared exactly once.
+    // The v2 "contract sheet" human stack, renamed to --font-prose and declared
+    // exactly once.
     expect(css).toMatch(
       /--font-prose\s*:\s*system-ui,\s*-apple-system,\s*"Segoe UI",\s*Roboto,\s*"Helvetica Neue",\s*sans-serif/,
     );

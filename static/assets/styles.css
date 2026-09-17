@@ -1,7 +1,8 @@
 /* KODAVR · HUMAN PROJECTION · "THE CONTRACT SHEET" · styles.css
-   Ported from the v2 demo docs/qwen/styles.css (STEP 1: styles only).
+   The vocabulary is documented in docs/design-system.md (tokens → roles →
+   components → our extensions).
    Tokens → sheet → type roles → blocks → cards → trust → titleblock → gate
-   → hall → reception → legacy compatibility → states → print.
+   → hall → reception → app components → states → print.
    No external resources: system font stacks only, so there is no FOUT. */
 
 /* ============ 01 · TOKENS ============ */

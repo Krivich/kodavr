@@ -27,3 +27,6 @@ context-machine-setup.md
 # Raw source material for the Human Surface v2 work: the owner's feedback dump
 # kept local on purpose; the sanitized public artefact lives in docs/ideas/.
 docs/ideas/feedback.md
+# Raw (Russian) brainstorm dumps (RFC + review + visual-grammar feedback): kept
+# local on purpose. The sanitized English artefacts live in docs/ideas/.
+docs/ideas/private/
