@@ -443,19 +443,11 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
   /* KDV-MOBILE-01: the gate is a full-width card with 16px padding. */
   #gate{width:calc(100vw - 32px);max-width:none;margin:auto;padding:16px}
 
-  /* KDV-MOBILE-01: below 480px the prompt follows the doors, so the hook, the
-     lane, the duties and both labelled doors come first. Measured 2026-09-15:
-     at 320x568 they do NOT all fit the first screen (875px of content vs a
-     552px dialog) — see tests/e2e/mobile.e2e.js and the owner decision in
-     STATE.md. `#gate:not([hidden])` guards the UA `[hidden]` rule the same way
-     `.species-chip[hidden]` does. */
-  #gate:not([hidden]){display:flex;flex-direction:column}
-  /* The gate is height-capped; without this a `<pre>` (overflow != visible)
-     would shrink to its min-content and lose its text. Let the dialog scroll. */
-  #gate:not([hidden]) > *{flex:0 0 auto}
-  .gate-prompt{order:1}
-  .gate-rest{order:2}
-
+  /* KDV-MOBILE-01: the gate keeps the desktop reading order at every width —
+     kicker, H1, hook, lane, prompt, duties, doors — so the prompt sits right
+     under the agent controls (owner decision 2026-09-17, reversing the earlier
+     doors-first mobile order). At 320px the doors are a short scroll away; the
+     composition promise is bounded by the viewport (§6.5). */
   .reception-prompt, .gate-prompt, .machine-prompt{font-size:13px}
 
   .agent-links{width:100%}

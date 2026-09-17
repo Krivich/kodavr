@@ -363,10 +363,10 @@ Dump content is fully indexed (body in SSR-HTML); gate/reception — dismissible
 - Full-width on screens < 480px, with 16px padding.
 - The two entry doors carry their own visible §7.1 labels (the digit stays an index badge) and are minimum 44×44px touch targets (Apple HIG).
 - Base font size ≥ 17px, no horizontal scroll.
-- Below 480px the pinned prompt follows the doors, so the labelled doors reach the reader before the prompt.
+- The pinned prompt follows the lane at every width — the same reading order as desktop (kicker, H1, hook, lane, prompt, duties, doors).
 - Esc-hook also works as a tap on the dimmed area outside the modal.
 - The "arrays/hearts" hint wraps to two lines on narrow screens.
-- First-screen composition (hook, lane, duties, both doors) holds wherever the viewport allows it — from roughly 390×844 upwards. At 320×568 it cannot be promised: measured 2026-09-15, the four blocks take 875px against a 552px dialog, so there the contract is the three bullets above — no horizontal scroll, 44px labelled doors, the doors before the prompt. The lane stays on the first screen at every width (§7.12).
+- First-screen composition (hook, lane, duties, both doors) holds wherever the viewport allows it — from roughly 390×844 upwards. At 320×568 it cannot be promised: measured 2026-09-15, the four blocks take 875px against a 552px dialog, so there the contract is the three bullets above — no horizontal scroll, 44px labelled doors and the desktop reading order (the doors are a short scroll away). The lane stays on the first screen at every width (§7.12).
 
 **Dump hall (body):**
 - Adaptive typography: `clamp(1rem, 2.5vw, 1.125rem)` for body text.

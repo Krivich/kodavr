@@ -220,11 +220,10 @@ test.describe('mobile 320x568', () => {
 
     // Measured 2026-09-15 with the gate dialog 552px tall: hook 190 + lane 284 +
     // duties 163 + doors 238 = 875px — so "hook + lane + duties + doors share the
-    // first screen" cannot hold at 320px, even with the prompt moved below the
-    // doors (the <480px order in styles.css). Whether <480px keeps that promise or
-    // settles for "hook + lane, doors a short scroll away" is a pending owner
-    // decision; the number is reported here so it is never silently lost
-    // (STATE.md keeps the decision record).
+    // first screen" cannot hold at 320px. Per the owner decision of 2026-09-17 the
+    // gate keeps the desktop reading order at every width (prompt after the lane,
+    // doors after the duties), so the doors are a short scroll away; the number is
+    // reported here so it is never silently lost (STATE.md keeps the decision).
     test.info().annotations.push({
       type: 'measurement',
       description: `320x568 gate dialog H=${measured.dialog.height}: hook ${measured.hook.height}, lane ${measured.lane.height}, duties ${measured.duties.height}, doors y=${measured.doors.y} h=${measured.doors.height}`,
@@ -246,13 +245,13 @@ test.describe('mobile 320x568', () => {
     await expect(labels.nth(0)).toHaveText(GATE_MACHINE_DOOR);
     await expect(labels.nth(1)).toHaveText(GATE_HUMAN_DOOR);
 
-    // §6.5/KDV-MOBILE-01: below 480px the pinned prompt follows the doors — the
-    // labelled doors reach the reader before the prompt does.
-    expect(measured.prompt.y).toBeGreaterThan(measured.doors.bottom);
+    // §6.5/KDV-MOBILE-01: the gate keeps the desktop order at every width — the
+    // prompt follows the lane and comes BEFORE the doors (owner decision 2026-09-17).
+    expect(measured.prompt.y).toBeLessThan(measured.doors.y);
 
     // Deliberately NOT asserted: both doors inside the initial 568px viewport — the
-    // measurement above shows it is unreachable at this width, and the composition
-    // promise for <480px is the pending owner decision.
+    // measurement above shows it is unreachable at this width; the composition
+    // promise for <480px is bounded by the viewport.
   });
 });
 

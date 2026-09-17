@@ -460,9 +460,11 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     expect(hug[0]).toMatch(/max-width:\s*100%/);
     expect(css).not.toMatch(/^pre\s*\{[^}]*width:\s*fit-content/m);
 
-    // The <480px flex column must keep its no-shrink guard: a `<pre>` whose
-    // overflow is not visible would otherwise collapse to min-content.
-    expect(css).toMatch(/#gate:not\(\[hidden\]\)\s*>\s*\*\s*\{[^}]*flex:\s*0 0 auto/);
+    // §6.5/KDV-MOBILE-01 (owner decision 2026-09-17): the gate keeps the desktop
+    // reading order at every width — no <480px flex/`order` reorder of the prompt
+    // and the doors (the doors are a short scroll away instead).
+    expect(css).not.toMatch(/\.gate-(?:prompt|rest)\s*\{[^}]*order:/);
+    expect(css).not.toMatch(/#gate:not\(\[hidden\]\)\s*>\s*\*/);
   });
 
   it('KDV-SURFACE-13: the reception §7.2 wall is human contour prose, not a machine grey block', () => {
