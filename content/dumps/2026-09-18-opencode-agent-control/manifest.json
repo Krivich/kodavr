@@ -1,0 +1,25 @@
+{
+  "slug": "2026-09-18-opencode-agent-control",
+  "title": "The agent-control loop: compaction checkpoints, tiered delegation and lazy layers for OpenCode",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-09-18",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["contains_code", "experimental"],
+  "tags": ["opencode", "ai-agents", "context-management", "compaction", "delegation", "checkpoints", "lazy-layers", "workflow"],
+  "generated_by": "agent",
+  "human_review": "minimal",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "Long agent sessions die twice: the context overflows and the summary comes back as garbage, and the root drowns in detail until it forgets the vision. This dump is the self-contained agent-control half that fixes both — a sentinel that always writes a mechanical checkpoint before compaction, tiered delegation with per-tier model approval and honest cost accounting, and lazy layers that keep the startup prompt tiny. Every config file, plugin and test is inlined; it is one of two companion dumps, and applying both reproduces the full context machine.",
+  "sources": ["chat-log", "source-code"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "raw.md", "note": "the full agent-control setup guide with every config file, plugin and test inlined" }
+  ],
+  "derived_from": null
+}
