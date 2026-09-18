@@ -1,0 +1,34 @@
+{
+  "bundle": "kodavr-dump",
+  "kind": "opencode-skill",
+  "date": "2026-09-18",
+  "maintainer": "Krivich",
+  "source": "https://github.com/Krivich/kodavr/tree/main/docs/skills/kodavr-dump",
+  "version_file": "home/user/.config/opencode/skills/kodavr-dump/VERSION",
+  "convention": "home-relative tree (GNU Stow 'installation image'); home/user is a placeholder for $HOME",
+  "stow_root": "home/user",
+  "install": [
+    {
+      "from": "home/user/.config/opencode/skills/kodavr-dump",
+      "to": {
+        "windows": "%USERPROFILE%\\.config\\opencode\\skills\\kodavr-dump",
+        "unix": "~/.config/opencode/skills/kodavr-dump"
+      },
+      "action": "copy"
+    },
+    {
+      "from": "home/user/.config/opencode/command/dump.md",
+      "to": {
+        "windows": "%USERPROFILE%\\.config\\opencode\\command\\dump.md",
+        "unix": "~/.config/opencode/command/dump.md"
+      },
+      "action": "copy",
+      "optional": true,
+      "note": "deterministic entry point: /dump forces loading the skill"
+    }
+  ],
+  "verify": "SHA256SUMS",
+  "restart": "opencode",
+  "requires": ["opencode"],
+  "optional": ["git", "gh", "GITHUB_TOKEN", "node"]
+}

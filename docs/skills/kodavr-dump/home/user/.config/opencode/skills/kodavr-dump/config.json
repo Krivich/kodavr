@@ -1,0 +1,6 @@
+{
+  "repo_url": "https://github.com/Krivich/kodavr.git",
+  "base_branch": "main",
+  "workdir": "~/.kodavr-dump/kodavr",
+  "fork_on_no_push": true
+}

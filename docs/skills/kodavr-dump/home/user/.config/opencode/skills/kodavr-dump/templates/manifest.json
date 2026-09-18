@@ -1,0 +1,25 @@
+{
+  "slug": "YYYY-MM-DD-short-kebab-name",
+  "title": "Concrete title of the experience",
+  "type": "case",
+  "domain": "engineering",
+  "date": "YYYY-MM-DD",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": [],
+  "tags": ["tag-one", "tag-two"],
+  "generated_by": "agent",
+  "human_review": "attested",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "One to three sentences: the problem, the reusable core, who benefits.",
+  "sources": ["chat-log"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "raw.md", "note": "the dump body" }
+  ],
+  "derived_from": null
+}
