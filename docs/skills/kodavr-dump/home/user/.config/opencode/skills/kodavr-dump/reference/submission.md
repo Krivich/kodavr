@@ -93,17 +93,25 @@ Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/<owner>/<repo>
 
 Never echo the token; never store it in git config or a file.
 
-### C. Push + compare URL (no gh, no token)
+### C. Push + pre-filled compare URL (no gh, no token)
 
 ```
 git -C <workdir> push -u origin dump/<slug>
 ```
 
-Then hand over the PR-creation URL:
+Then build the PR-creation URL **with the title and body already filled** — never
+hand the human a blank template. GitHub honours `title` and `body` query
+parameters on the compare page; each must be `encodeURIComponent`-encoded:
 
 ```
-https://github.com/<owner>/<repo>/compare/<base>...dump/<slug>?expand=1
+https://github.com/<owner>/<repo>/compare/<base>...dump/<slug>?expand=1&title=<encoded title>&body=<encoded body>
 ```
+
+- **title** = the commit line: `dump: <title> (<slug>)`.
+- **body** = the filled PR template (see "PR body" below), built from the manifest.
+- Encode spaces, `#`, newlines, `|` and brackets (`encodeURIComponent`). If a
+  shell or URL-length limit gets in the way, print the title and body separately
+  for copy-paste — blank is the only wrong answer.
 
 If the push is rejected for lack of write access and `fork_on_no_push` is true,
 fork first and push there:
@@ -113,13 +121,15 @@ fork first and push there:
   `https://github.com/<your-login>/<repo>.git`.
 - Compare URL for a fork: `.../compare/<base>...<your-login>:dump/<slug>?expand=1`.
 
-Tell the human the URL and paste the filled PR body for them.
+Hand over the one link (and the raw title/body on request).
 
 ## PR body
 
 Fill every field of `.github/PULL_REQUEST_TEMPLATE.md` (fetch it from the repo)
-and tick only the boxes that are actually true. Write it to a temp file and use
-`--body-file` / `-Body` so shell quoting cannot corrupt it.
+and tick only the boxes that are actually true. The same filled body is used
+everywhere: as `--body-file` / `-Body` for `gh`/REST, or URL-encoded into the
+compare link's `body` parameter when there is no `gh` and no token. Write it to a
+temp file for the CLI paths so shell quoting cannot corrupt it.
 
 ```
 ## Dump

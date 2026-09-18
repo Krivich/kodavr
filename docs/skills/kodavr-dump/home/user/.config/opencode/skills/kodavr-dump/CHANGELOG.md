@@ -12,6 +12,15 @@ which revision it runs and be told when to update.
 
 Maintainer: Krivich.
 
+## 0.4.0 — 2026-09-18
+
+- Submission (`SKILL.md` Step 6, `reference/submission.md` C): when neither `gh`
+  nor a token is available, build the compare URL **pre-filled** — the commit
+  line as `title`, the filled PR template as `body`, both
+  `encodeURIComponent`-encoded (`?expand=1&title=&body=`) — instead of handing
+  the human a blank template to fill by hand.
+- MINOR: new submission capability, backward compatible.
+
 ## 0.3.0 — 2026-09-18
 
 - Add a **summary-writing contract** (`SKILL.md` Step 3, `templates/summary.md`,

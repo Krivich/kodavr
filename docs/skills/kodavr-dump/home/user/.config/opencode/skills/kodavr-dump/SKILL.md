@@ -234,9 +234,12 @@ Follow `reference/submission.md` exactly. In short:
 2. Ensure ONLY `content/dumps/<slug>/` is added (`git add content/dumps/<slug>`).
 3. Commit: `dump: <title> (<slug>)` — one line, one dump.
 4. Push the branch.
-5. Open the PR using the filled `.github/PULL_REQUEST_TEMPLATE.md`, via the
-   fallback chain: `gh` if available → GitHub REST API if a token is in the
-   environment → otherwise push + hand over the compare URL.
+5. Open the PR, via the fallback chain: `gh` if available → GitHub REST API if a
+   token is in the environment → otherwise **build the pre-filled compare URL
+   yourself** and hand that over. Never leave the human with a blank template:
+   put the commit line in `title` and the filled PR body in `body`, each
+   `encodeURIComponent`-encoded (`?expand=1&title=<enc>&body=<enc>`), so they
+   only press "Create pull request". Recipe: `reference/submission.md`.
 
 Never commit other people's untracked files. Never touch files outside the dump
 dir. Never echo or persist tokens.
