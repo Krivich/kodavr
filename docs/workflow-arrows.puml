@@ -56,6 +56,7 @@ package "scripts/lib\n====\nthe smart controller: content, machine contracts, bu
   component "relativize.mjs\nrelativizeSite\n--\nhost-agnostic internal links" as REL <<lib>> [[../scripts/lib/relativize.mjs#relativizeSite]]
   component "verbatim.mjs\nROBOTS_TXT · HUMANS_TXT\n--\nverbatim robots/humans" as VERB <<lib>> [[../scripts/lib/verbatim.mjs]]
   component "static-server.mjs\ncreateStaticServer\n--\nlocal preview server" as SSRV <<lib>> [[../scripts/lib/static-server.mjs#createStaticServer]]
+  component "manifest-card.mjs\nrenderManifestCard\n--\nmanifest.json → the PR reviewer's card" as MCARD <<lib>> [[../scripts/lib/manifest-card.mjs#renderManifestCard]]
 }
 
 package "scripts\n====\nentry points you actually run" as P_CLI {
@@ -68,6 +69,7 @@ package "scripts\n====\nentry points you actually run" as P_CLI {
   component "generate-touch-icon.mjs\n--\nrasterizes the touch icon" as CLI_TI <<cli>> [[../scripts/generate-touch-icon.mjs]]
   component "workflow-arrows-lint.mjs\nlintDiagram\n--\nthis map's drift alarm" as CLI_LINT <<cli>> [[../scripts/workflow-arrows-lint.mjs#lintDiagram]]
   component "contract.mjs\nvalidateAll\n--\nguards the module index (contract headers)" as CLI_CONTRACT <<cli>> [[../scripts/contract.mjs#validateAll]]
+  component "pr-manifest-card.mjs\n--\nposts the sticky manifest card on a PR" as CLI_CARD <<cli>> [[../scripts/pr-manifest-card.mjs]]
 }
 
 package "input/controllers\n====\nclient controllers injected by the engine" as P_CTRL {
@@ -127,6 +129,8 @@ CLI_TI ..> PW : rasterizes the touch icon
 GH ..> CLI_REQ : runs the coverage check
 GH ..> CLI_LINT : guards this map
 GH ..> CLI_CONTRACT : guards the module index
+GH ..> CLI_CARD : runs the manifest card on a PR\nso the reviewer sees the fields
+CLI_CARD ..> MCARD : renders content/dumps/<slug>/manifest.json
 AGENT ..> CLI_DIET : keeps STATE.md compact
 
 legend right

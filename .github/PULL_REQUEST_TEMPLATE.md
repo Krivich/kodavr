@@ -1,13 +1,12 @@
 ## Dump
-- slug:
-- type (note|case|pack):
-- domain:
-- stakes (low|medium|high):
-- content_flags:
-- generated_by (human|agent|hybrid):
-- human_review (none|minimal|attested):
+
+The manifest fields (type, domain, stakes, flags, trust, labels) are posted
+automatically below by the `dump-manifest` bot, straight from
+`content/dumps/<slug>/manifest.json` — nothing to fill in here. Describe in your
+own words only what the bot cannot show.
 
 ## Author checklist
+
 - [ ] Secrets cleaned (ran secret-scan locally)
 - [ ] Examples are synthetic, no real data
 - [ ] REDACTIONS.md attached (if sources include correspondence)

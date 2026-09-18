@@ -54,6 +54,9 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: AGENT_DUTIES, CONSUMPTION_CONTRACT_SEE, CONTENT_FLAGS_VOCABULARY, CONTRACT_VERSION, DEFAULT_LICENSE, ISSUES_URL, REPOSITORY, REPOSITORY_BRANCH, STAKES_VOCABULARY, TRUST_LEGEND_LEAD, TRUST_LEVELS, TRUST_LEVEL_MEANINGS, buildAtom, buildIndex, buildIndexEntry, buildTagGraph, buildWellKnown, collectHtmlFiles, escapeXml, injectBuildMeta, readGitHubEvent, resolveAuthorFromCi, resolveAuthorMeta, resolveRepository, writeMachineFiles, writeSitemap
   consumes: ./verbatim.mjs, node:fs, node:fs/promises, node:path
   invariants: — machine files are generated, never hand-edited
+- **scripts/lib/manifest-card.mjs** — renders a dump manifest as a markdown card and finds changed dump slugs
+  exports: CARD_MARKER, dumpSlugsFromFiles, renderManifestCard
+  invariants: — the manifest is the only source; the card renders it and never invents fields
 - **scripts/lib/markdown.mjs** — markdown → sanitized HTML for dump bodies
   exports: renderMarkdown
   consumes: marked, sanitize-html
@@ -73,6 +76,9 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/lib/verbatim.mjs** — the verbatim robots.txt and humans.txt the build must not alter
   exports: HUMANS_TXT, ROBOTS_TXT
   invariants: — these files are served verbatim; the engine's defaults are overwritten
+- **scripts/pr-manifest-card.mjs** — posts or updates the sticky manifest-card comment on a pull request
+  consumes: ./lib/manifest-card.mjs, node:fs, node:path
+  invariants: — the manifest is the only source; the comment is a render, never an input
 - **scripts/req-coverage.js** — reconciles requirement IDs between REQUIREMENTS.md and the tests
   consumes: node:fs, node:path, node:url
   invariants: — a ✅ row without a test, or a test ID absent from the registry, exits 1
