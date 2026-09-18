@@ -23,7 +23,8 @@ const SPECIES_KEY = 'kodavr.species';
 // §7.11: a dump page pins the prompt to its own canonical URL and points at the
 // index for more. The e2e server serves the built site at 127.0.0.1:4173.
 const DUMP_PROMPT = dumpPrompt(
-  'http://127.0.0.1:4173/dumps/sample-dump/',
+  'http://127.0.0.1:4173/dumps/sample-dump/raw.md',
+  'http://127.0.0.1:4173/dumps/sample-dump/manifest.json',
   'http://127.0.0.1:4173/index.json',
 );
 

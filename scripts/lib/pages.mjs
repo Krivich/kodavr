@@ -420,11 +420,12 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
 
 /**
  * Copy slices shared by dump pages: the §7 texts the hall must carry verbatim.
- * §7.11: with a dump + index URL the prompt is pinned to the shared dump;
- * without them it falls back to the universal §7.4 prompt.
+ * §7.11: with a body + manifest + index URL the prompt is pinned to the shared
+ * dump and hands the agent raw markdown; without them it falls back to the
+ * universal §7.4 prompt.
  */
-export function dumpCopySlices({ dumpUrl = null, indexUrl = null } = {}) {
-  const prompt = dumpUrl && indexUrl ? dumpPrompt(dumpUrl, indexUrl) : PROMPT_TEXT;
+export function dumpCopySlices({ bodyUrl = null, manifestUrl = null, indexUrl = null } = {}) {
+  const prompt = bodyUrl && manifestUrl && indexUrl ? dumpPrompt(bodyUrl, manifestUrl, indexUrl) : PROMPT_TEXT;
   return {
     // §6.2: the shipped contract version reaches head.hbs on dump pages too;
     // site.js compares it with the stored declaration record and re-asks on a bump.

@@ -217,6 +217,12 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
   // preview line (`abstract`) is the platform agent hook; the same hook, not the
   // summary, is what the page's meta/og/twitter descriptions carry.
   const canonical = `${base}/dumps/${slug}/`;
+  // §5.1/§7.11: the raw layer is the full dump. Its published URL, not the HTML
+  // projection, is what a machine is handed — derived exactly as in index.json.
+  const rawFile = (Array.isArray(dump.layers) ? dump.layers.find((layer) => layer?.name === 'raw')?.file : null) ?? 'raw.md';
+  const bodyUrl = `${base}/dumps/${slug}/${rawFile}`;
+  const manifestUrl = `${base}/dumps/${slug}/manifest.json`;
+  const indexUrl = `${base}/index.json`;
   const image = `${base}${OG_IMAGE_PATH}`;
   const organization = jsonldOrganization({ name: SITE_NAME, url: `${base}/`, logo: image });
   const website = jsonldWebsite({ name: SITE_NAME, base, description: HOME_TAGLINE, image });
@@ -257,8 +263,11 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     issues_url: ISSUES_URL,
     // §6.5 artifacts list: each entry renders as its own card (site/artifacts).
     artifacts,
-    manifest_url: `${base}/dumps/${slug}/manifest.json`,
-    index_url: `${base}/index.json`,
+    manifest_url: manifestUrl,
+    // §5.1: the raw markdown beside the manifest — the machine's download, not
+    // the HTML projection.
+    body_url: bodyUrl,
+    index_url: indexUrl,
     og_title: `${manifest.title} · ${manifest.stakes}`,
     // §6.4/P5b: the platform agent hook is the platform-level preview line for
     // dumps; the dump's own `summary` stays on the manifest card and in the
@@ -295,7 +304,7 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     nav: buildNav(null),
     // §7.11: a dump page pins the prompt to its own canonical URL; `/reception/`
     // keeps the universal §7.4 prompt.
-    copy: dumpCopySlices({ dumpUrl: canonical, indexUrl: `${base}/index.json` }),
+    copy: dumpCopySlices({ bodyUrl, manifestUrl, indexUrl }),
     body_has_title,
     body_html,
     // §6.3: the optional `summary.md` layer is the author's brief for a human

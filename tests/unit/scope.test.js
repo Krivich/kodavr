@@ -55,6 +55,7 @@ describe('MVP non-goals (§11)', () => {
       'dumps',
       'generated_at',
       'platform',
+      'protocol',
       'total',
       'version',
     ]);

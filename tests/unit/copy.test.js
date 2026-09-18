@@ -289,8 +289,11 @@ describe('copydeck', () => {
     expect(links[3].href).toBe('https://claude.ai/new?q=hello%20world');
 
     const spec = blockFor('7.11');
-    expect(dumpPrompt('<dump>', '<index>')).toBe(
-      spec.replaceAll('<dump-url>', '<dump>').replaceAll('<index-url>', '<index>'),
+    expect(dumpPrompt('<body>', '<manifest>', '<index>')).toBe(
+      spec
+        .replaceAll('<body-url>', '<body>')
+        .replaceAll('<manifest-url>', '<manifest>')
+        .replaceAll('<index-url>', '<index>'),
     );
   });
 

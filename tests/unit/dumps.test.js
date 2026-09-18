@@ -39,6 +39,7 @@ describe('dumps controller', () => {
       content_flags: ['opinion'],
       summary: 'A fixture dump for tests.',
       manifest_url: 'https://example.test/dumps/sample-dump/manifest.json',
+      body_url: 'https://example.test/dumps/sample-dump/raw.md',
       index_url: 'https://example.test/index.json',
     });
     expect(dataset.body_html).toContain('<h1>Sample Heading</h1>');

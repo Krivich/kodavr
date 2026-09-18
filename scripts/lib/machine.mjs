@@ -8,6 +8,7 @@
  *   CONTRACT_VERSION — the consumption-contract version literal
  *   DEFAULT_LICENSE — the default content licence
  *   ISSUES_URL — the repository Issues URL
+ *   PLATFORM_ABOUT — the inline machine BIOS: what the platform is (one source)
  *   REPOSITORY — the owner/repo slug
  *   REPOSITORY_BRANCH — the default branch
  *   STAKES_VOCABULARY — the allowed stakes values
@@ -21,7 +22,7 @@
  *   buildWellKnown — the /.well-known/kodavr.json protocol document
  *   collectHtmlFiles — every built HTML file under a directory
  *   escapeXml — escapes a value for XML
- *   injectBuildMeta — adds commit_sha, built_at and author to a manifest
+ *   injectBuildMeta — adds commit_sha, built_at, author, the BIOS and layer URLs to a manifest
  *   readGitHubEvent — reads the CI event payload
  *   resolveAuthorFromCi — the author block from the environment
  *   resolveAuthorMeta — the author block from an event payload
@@ -41,7 +42,7 @@
 // The controller builds these AFTER the dumb engine renders HTML:
 // index.json, /.well-known/kodavr.json, Atom feeds, per-dump manifests,
 // the verbatim robots.txt/humans.txt and the regenerated sitemap.xml.
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { ROBOTS_TXT, HUMANS_TXT } from './verbatim.mjs';
@@ -129,10 +130,15 @@ export function buildIndexEntry(dump, { baseUrl }) {
   const base = normalizeBaseUrl(baseUrl);
   const manifest = dump.manifest;
   const slug = dumpSlug(dump);
+  // §5.1: the raw layer is the full dump. The index names it explicitly so a
+  // machine downloads markdown instead of scraping the HTML projection.
+  const rawLayer = Array.isArray(dump.layers) ? dump.layers.find((layer) => layer?.name === 'raw') : null;
+  const bodyFile = rawLayer?.file ?? 'raw.md';
   const entry = {
     slug,
     url: `${base}/dumps/${slug}/`,
     manifest_url: `${base}/dumps/${slug}/manifest.json`,
+    body_url: `${base}/dumps/${slug}/${bodyFile}`,
     title: manifest.title,
     type: manifest.type,
     domain: manifest.domain,
@@ -154,6 +160,43 @@ export function buildIndexEntry(dump, { baseUrl }) {
 }
 
 /**
+ * §5.1/§5.2: a machine's first fetch is index.json (the §7.4 prompt), but it may
+ * equally arrive at a published manifest (the §7.11 prompt from a shared article).
+ * Both doors must transmit the SAME orientation ("BIOS") inline — a pointer can be
+ * ignored, and a model only sees what is in the document it already holds. The
+ * BIOS is one source, spread verbatim into index.json, the published manifest and
+ * the discovery document; `download_field` names the exact field of the `dumps`
+ * collection that holds the full dump.
+ */
+export const PLATFORM_ABOUT =
+  'Kodavr is a registry of raw, unpolished first-hand experience. A dump is not written for a human to read directly — it is source material for the reader\'s agent, which adapts it and writes it up in the user\'s own context. Honor each dump\'s stakes and content_flags.';
+
+// §5.2: the action rules that turn "honor stakes and content_flags" from a plea
+// into a mechanism. Inline, because the agent may never follow the pointer.
+const PLATFORM_INTERPRET =
+  'Read a dump\'s own `stakes`, `content_flags`, `trust_level`, `license` and `author` before using it. stakes=high, or content_flags professional_advice / financial_advice / medical_claims / requires_expert_review → warn the user or refuse direct application. trust_level says how far the claims were checked, least to most: raw < self-tested < community-tested < adapted < library — for `raw` and `self-tested`, verify a claim before relying on it. Always attribute the dump by its `url` (+ `manifest_url`) and its `license`, write in the user\'s language, and adapt the material to the user\'s situation — never present it as verified fact or as your own.';
+
+// §5.1/§5.2: the steps must work from BOTH doors — /index.json (the collection)
+// and a single dump's manifest (a shared article) — and must name where the body
+// actually is, so even a weak agent cannot mistake the manifest for the content.
+const HOW_TO_CONSUME_STEPS = [
+  'you may hold either `/index.json` (the whole collection) or a single dump\'s `manifest.json` — if you hold a manifest, apply these steps to that dump',
+  'to pick from the collection, filter the `dumps` array by domain / tags / stakes / content_flags; if you hold a manifest, that dump is already picked',
+  'download the dump\'s body — its `raw` layer: the entry\'s `body_url`, or in a manifest the layer whose `name` is `raw` (published at `/dumps/<slug>/raw.md`) — raw markdown, never the HTML page',
+  'read the dump\'s manifest for metadata, artifacts and layers — the entry\'s `manifest_url`, or the `manifest.json` you already hold — and check each layer\'s `url`',
+  'use the downloaded body as raw material: adapt it and write it up in the user\'s context and language; honor stakes and content_flags; attribute the dump by its `url` and `license`; never present it as verified fact or as your own',
+];
+
+function machineBios(baseUrl) {
+  const base = normalizeBaseUrl(baseUrl);
+  return {
+    about: PLATFORM_ABOUT,
+    index_url: `${base}/index.json`,
+    how_to_consume: { download_field: 'dumps[].body_url', steps: HOW_TO_CONSUME_STEPS },
+  };
+}
+
+/**
  * §5.1 main machine index, dumps sorted by date descending.
  */
 export function buildIndex(dumps, { baseUrl, generatedAt } = {}) {
@@ -167,6 +210,9 @@ export function buildIndex(dumps, { baseUrl, generatedAt } = {}) {
     generated_at: generatedAt,
     base_url: base,
     total: entries.length,
+    // §5.1/§5.2: the whole machine protocol (the well-known BIOS) is embedded
+    // verbatim, not linked — whichever door the agent entered, it sees it.
+    protocol: buildWellKnown({ baseUrl: base }),
     dumps: entries,
   };
 }
@@ -234,7 +280,7 @@ export function buildTagGraph(dumps, { baseUrl, generatedAt } = {}) {
 /**
  * §5.2 discovery document served at /.well-known/kodavr.json.
  */
-export function buildWellKnown() {
+export function buildWellKnown({ baseUrl = '' } = {}) {
   return {
     platform: 'kodavr',
     version: CONTRACT_VERSION,
@@ -243,6 +289,7 @@ export function buildWellKnown() {
       index: '/index.json',
       manifest_pattern: '/dumps/{slug}/manifest.json',
       dump_pattern: '/dumps/{slug}/',
+      body_pattern: '/dumps/{slug}/{file}',
       feeds: ['/feeds/all.atom', '/feeds/{domain}.atom'],
       sitemap: '/sitemap.xml',
       tags: '/tags.json',
@@ -260,6 +307,8 @@ export function buildWellKnown() {
       spoofing_clause: 'human declaring machine status assumes full machine duties',
       agent_duties: AGENT_DUTIES,
     },
+    ...machineBios(baseUrl),
+    interpret: PLATFORM_INTERPRET,
     trust_levels: TRUST_LEVELS,
     stakes_vocabulary: STAKES_VOCABULARY,
     content_flags_vocabulary: CONTENT_FLAGS_VOCABULARY,
@@ -352,12 +401,22 @@ export function resolveAuthorFromCi(env = process.env) {
  * `consumption_contract`) and attach the layers read from disk. Never drops an
  * existing field; an author-supplied value always wins over injected metadata.
  */
-export function injectBuildMeta(manifest, { commitSha = null, builtAt, author = null, layers = null } = {}) {
+export function injectBuildMeta(manifest, { commitSha = null, builtAt, author = null, layers = null, baseUrl = null } = {}) {
+  const base = normalizeBaseUrl(baseUrl);
   const next = { ...manifest, commit_sha: commitSha, built_at: builtAt };
   if (!next.license) next.license = DEFAULT_LICENSE;
   if (!('derived_from' in next)) next.derived_from = null;
   if (!next.consumption_contract) next.consumption_contract = { see: CONSUMPTION_CONTRACT_SEE };
-  if (Array.isArray(layers)) next.layers = layers;
+  // §5.1/§5.2: the published manifest embeds the same protocol (BIOS) as index.json,
+  // so an agent handed a shared article's manifest still knows where it landed.
+  if (base) next.protocol = buildWellKnown({ baseUrl: base });
+  if (Array.isArray(layers)) {
+    // §5.1: each layer file is published beside the manifest, so its URL is
+    // derivable and stated — a machine downloads markdown, never scrapes HTML.
+    next.layers = layers.map((layer) =>
+      base && next.slug ? { ...layer, url: `${base}/dumps/${next.slug}/${layer.file}` } : { ...layer },
+    );
+  }
   // Author attribution is only meaningful when a PR/actor was actually seen.
   const hasAuthorMeta = Boolean(author && (author.github || author.pr_url || author.merged_at));
   if (next.author || hasAuthorMeta) {
@@ -375,7 +434,7 @@ export function injectBuildMeta(manifest, { commitSha = null, builtAt, author = 
  * Write every machine contract into the public output directory.
  * @param {object} args
  * @param {string} args.outputDir - public root (e.g. output/public)
- * @param {Array<{slug: string, manifest: object}>} args.dumps
+ * @param {Array<{slug: string, manifest: object, layers?: Array, dir?: string}>} args.dumps
  * @param {string} args.baseUrl
  * @param {string} args.generatedAt - ISO timestamp
  * @param {string|null} args.commitSha
@@ -406,7 +465,7 @@ export async function writeMachineFiles({
   await mkdir(wellKnownDir, { recursive: true });
   await writeFile(
     join(wellKnownDir, 'kodavr.json'),
-    `${JSON.stringify(buildWellKnown(), null, 2)}\n`,
+    `${JSON.stringify(buildWellKnown({ baseUrl: base }), null, 2)}\n`,
     'utf8',
   );
 
@@ -434,8 +493,14 @@ export async function writeMachineFiles({
       builtAt,
       author,
       layers: dump.layers,
+      baseUrl: base,
     });
     await writeFile(join(dir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+    // §5.1: every layer file is published at `/dumps/<slug>/<file>` so the
+    // index's `body_url` and the manifest's `layers[].url` actually resolve.
+    for (const layer of Array.isArray(dump.layers) ? dump.layers : []) {
+      if (dump.dir && layer?.file) await copyFile(join(dump.dir, layer.file), join(dir, layer.file));
+    }
   }
 }
 

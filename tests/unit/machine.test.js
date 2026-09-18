@@ -105,6 +105,7 @@ describe('index.json builder', () => {
       slug: 'sample-dump',
       url: 'https://kodavr.xyz/dumps/sample-dump/',
       manifest_url: 'https://kodavr.xyz/dumps/sample-dump/manifest.json',
+      body_url: 'https://kodavr.xyz/dumps/sample-dump/raw.md',
       title: 'Sample Dump',
       type: 'case',
       domain: 'engineering',
@@ -132,6 +133,12 @@ describe('index.json builder', () => {
     });
     expect(index.dumps).toHaveLength(2);
     expect(index.dumps[0]).toMatchObject({ slug: 'sample-dump-two' });
+    // §5.1/§5.2: the whole protocol (BIOS) is embedded verbatim, not linked, so a
+    // machine sees where it is whichever door it entered.
+    expect(index.protocol).toEqual(buildWellKnown({ baseUrl: BASE_URL }));
+    expect(index.protocol.how_to_consume.download_field).toBe('dumps[].body_url');
+    expect(index.protocol.about).toContain('raw');
+    expect(index.protocol.index_url).toBe('https://kodavr.xyz/index.json');
   });
 
   it('KDV-CONTRACT-02: buildIndex sorts dumps by date descending', () => {
@@ -232,6 +239,7 @@ describe('well-known discovery document', () => {
       index: '/index.json',
       manifest_pattern: '/dumps/{slug}/manifest.json',
       dump_pattern: '/dumps/{slug}/',
+      body_pattern: '/dumps/{slug}/{file}',
       feeds: ['/feeds/all.atom', '/feeds/{domain}.atom'],
       sitemap: '/sitemap.xml',
       tags: '/tags.json',
@@ -250,6 +258,55 @@ describe('well-known discovery document', () => {
     expect(wk.trust_levels).toEqual(['raw', 'self-tested', 'community-tested', 'adapted', 'library']);
     expect(wk.stakes_vocabulary).toEqual(['low', 'medium', 'high']);
     expect(wk.content_flags_vocabulary).toContain('requires_expert_review');
+    // §5.2: the discovery document states the same consumption steps as index.json.
+    expect(wk.how_to_consume.download_field).toBe('dumps[].body_url');
+    expect(wk.how_to_consume.steps.some((s) => s.includes('manifest_url'))).toBe(true);
+    // §5.2: the doc must explain itself to the dumbest agent, inline.
+    expect(wk.about).toContain('raw');
+    expect(wk.interpret).toMatch(/stakes/i);
+    expect(wk.interpret).toMatch(/trust_level/i);
+    // §5.2: a low trust_level must carry an action, and attribution must name fields.
+    expect(wk.interpret).toMatch(/verify/i);
+    expect(wk.interpret).toMatch(/manifest_url/);
+  });
+});
+
+describe('machine BIOS (orientation block)', () => {
+  it('KDV-CONTRACT-01/03/05: index and the published manifest both embed the SAME protocol (BIOS)', () => {
+    const index = buildIndex(DUMPS, { baseUrl: BASE_URL, generatedAt: 't' });
+    const manifest = injectBuildMeta(DUMPS[0].manifest, {
+      commitSha: 'abc',
+      builtAt: 't',
+      layers: [{ name: 'raw', file: 'raw.md', fact_checked: false, author_voice: true }],
+      baseUrl: BASE_URL,
+    });
+    const wk = buildWellKnown({ baseUrl: BASE_URL });
+
+    // One source: the very same protocol object, whichever door the agent entered.
+    expect(index.protocol).toEqual(wk);
+    expect(manifest.protocol).toEqual(wk);
+    expect(wk.about).toBeTruthy();
+    expect(wk.index_url).toBe(`${BASE_URL}/index.json`);
+  });
+
+  it('KDV-CONTRACT-01/05: the BIOS step tells the agent to write the dump up, not merely retell a link', () => {
+    const { how_to_consume } = buildWellKnown({ baseUrl: BASE_URL });
+    expect(how_to_consume.download_field).toBe('dumps[].body_url');
+    expect(how_to_consume.steps).toHaveLength(5);
+    expect(how_to_consume.steps.join(' ')).toMatch(/write it up/i);
+  });
+
+  it('KDV-CONTRACT-01: the BIOS consumption steps work from the manifest door, not only the index', () => {
+    const { how_to_consume } = buildWellKnown({ baseUrl: BASE_URL });
+    const text = how_to_consume.steps.join(' ');
+    // A machine handed a shared article's manifest holds no `dumps[]`: the steps
+    // must still say where the body is — the dump's `raw` layer.
+    expect(text).toMatch(/manifest/i);
+    expect(text).toMatch(/`raw` layer/);
+    expect(text).toMatch(/layers/);
+    // Attribution must name the exact fields, not just "the source".
+    expect(text).toMatch(/`url`/);
+    expect(text).toMatch(/`license`/);
   });
 });
 
@@ -319,5 +376,22 @@ describe('build metadata injection', () => {
     const result = injectBuildMeta(DUMPS[0].manifest, { commitSha: null, builtAt: '2026-09-14T10:00:00.000Z' });
     expect(result.commit_sha).toBeNull();
     expect(result.built_at).toBe('2026-09-14T10:00:00.000Z');
+  });
+
+  it('KDV-CONTRACT-03 + KDV-MANIFEST-09: injectBuildMeta gives each layer its published URL', () => {
+    const layers = [
+      { name: 'raw', file: 'raw.md', fact_checked: false, author_voice: true },
+      { name: 'summary', file: 'summary.md', fact_checked: false, author_voice: false },
+    ];
+    const result = injectBuildMeta(DUMPS[0].manifest, {
+      commitSha: 'abc',
+      builtAt: '2026-09-14T10:00:00.000Z',
+      layers,
+      baseUrl: BASE_URL,
+    });
+    expect(result.layers.map((l) => l.url)).toEqual([
+      'https://kodavr.xyz/dumps/sample-dump/raw.md',
+      'https://kodavr.xyz/dumps/sample-dump/summary.md',
+    ]);
   });
 });

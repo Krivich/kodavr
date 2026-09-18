@@ -164,11 +164,11 @@ export const GATE_REST = [
 ].join('\n');
 
 export const PROMPT_TEXT = [
-  'Load https://kodavr.xyz/index.json. Select dumps matching my',
-  'request (fields: domain, tags, stakes, content_flags). For the',
-  'selected ones, fetch /dumps/<slug>/manifest.json and body files.',
-  'Retell them in my context: I am [who I am], I know [what I know].',
-  'Honor stakes and flags: where needed, warn me or refuse to retell.',
+  'Load https://kodavr.xyz/index.json and follow its how_to_consume.',
+  'Select dumps matching my request (fields: domain, tags, stakes,',
+  'content_flags). Retell the selected dumps in my context: I am',
+  '[who I am], I know [what I know]. Honor stakes and flags: where',
+  'needed, warn me or refuse to retell.',
 ].join('\n');
 
 export const LANE_COPY_LABEL = 'Or copy & paste it yourself';
@@ -252,14 +252,15 @@ export const GATE_TEXT = [
 ].join('\n\n');
 
 // §7.11: a dump page pins the prompt to the shared dump; `/reception/` uses the
-// universal PROMPT_TEXT instead. Keep the placeholder tokens EXACTLY as in SPEC
-// §7.11 so the verdict test can substitute them.
-export function dumpPrompt(dumpUrl, indexUrl) {
+// universal PROMPT_TEXT instead. The agent is handed the raw markdown and the
+// manifest, never the HTML projection. Keep the placeholder tokens EXACTLY as in
+// SPEC §7.11 so the verdict test can substitute them.
+export function dumpPrompt(bodyUrl, manifestUrl, indexUrl) {
   return [
-    `Read the dump at ${dumpUrl}. It is raw experience a human shared`,
-    'with me. Retell it in my context: I am [who I am], I know',
-    '[what I know]. Honor its stakes and content_flags: where needed,',
-    `warn me or refuse to retell. If it fits, also check ${indexUrl}`,
+    `Read the dump's raw markdown at ${bodyUrl} (manifest: ${manifestUrl}).`,
+    'It is raw experience a human shared with me. Retell it in my context:',
+    'I am [who I am], I know [what I know]. Honor its stakes and content_flags:',
+    `where needed, warn me or refuse to retell. If it fits, also check ${indexUrl}`,
     'for other dumps worth my attention.',
   ].join('\n');
 }
