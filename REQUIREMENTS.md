@@ -143,7 +143,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 
 - ✅ **KDV-CONTENT-01**: Dump `2026-09-14-kodavr-manifesto` (`type=case`, `domain=engineering`) has `raw.md` with the six §10.1 sections and its §10.1 meta (`generated_by=hybrid`, `human_review=attested`, `stakes=low`, `content_flags=["opinion"]`, `trust_level=self-tested`). *(§10.1)*
 - ✅ **KDV-CONTENT-02**: Dump #1 references the specification (`docs/SPEC.md`) that spawned the repository. *(§10.1)*
-- ✅ **KDV-CONTENT-03**: The second starter slot is deferred to a real community PR (§10.2) — the launch ships exactly one dump, with no fabricated filler. *(§10.2)*
+- ✅ **KDV-CONTENT-03**: No fabricated filler: the launch manifesto is present and every directory under `content/dumps/` is a real, §4.1-valid dump (manifest + raw layer, slug = directory, schema-valid, checked through the real validator — not a count). The second starter slot fills only through the normal community PR flow (§10.2). *(§10.2; tests/unit/content-starters.test.js)*
 
 ## KDV-BUILD — External controller (§8.2)
 

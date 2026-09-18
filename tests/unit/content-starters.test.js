@@ -1,12 +1,14 @@
-// tests/unit/content-starters.test.js — the mandatory starter dump (§10).
-// `2026-09-14-kodavr-manifesto` is the platform manifesto (type=case,
-// self-referential to the spec) and doubles as the worked example of the format.
-// The second starter slot is intentionally deferred to a real community PR
-// (§10.2): no filler dump is shipped.
+// tests/unit/content-starters.test.js — the starter dump and the anti-filler
+// guard (§10). `2026-09-14-kodavr-manifesto` is the platform manifesto
+// (type=case, self-referential to the spec) and doubles as the worked example
+// of the format. Later dumps arrive through the normal community PR flow
+// (§10.2): the guard checks that every shipped dump is a real, §4.1-valid dump
+// instead of pinning the set to a fixed count.
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { validateManifest } from '../../scripts/validate.mjs';
 
 const ROOT_URL = new URL('../../', import.meta.url);
 const ROOT = fileURLToPath(ROOT_URL);
@@ -67,11 +69,29 @@ describe('starter content (§10)', () => {
     }
   });
 
-  it('KDV-CONTENT-03: only the manifesto ships — the second starter slot is deferred to a community PR (§10.2)', () => {
-    const entries = readdirSync(fileURLToPath(new URL('content/dumps', ROOT_URL)), { withFileTypes: true })
+  it('KDV-CONTENT-03: no fabricated filler — the manifesto is present and every shipped dump is a real, §4.1-valid dump (§10.2)', () => {
+    const slugs = readdirSync(fileURLToPath(new URL('content/dumps', ROOT_URL)), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    expect(entries).toEqual(['2026-09-14-kodavr-manifesto']);
+
+    // The launch starter is present; the second slot fills through the normal
+    // PR flow, so the set is not pinned to a count (a count check would red-flag
+    // every real dump PR).
+    expect(slugs).toContain('2026-09-14-kodavr-manifesto');
+
+    // Every directory under content/dumps/ must be a real dump: manifest + raw
+    // layer present, slug equals the directory name, and the manifest is
+    // §4.1-valid — checked through the real validator, never a hardcoded list.
+    for (const slug of slugs) {
+      const dir = `content/dumps/${slug}`;
+      expect(exists(`${dir}/manifest.json`), `${dir}/manifest.json`).toBe(true);
+      expect(exists(`${dir}/raw.md`), `${dir}/raw.md`).toBe(true);
+      const man = manifestOf(dir);
+      expect(man.slug, `${slug}: manifest slug must equal the directory name`).toBe(slug);
+      const errors = [];
+      validateManifest(man, dir, errors);
+      expect(errors, `${slug}: ${errors.join('; ')}`).toEqual([]);
+    }
   });
 });
