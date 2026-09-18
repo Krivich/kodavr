@@ -56,7 +56,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — machine files are generated, never hand-edited
 - **scripts/lib/manifest-card.mjs** — renders a dump manifest as a markdown card and finds changed dump slugs
   exports: CARD_MARKER, dumpSlugsFromFiles, renderManifestCard
-  invariants: — the manifest is the only source; the card renders it and never invents fields
+  invariants: — the manifest is the only source; the card renders it and never invents fields; — the summary hook and the folded summary.md brief are omitted when absent
 - **scripts/lib/markdown.mjs** — markdown → sanitized HTML for dump bodies
   exports: renderMarkdown
   consumes: marked, sanitize-html
@@ -78,7 +78,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — these files are served verbatim; the engine's defaults are overwritten
 - **scripts/pr-manifest-card.mjs** — posts or updates the sticky manifest-card comment on a pull request
   consumes: ./lib/manifest-card.mjs, node:fs, node:path
-  invariants: — the manifest is the only source; the comment is a render, never an input
+  invariants: — the manifest and summary.md are the only source; the comment is a render, never an input
 - **scripts/req-coverage.js** — reconciles requirement IDs between REQUIREMENTS.md and the tests
   consumes: node:fs, node:path, node:url
   invariants: — a ✅ row without a test, or a test ID absent from the registry, exits 1

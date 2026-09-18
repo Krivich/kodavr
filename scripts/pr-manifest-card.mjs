@@ -6,7 +6,7 @@
  *   node:fs — read the changed-file list, manifest and event payload
  *   node:path — resolve dump paths
  * INVARIANTS:
- *   — the manifest is the only source; the comment is a render, never an input
+ *   — the manifest and summary.md are the only source; the comment is a render, never an input
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -35,10 +35,13 @@ function pullRequestNumber() {
 function buildBody(slugs) {
   const cards = [];
   for (const slug of slugs) {
-    const manifestPath = join('content', 'dumps', slug, 'manifest.json');
+    const dir = join('content', 'dumps', slug);
+    const manifestPath = join(dir, 'manifest.json');
     if (!existsSync(manifestPath)) continue;
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    cards.push(renderManifestCard(manifest, slug));
+    const summaryPath = join(dir, 'summary.md');
+    const brief = existsSync(summaryPath) ? readFileSync(summaryPath, 'utf8') : '';
+    cards.push(renderManifestCard(manifest, slug, brief));
   }
   return cards.join('\n');
 }

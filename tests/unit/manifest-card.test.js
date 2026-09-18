@@ -49,4 +49,17 @@ describe('KDV-CI-14: the PR manifest card', () => {
       ]),
     ).toEqual(['a', 'b']);
   });
+
+  it('KDV-CI-15: leads with the summary hook and folds the human brief', () => {
+    const brief = '## What it is\n\nA thing.\n\n## Why you would want it\n\nBecause.';
+    const card = renderManifestCard({ type: 'case', summary: 'A hook line.' }, 's', brief);
+    expect(card).toContain('**What it is:** A hook line.');
+    expect(card).toContain('<details><summary>Human brief (summary.md)</summary>');
+    expect(card).toContain('Because.');
+    expect(card).toContain('</details>');
+    // A card without a brief (or hook) stays exactly as before — no empty section.
+    const bare = renderManifestCard({ type: 'case' }, 's');
+    expect(bare).not.toContain('<details>');
+    expect(bare).not.toContain('What it is:');
+  });
 });

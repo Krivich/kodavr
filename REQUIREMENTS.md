@@ -132,6 +132,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CI-12**: `validate.yml` runs `npm run workflow-arrows:lint`, so `docs/workflow-arrows.puml` cannot drift from the tree — drawers, code-dir file coverage, links/symbols, stereotypes and step numbers are checked in CI. *(§8.1)*
 - ✅ **KDV-CI-13**: `validate.yml` runs `npm run contract`, so every first-party module (`scripts/lib`, `scripts`, `input/controllers`) must open with a `CONTRACT` header whose `EXPORTS`/`CONSUMES` equal the module's real exports/imports both ways, and the generated index in `AGENTS/code-map.md` cannot drift from the code. *(§8.1)*
 - ✅ **KDV-CI-14**: A `pull_request` workflow (`dump-manifest.yml`) posts/updates a sticky comment rendering the changed dump's `manifest.json` fields for the reviewer, so the PR template carries no duplicated manifest data; same-repo PRs only (fork tokens are read-only and are skipped). *(§8.1; tests/unit/manifest-card.test.js)*
+- ✅ **KDV-CI-15**: The manifest card leads with the dump's `manifest.summary` hook and folds the `summary.md` brief into a collapsible section, so a reviewer grasps the dump at a glance; both are omitted when absent. *(§8.1; tests/unit/manifest-card.test.js)*
 
 ## KDV-MOD — Moderation and social layer (§9)
 
@@ -180,9 +181,9 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 11 | 11 | 0 | 0 | 0 |
-| KDV-CI | 14 | 12 | 2 | 0 | 0 |
+| KDV-CI | 15 | 13 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
 | KDV-SCOPE | 6 | 6 | 0 | 0 | 0 |
-| **Total** | **121** | **111** | **10** | **0** | **0** |
+| **Total** | **122** | **112** | **10** | **0** | **0** |

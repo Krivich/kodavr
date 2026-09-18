@@ -4,9 +4,10 @@
  * EXPORTS:
  *   CARD_MARKER — the sticky-comment marker every rendered card starts with
  *   dumpSlugsFromFiles — content/dumps/<slug>/... paths → unique sorted slugs
- *   renderManifestCard — manifest + slug → a sticky PR-comment body
+ *   renderManifestCard — manifest + slug (+ the summary.md brief) → a sticky PR-comment body
  * INVARIANTS:
  *   — the manifest is the only source; the card renders it and never invents fields
+ *   — the summary hook and the folded summary.md brief are omitted when absent
  */
 
 // The PR-comment poster looks for this marker to update the existing comment
@@ -43,8 +44,9 @@ export function dumpSlugsFromFiles(files) {
   return [...slugs].sort();
 }
 
-// renderManifestCard(manifest, slug) → the sticky PR-comment body (markdown)
-export function renderManifestCard(manifest, slug) {
+// renderManifestCard(manifest, slug, summaryBrief?) → the sticky PR-comment body.
+// summaryBrief is the text of content/dumps/<slug>/summary.md when that file exists.
+export function renderManifestCard(manifest, slug, summaryBrief = '') {
   const rows = [];
   for (const [key, label] of FIELDS) {
     const value = manifest[key];
@@ -52,6 +54,18 @@ export function renderManifestCard(manifest, slug) {
     if (Array.isArray(value) && value.length === 0) continue;
     rows.push(`| ${label} | ${asCell(value)} |`);
   }
-  const footer = `> Auto-generated from \`content/dumps/${slug}/manifest.json\` — edit the manifest, not this comment.`;
-  return [CARD_MARKER, `### Dump manifest — \`${slug}\``, '', '| Field | Value |', '| --- | --- |', ...rows, '', footer, ''].join('\n');
+
+  const parts = [CARD_MARKER, `### Dump manifest — \`${slug}\``, ''];
+  // The hook always shows; the full human brief folds away for a one-click read.
+  if (manifest.summary) parts.push(`**What it is:** ${cell(manifest.summary)}`, '');
+  const brief = String(summaryBrief || '').trim();
+  if (brief) parts.push('<details><summary>Human brief (summary.md)</summary>', '', brief, '', '</details>', '');
+  parts.push('| Field | Value |', '| --- | --- |', ...rows, '');
+  parts.push(
+    brief
+      ? `> Auto-generated from \`content/dumps/${slug}/manifest.json\` and \`summary.md\` — edit the files, not this comment.`
+      : `> Auto-generated from \`content/dumps/${slug}/manifest.json\` — edit the manifest, not this comment.`,
+    '',
+  );
+  return parts.join('\n');
 }
