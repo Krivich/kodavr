@@ -51,11 +51,13 @@ describe('MVP non-goals (§11)', () => {
     // index.json stays a flat list — no facets/sections.
     const index = buildIndex([], { baseUrl: 'https://kodavr.xyz', generatedAt: 't' });
     expect(Object.keys(index).sort()).toEqual([
+      '$schema',
       'base_url',
       'dumps',
       'generated_at',
+      'index_url',
       'platform',
-      'protocol',
+      'schema',
       'total',
       'version',
     ]);

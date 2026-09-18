@@ -302,9 +302,9 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     logo_svg: logo,
     // §6.6: a dump is not one of the primary-nav routes, so no item is current.
     nav: buildNav(null),
-    // §7.11: a dump page pins the prompt to its own canonical URL; `/reception/`
-    // keeps the universal §7.4 prompt.
-    copy: dumpCopySlices({ bodyUrl, manifestUrl, indexUrl }),
+    // §7.11: the prompt is a bare boot address to this dump's own manifest,
+    // whose embedded schema names the `raw` layer to download.
+    copy: dumpCopySlices({ manifestUrl }),
     body_has_title,
     body_html,
     // §6.3: the optional `summary.md` layer is the author's brief for a human

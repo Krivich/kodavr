@@ -289,12 +289,11 @@ describe('copydeck', () => {
     expect(links[3].href).toBe('https://claude.ai/new?q=hello%20world');
 
     const spec = blockFor('7.11');
-    expect(dumpPrompt('<body>', '<manifest>', '<index>')).toBe(
-      spec
-        .replaceAll('<body-url>', '<body>')
-        .replaceAll('<manifest-url>', '<manifest>')
-        .replaceAll('<index-url>', '<index>'),
+    expect(dumpPrompt('<manifest>')).toBe(spec.replaceAll('<manifest-url>', '<manifest>'));
+    expect(dumpPrompt('https://x/dumps/s/manifest.json')).toBe(
+      'Download https://x/dumps/s/manifest.json and follow its schema.',
     );
+    expect(PROMPT_TEXT).toBe('Download https://kodavr.xyz/index.json and follow its schema.');
   });
 
   it('KDV-SURFACE-15: the machine-panel reset label is the human counterpart of the reception reset', () => {

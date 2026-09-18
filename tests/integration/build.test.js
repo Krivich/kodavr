@@ -220,18 +220,21 @@ describe('build controller (integration)', () => {
     expect(index.dumps[0].manifest_url).toBe(`${BASE_URL}/dumps/sample-dump-two/manifest.json`);
     // §5.1: the index names the very field a machine downloads the dump from.
     expect(index.dumps[0].body_url).toBe(`${BASE_URL}/dumps/sample-dump-two/raw.md`);
-    expect(index.protocol.how_to_consume.download_field).toBe('dumps[].body_url');
+    // §5.1: the index is self-describing and the same schema is served beside it.
+    expect(index.$schema).toBe(`${BASE_URL}/schemas/index.schema.json`);
+    const servedIndexSchema = JSON.parse(await readFile(join(publicDir, 'schemas', 'index.schema.json'), 'utf8'));
+    expect(index.schema).toEqual(servedIndexSchema);
+    expect(await exists(join(publicDir, 'schemas'))).toBe(true);
+    // §4.1: the published manifest carries its own schema, served identically.
+    expect(manifest.$schema).toBe(`${BASE_URL}/schemas/manifest.schema.json`);
+    const servedManifestSchema = JSON.parse(await readFile(join(publicDir, 'schemas', 'manifest.schema.json'), 'utf8'));
+    expect(manifest.schema).toEqual(servedManifestSchema);
 
-    // .well-known/kodavr.json
+    // .well-known/kodavr.json stays the standalone platform OS the schemas point to.
     const wellKnown = JSON.parse(await readFile(join(publicDir, '.well-known', 'kodavr.json'), 'utf8'));
     expect(wellKnown.endpoints.index).toBe('/index.json');
     expect(wellKnown.endpoints.body_pattern).toBe('/dumps/{slug}/{file}');
     expect(wellKnown.trust_levels).toContain('library');
-
-    // KDV-CONTRACT-01/05: the WHOLE protocol (BIOS) is embedded verbatim in both
-    // index.json and the published manifest — the same object as well-known.
-    expect(index.protocol).toEqual(wellKnown);
-    expect(manifest.protocol).toEqual(wellKnown);
     expect(wellKnown.about).toContain('raw');
     expect(wellKnown.interpret).toMatch(/stakes/i);
     expect(wellKnown.index_url).toBe(`${BASE_URL}/index.json`);
@@ -330,12 +333,11 @@ describe('build controller (integration)', () => {
       { name: 'raw', file: 'raw.md', fact_checked: false, author_voice: true, url: `${BASE_URL}/dumps/sample-dump/raw.md` },
       { name: 'summary', file: 'summary.md', fact_checked: false, author_voice: false, url: `${BASE_URL}/dumps/sample-dump/summary.md` },
     ]);
-    // The published manifest embeds the whole protocol (BIOS): whichever door the
-    // agent entered (index from reception, this manifest from a shared article),
-    // the orientation is the same object (§5.1/§5.2).
-    expect(manifest.protocol.about).toBeTruthy();
-    expect(manifest.protocol.index_url).toBe(`${BASE_URL}/index.json`);
-    expect(manifest.protocol.how_to_consume.download_field).toBe('dumps[].body_url');
+    // §4.1/§5.1: the published manifest carries its own JSON Schema inline
+    // (`$schema` URL + `schema`), served at /schemas/manifest.schema.json.
+    expect(manifest.$schema).toBe(`${BASE_URL}/schemas/manifest.schema.json`);
+    expect(manifest.schema.$id).toBe(`${BASE_URL}/schemas/manifest.schema.json`);
+    expect(manifest.schema.description).toContain('/.well-known/kodavr.json');
     // §4.1 provenance/contract defaults.
     expect(manifest.derived_from).toBeNull();
     expect(manifest.consumption_contract).toEqual({ see: '/.well-known/kodavr.json' });
@@ -496,11 +498,7 @@ describe('build controller (integration)', () => {
     expect(text).toContain(BRIEF_HEADING);
     expect(text).toContain(RECEPTION_RATING);
     expect(text).not.toContain(`${RECEPTION_WALL}\n\n${BRIEF_HEADING}`);
-    expect(text).toContain(dumpPrompt(
-      'https://example.test/dumps/sample-dump/raw.md',
-      'https://example.test/dumps/sample-dump/manifest.json',
-      'https://example.test/index.json',
-    ));
+    expect(text).toContain(dumpPrompt('https://example.test/dumps/sample-dump/manifest.json'));
     expect(html).toContain('class="agent-lane"');
     expect(html).toContain('class="copy-prompt"');
     expect(text).not.toContain('[ 0 ]');

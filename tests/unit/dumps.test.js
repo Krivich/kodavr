@@ -42,6 +42,11 @@ describe('dumps controller', () => {
       body_url: 'https://example.test/dumps/sample-dump/raw.md',
       index_url: 'https://example.test/index.json',
     });
+    // §7.11: the dump page prompt is a bare boot address to the manifest, whose
+    // embedded schema describes the `raw` layer to download.
+    expect(dataset.copy.prompt).toBe(
+      'Download https://example.test/dumps/sample-dump/manifest.json and follow its schema.',
+    );
     expect(dataset.body_html).toContain('<h1>Sample Heading</h1>');
     expect(dataset.body_html).toContain('<strong>bold</strong>');
     expect(dataset.body_html).not.toContain('<pre class="raw">');

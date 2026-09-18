@@ -12,6 +12,11 @@ import {
   REPOSITORY,
   ISSUES_URL,
 } from '../../scripts/lib/machine.mjs';
+import {
+  buildIndexSchema,
+  buildManifestSchema,
+  PLATFORM_DESCRIPTION,
+} from '../../scripts/lib/schema.mjs';
 
 const BASE_URL = 'https://kodavr.xyz';
 
@@ -130,15 +135,17 @@ describe('index.json builder', () => {
       generated_at: '2026-09-14T00:00:00.000Z',
       base_url: BASE_URL,
       total: 2,
+      index_url: 'https://kodavr.xyz/index.json',
     });
     expect(index.dumps).toHaveLength(2);
     expect(index.dumps[0]).toMatchObject({ slug: 'sample-dump-two' });
-    // §5.1/§5.2: the whole protocol (BIOS) is embedded verbatim, not linked, so a
-    // machine sees where it is whichever door it entered.
-    expect(index.protocol).toEqual(buildWellKnown({ baseUrl: BASE_URL }));
-    expect(index.protocol.how_to_consume.download_field).toBe('dumps[].body_url');
-    expect(index.protocol.about).toContain('raw');
-    expect(index.protocol.index_url).toBe('https://kodavr.xyz/index.json');
+    // §5.1: the index is self-describing — `$schema` names the URL of the schema
+    // embedded verbatim in `schema`, so a machine orients without fetching.
+    expect(index.$schema).toBe('https://kodavr.xyz/schemas/index.schema.json');
+    expect(index.schema).toEqual(buildIndexSchema({ baseUrl: BASE_URL }));
+    expect(index.schema.description).toContain('translator');
+    expect(index.schema.description).toContain('/.well-known/kodavr.json');
+    expect(index.schema.description).toContain('check with your user');
   });
 
   it('KDV-CONTRACT-02: buildIndex sorts dumps by date descending', () => {
@@ -271,8 +278,8 @@ describe('well-known discovery document', () => {
   });
 });
 
-describe('machine BIOS (orientation block)', () => {
-  it('KDV-CONTRACT-01/03/05: index and the published manifest both embed the SAME protocol (BIOS)', () => {
+describe('machine BIOS (self-describing schemas)', () => {
+  it('KDV-CONTRACT-01/03/05: index and the published manifest both embed self-describing schemas', () => {
     const index = buildIndex(DUMPS, { baseUrl: BASE_URL, generatedAt: 't' });
     const manifest = injectBuildMeta(DUMPS[0].manifest, {
       commitSha: 'abc',
@@ -280,13 +287,46 @@ describe('machine BIOS (orientation block)', () => {
       layers: [{ name: 'raw', file: 'raw.md', fact_checked: false, author_voice: true }],
       baseUrl: BASE_URL,
     });
-    const wk = buildWellKnown({ baseUrl: BASE_URL });
 
-    // One source: the very same protocol object, whichever door the agent entered.
-    expect(index.protocol).toEqual(wk);
-    expect(manifest.protocol).toEqual(wk);
-    expect(wk.about).toBeTruthy();
-    expect(wk.index_url).toBe(`${BASE_URL}/index.json`);
+    // One source per door: the same schema builder, embedded verbatim, with the
+    // shared BIOS paragraph in its root description.
+    expect(index.$schema).toBe(`${BASE_URL}/schemas/index.schema.json`);
+    expect(index.schema).toEqual(buildIndexSchema({ baseUrl: BASE_URL }));
+    expect(manifest.$schema).toBe(`${BASE_URL}/schemas/manifest.schema.json`);
+    expect(manifest.schema).toEqual(buildManifestSchema({ baseUrl: BASE_URL }));
+    for (const schema of [index.schema, manifest.schema]) {
+      expect(schema.description).toContain('translator');
+      expect(schema.description).toContain('/.well-known/kodavr.json');
+      expect(schema.description).toContain('check with your user');
+    }
+  });
+
+  it('KDV-CONTRACT-01: the shared PLATFORM_DESCRIPTION is one source of both schema root descriptions', () => {
+    const indexSchema = buildIndexSchema({ baseUrl: BASE_URL });
+    const manifestSchema = buildManifestSchema({ baseUrl: BASE_URL });
+    expect(indexSchema.description).toContain(PLATFORM_DESCRIPTION);
+    expect(manifestSchema.description).toContain(PLATFORM_DESCRIPTION);
+    // The shared paragraph is the head; each document adds its own landscape.
+    expect(indexSchema.description).not.toBe(manifestSchema.description);
+  });
+
+  it('KDV-CONTRACT-01: every field a built index/manifest carries is described in its schema', () => {
+    const index = buildIndex(DUMPS, { baseUrl: BASE_URL, generatedAt: 't' });
+    for (const key of Object.keys(index)) {
+      expect(Object.keys(index.schema.properties), key).toContain(key);
+      expect(index.schema.properties[key].description, key).toBeTruthy();
+    }
+    const manifest = injectBuildMeta(DUMPS[0].manifest, {
+      commitSha: 'abc',
+      builtAt: 't',
+      layers: [{ name: 'raw', file: 'raw.md', fact_checked: false, author_voice: true }],
+      author: { github: 'gh', pr_url: 'p', merged_at: 'm' },
+      baseUrl: BASE_URL,
+    });
+    for (const key of Object.keys(manifest)) {
+      expect(Object.keys(manifest.schema.properties), key).toContain(key);
+      expect(manifest.schema.properties[key].description, key).toBeTruthy();
+    }
   });
 
   it('KDV-CONTRACT-01/05: the BIOS step tells the agent to write the dump up, not merely retell a link', () => {

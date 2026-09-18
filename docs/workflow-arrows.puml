@@ -51,7 +51,8 @@ package "scripts/lib\n====\nthe smart controller: content, machine contracts, bu
   component "pages.mjs\nbuildRouteDatasets · buildNav\n--\nroute datasets: copydeck, SEO, JSON-LD" as PAGES <<lib>> [[../scripts/lib/pages.mjs#buildRouteDatasets]]
   component "copy.mjs\n--\nsingle source of truth for every human string" as COPY <<lib>> [[../scripts/lib/copy.mjs]]
   component "jsonld.mjs\nserializeJsonLd\n--\nsafe schema.org @graph per page" as JSONLD <<lib>> [[../scripts/lib/jsonld.mjs#serializeJsonLd]]
-  component "machine.mjs\nwriteMachineFiles · writeSitemap\n--\nindex.json, well-known, feeds, tags, sitemap" as MACHINE <<lib>> [[../scripts/lib/machine.mjs#writeMachineFiles]]
+  component "machine.mjs\nwriteMachineFiles · writeSitemap\n--\nindex.json, schemas, well-known, feeds, tags, sitemap" as MACHINE <<lib>> [[../scripts/lib/machine.mjs#writeMachineFiles]]
+  component "schema.mjs\nbuildIndexSchema · buildManifestSchema\n--\nself-describing JSON Schemas for index/manifest" as SCHEMA <<lib>> [[../scripts/lib/schema.mjs#buildIndexSchema]]
   component "ignition.mjs\nrunIgnition\n--\nspawns the vendored engine" as IGN <<lib>> [[../scripts/lib/ignition.mjs#runIgnition]]
   component "relativize.mjs\nrelativizeSite\n--\nhost-agnostic internal links" as REL <<lib>> [[../scripts/lib/relativize.mjs#relativizeSite]]
   component "verbatim.mjs\nROBOTS_TXT · HUMANS_TXT\n--\nverbatim robots/humans" as VERB <<lib>> [[../scripts/lib/verbatim.mjs]]
@@ -122,6 +123,7 @@ IGN ..> VIEW_GATE : and the consumption-contract partials
 IGN ..> CTRL_DUMPS : injects the page controller
 IGN ..> CTRL_REC : injects the reception controller
 PAGES ..> MACHINE : reads buildIndexEntry / buildWellKnown
+MACHINE ..> SCHEMA : embeds + serves the index/manifest JSON Schemas
 MACHINE ..> VERB : writes robots.txt / humans.txt verbatim
 CLI_SERVE ..> SSRV : serves output/public locally
 CLI_OG ..> PW : rasterizes the OG card

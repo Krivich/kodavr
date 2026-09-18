@@ -22,14 +22,15 @@
  *   buildWellKnown — the /.well-known/kodavr.json protocol document
  *   collectHtmlFiles — every built HTML file under a directory
  *   escapeXml — escapes a value for XML
- *   injectBuildMeta — adds commit_sha, built_at, author, the BIOS and layer URLs to a manifest
+ *   injectBuildMeta — adds commit_sha, built_at, author, the schema and layer URLs to a manifest
  *   readGitHubEvent — reads the CI event payload
  *   resolveAuthorFromCi — the author block from the environment
  *   resolveAuthorMeta — the author block from an event payload
  *   resolveRepository — owner/repo from the environment or git config
- *   writeMachineFiles — writes index.json, well-known, feeds, tags, manifests
+ *   writeMachineFiles — writes index.json, schemas, well-known, feeds, tags, manifests
  *   writeSitemap — writes sitemap.xml over the built HTML
  * CONSUMES:
+ *   ./schema.mjs — the self-describing JSON Schemas embedded in and served beside the machine files
  *   ./verbatim.mjs — the verbatim robots.txt / humans.txt
  *   node:fs — read files
  *   node:fs/promises — walk and write machine files
@@ -46,6 +47,12 @@ import { copyFile, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { ROBOTS_TXT, HUMANS_TXT } from './verbatim.mjs';
+import {
+  buildIndexSchema,
+  buildManifestSchema,
+  INDEX_SCHEMA_ID,
+  MANIFEST_SCHEMA_ID,
+} from './schema.mjs';
 
 const XML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' };
 
@@ -205,14 +212,16 @@ export function buildIndex(dumps, { baseUrl, generatedAt } = {}) {
     .map((dump) => buildIndexEntry(dump, { baseUrl: base }))
     .sort((a, b) => String(b.date).localeCompare(String(a.date)));
   return {
+    // §5.1: the index is self-describing — `$schema` names the URL and `schema`
+    // embeds the same JSON Schema verbatim, so a machine orients without fetching.
+    $schema: `${base}${INDEX_SCHEMA_ID}`,
+    schema: buildIndexSchema({ baseUrl: base }),
     platform: 'kodavr',
     version: CONTRACT_VERSION,
     generated_at: generatedAt,
     base_url: base,
     total: entries.length,
-    // §5.1/§5.2: the whole machine protocol (the well-known BIOS) is embedded
-    // verbatim, not linked — whichever door the agent entered, it sees it.
-    protocol: buildWellKnown({ baseUrl: base }),
+    index_url: `${base}/index.json`,
     dumps: entries,
   };
 }
@@ -403,13 +412,19 @@ export function resolveAuthorFromCi(env = process.env) {
  */
 export function injectBuildMeta(manifest, { commitSha = null, builtAt, author = null, layers = null, baseUrl = null } = {}) {
   const base = normalizeBaseUrl(baseUrl);
-  const next = { ...manifest, commit_sha: commitSha, built_at: builtAt };
+  // §4.1/§5.1: the published manifest is self-describing — `$schema` names the URL
+  // and `schema` embeds the same JSON Schema verbatim, so an agent handed a shared
+  // article's manifest still orients without fetching the well-known.
+  const next = {
+    $schema: `${base}${MANIFEST_SCHEMA_ID}`,
+    schema: buildManifestSchema({ baseUrl: base }),
+    ...manifest,
+    commit_sha: commitSha,
+    built_at: builtAt,
+  };
   if (!next.license) next.license = DEFAULT_LICENSE;
   if (!('derived_from' in next)) next.derived_from = null;
   if (!next.consumption_contract) next.consumption_contract = { see: CONSUMPTION_CONTRACT_SEE };
-  // §5.1/§5.2: the published manifest embeds the same protocol (BIOS) as index.json,
-  // so an agent handed a shared article's manifest still knows where it landed.
-  if (base) next.protocol = buildWellKnown({ baseUrl: base });
   if (Array.isArray(layers)) {
     // §5.1: each layer file is published beside the manifest, so its URL is
     // derivable and stated — a machine downloads markdown, never scrapes HTML.
@@ -455,6 +470,21 @@ export async function writeMachineFiles({
 
   const index = buildIndex(dumps, { baseUrl: base, generatedAt });
   await writeFile(join(outputDir, 'index.json'), `${JSON.stringify(index, null, 2)}\n`, 'utf8');
+
+  // §5.1/§4.1: both schemas are also served at their `$id`, so the embedded
+  // `schema` and the served document are one source, byte-for-byte.
+  const schemasDir = join(outputDir, 'schemas');
+  await mkdir(schemasDir, { recursive: true });
+  await writeFile(
+    join(schemasDir, 'index.schema.json'),
+    `${JSON.stringify(buildIndexSchema({ baseUrl: base }), null, 2)}\n`,
+    'utf8',
+  );
+  await writeFile(
+    join(schemasDir, 'manifest.schema.json'),
+    `${JSON.stringify(buildManifestSchema({ baseUrl: base }), null, 2)}\n`,
+    'utf8',
+  );
 
   // §11/§5.2: the tag graph is the machine-readable alternative to the
   // deferred tag/domain pages; same writer path as index.json.

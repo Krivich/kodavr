@@ -52,7 +52,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — every serialized graph is safe inside a script tag (angle brackets are escaped)
 - **scripts/lib/machine.mjs** — the machine-first surface: index.json, well-known, feeds, tags, sitemap
   exports: AGENT_DUTIES, CONSUMPTION_CONTRACT_SEE, CONTENT_FLAGS_VOCABULARY, CONTRACT_VERSION, DEFAULT_LICENSE, ISSUES_URL, PLATFORM_ABOUT, REPOSITORY, REPOSITORY_BRANCH, STAKES_VOCABULARY, TRUST_LEGEND_LEAD, TRUST_LEVELS, TRUST_LEVEL_MEANINGS, buildAtom, buildIndex, buildIndexEntry, buildTagGraph, buildWellKnown, collectHtmlFiles, escapeXml, injectBuildMeta, readGitHubEvent, resolveAuthorFromCi, resolveAuthorMeta, resolveRepository, writeMachineFiles, writeSitemap
-  consumes: ./verbatim.mjs, node:fs, node:fs/promises, node:path
+  consumes: ./schema.mjs, ./verbatim.mjs, node:fs, node:fs/promises, node:path
   invariants: — machine files are generated, never hand-edited
 - **scripts/lib/manifest-card.mjs** — renders a dump manifest as a markdown card and finds changed dump slugs
   exports: CARD_MARKER, dumpSlugsFromFiles, renderManifestCard
@@ -69,6 +69,9 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: htmlDepth, relativizeHtml, relativizeSite
   consumes: ./machine.mjs, node:fs, node:fs/promises, node:path
   invariants: — machine files and og:* stay absolute; only HTML links are rewritten
+- **scripts/lib/schema.mjs** — the self-description layer: the shared machine BIOS and the JSON Schemas embedded in (and served beside) index.json and every published manifest
+  exports: INDEX_SCHEMA_ID, MANIFEST_SCHEMA_ID, PLATFORM_DESCRIPTION, SCHEMA_DIALECT, buildIndexSchema, buildManifestSchema
+  invariants: — the platform paragraph has ONE source and appears verbatim in both schemas;; — every field a machine reads is described, so it can orient without fetching; — /.well-known/kodavr.json;; — the same schema object is both embedded (as `schema`) and served at its `$id`.
 - **scripts/lib/static-server.mjs** — a minimal static server for local preview and e2e
   exports: contentType, createStaticServer, resolveFile
   consumes: node:fs/promises, node:http, node:path

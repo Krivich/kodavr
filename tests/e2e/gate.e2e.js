@@ -20,13 +20,10 @@ import { CONTRACT_VERSION } from '../../scripts/lib/machine.mjs';
 
 const DUMP = '/dumps/sample-dump/';
 const SPECIES_KEY = 'kodavr.species';
-// §7.11: a dump page pins the prompt to its own canonical URL and points at the
-// index for more. The e2e server serves the built site at 127.0.0.1:4173.
-const DUMP_PROMPT = dumpPrompt(
-  'http://127.0.0.1:4173/dumps/sample-dump/raw.md',
-  'http://127.0.0.1:4173/dumps/sample-dump/manifest.json',
-  'http://127.0.0.1:4173/index.json',
-);
+// §7.11: a dump page's prompt is a bare boot address to its own manifest, whose
+// embedded schema describes the `raw` layer. The e2e server serves the built
+// site at 127.0.0.1:4173.
+const DUMP_PROMPT = dumpPrompt('http://127.0.0.1:4173/dumps/sample-dump/manifest.json');
 
 // Playwright starts a fresh browser context per test, so localStorage — and
 // with it the persisted declaration — never leaks between them.
