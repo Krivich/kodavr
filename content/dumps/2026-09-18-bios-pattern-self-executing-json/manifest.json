@@ -1,0 +1,37 @@
+{
+  "slug": "2026-09-18-bios-pattern-self-executing-json",
+  "title": "The BIOS Pattern: Self-Executing JSON Contracts for AI Agents",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-09-18",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["opinion", "contains_code", "experimental", "unverified_claims"],
+  "tags": [
+    "bios-pattern",
+    "self-executing-json",
+    "json-schema",
+    "ai-agents",
+    "protocol-design",
+    "self-describing",
+    "zero-config",
+    "executable-contracts"
+  ],
+  "generated_by": "hybrid",
+  "human_review": "minimal",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "Agents receive JSON but do not know what to do with it: is this a blog, a knowledge base, documentation? This dump describes a pattern that turns JSON Schema into an executable BIOS — a `$schema` pointer plus an inline `schema` whose `description` fields carry the agent's role and next steps — so a document boots an agent with no external config. Kodavr is the first implementation; the pattern applies to any machine-readable contract.",
+  "sources": ["chat-log", "source-code"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "raw.md", "note": "the dump body" },
+    { "kind": "url", "path_or_url": "https://kodavr.xyz/schemas/index.schema.json", "note": "the index BIOS as served" },
+    { "kind": "url", "path_or_url": "https://kodavr.xyz/schemas/manifest.schema.json", "note": "the manifest BIOS as served" },
+    { "kind": "url", "path_or_url": "https://kodavr.xyz/.well-known/kodavr.json", "note": "the well-known protocol document" }
+  ],
+  "derived_from": null
+}
