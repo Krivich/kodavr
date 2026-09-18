@@ -235,11 +235,12 @@ Follow `reference/submission.md` exactly. In short:
 3. Commit: `dump: <title> (<slug>)` — one line, one dump.
 4. Push the branch.
 5. Open the PR, via the fallback chain: `gh` if available → GitHub REST API if a
-   token is in the environment → otherwise **build the pre-filled compare URL
-   yourself** and hand that over. Never leave the human with a blank template:
-   put the commit line in `title` and the filled PR body in `body`, each
-   `encodeURIComponent`-encoded (`?expand=1&title=<enc>&body=<enc>`), so they
-   only press "Create pull request". Recipe: `reference/submission.md`.
+   token is in the environment → otherwise hand over the plain compare URL
+   (`.../compare/<base>...dump/<slug>?expand=1`). Do NOT build or URL-encode a
+   `title`/`body` — long pre-filled links get mangled in editors and terminals,
+   and the repo does the rest: GitHub loads the PR template, and the
+   `dump-manifest` workflow posts the manifest fields as a comment. The human
+   just presses "Create pull request". Recipe: `reference/submission.md`.
 
 Never commit other people's untracked files. Never touch files outside the dump
 dir. Never echo or persist tokens.

@@ -14,12 +14,13 @@ Maintainer: Krivich.
 
 ## 0.4.0 — 2026-09-18
 
-- Submission (`SKILL.md` Step 6, `reference/submission.md` C): when neither `gh`
-  nor a token is available, build the compare URL **pre-filled** — the commit
-  line as `title`, the filled PR template as `body`, both
-  `encodeURIComponent`-encoded (`?expand=1&title=&body=`) — instead of handing
-  the human a blank template to fill by hand.
-- MINOR: new submission capability, backward compatible.
+- Submission (`SKILL.md` Step 6, `reference/submission.md`): stop duplicating the
+  manifest in the PR. Hand over the plain compare URL — no URL-encoded
+  `title`/`body`, which get mangled in editors and terminals. GitHub loads the PR
+  template by itself, and the repo's `dump-manifest` workflow posts the manifest
+  fields as a comment, so the human just presses "Create pull request".
+- MINOR: submission capability change, backward compatible (the field values now
+  live in one place — the manifest — instead of being retyped into the PR).
 
 ## 0.3.0 — 2026-09-18
 

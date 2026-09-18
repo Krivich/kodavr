@@ -93,25 +93,23 @@ Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/<owner>/<repo>
 
 Never echo the token; never store it in git config or a file.
 
-### C. Push + pre-filled compare URL (no gh, no token)
+### C. Push + compare URL (no gh, no token)
 
 ```
 git -C <workdir> push -u origin dump/<slug>
 ```
 
-Then build the PR-creation URL **with the title and body already filled** — never
-hand the human a blank template. GitHub honours `title` and `body` query
-parameters on the compare page; each must be `encodeURIComponent`-encoded:
+Then hand over the plain PR-creation link — do **not** build or URL-encode a
+`title`/`body`:
 
 ```
-https://github.com/<owner>/<repo>/compare/<base>...dump/<slug>?expand=1&title=<encoded title>&body=<encoded body>
+https://github.com/<owner>/<repo>/compare/<base>...dump/<slug>?expand=1
 ```
 
-- **title** = the commit line: `dump: <title> (<slug>)`.
-- **body** = the filled PR template (see "PR body" below), built from the manifest.
-- Encode spaces, `#`, newlines, `|` and brackets (`encodeURIComponent`). If a
-  shell or URL-length limit gets in the way, print the title and body separately
-  for copy-paste — blank is the only wrong answer.
+GitHub loads `.github/PULL_REQUEST_TEMPLATE.md` into the body by itself, and the
+`dump-manifest` workflow posts the manifest fields as a comment, so there is
+nothing to fill by hand — the human just presses "Create pull request". (Long
+pre-filled URLs are fragile: editors and terminals mangle the query string.)
 
 If the push is rejected for lack of write access and `fork_on_no_push` is true,
 fork first and push there:
@@ -121,35 +119,23 @@ fork first and push there:
   `https://github.com/<your-login>/<repo>.git`.
 - Compare URL for a fork: `.../compare/<base>...<your-login>:dump/<slug>?expand=1`.
 
-Hand over the one link (and the raw title/body on request).
+Tell the human the link; the template and the bot fill the rest.
 
 ## PR body
 
-Fill every field of `.github/PULL_REQUEST_TEMPLATE.md` (fetch it from the repo)
-and tick only the boxes that are actually true. The same filled body is used
-everywhere: as `--body-file` / `-Body` for `gh`/REST, or URL-encoded into the
-compare link's `body` parameter when there is no `gh` and no token. Write it to a
-temp file for the CLI paths so shell quoting cannot corrupt it.
+The template no longer duplicates the manifest: it is an instruction plus the
+author checklist, and the repo's `dump-manifest` workflow posts the manifest
+fields (type, domain, stakes, flags, trust, labels) as a comment straight from
+`content/dumps/<slug>/manifest.json`. So the body you submit is the template
+with the boxes ticked that are actually true:
 
-```
-## Dump
-- slug: <slug>
-- type (note|case|pack): <type>
-- domain: <domain>
-- stakes (low|medium|high): <stakes>
-- content_flags: <flags or ->
-- generated_by (human|agent|hybrid): <...>
-- human_review (none|minimal|attested): <...>
+- `gh` / REST: write it to a temp file and use `--body-file` / `-Body`.
+- Compare link: nothing to fill — GitHub loads the template and the bot adds the
+  fields; the human just presses "Create pull request".
 
-## Author checklist
-- [x] Secrets cleaned (ran secret-scan locally)
-- [x] Examples are synthetic, no real data
-- [ ] REDACTIONS.md attached (if sources include correspondence)
-- [x] manifest.json is valid per schema (locally: node scripts/validate.mjs)
-- [x] Licence specified
-- [ ] Heavy files moved to Release convention
-- [x] summary.md brief attached (if an agent wrote it)
-```
+Tick only the boxes that are true (leave `REDACTIONS.md` / Release / summary
+unticked when they do not apply); the manifest stays the single source of the
+field values.
 
 ## Safety checks before pushing
 
