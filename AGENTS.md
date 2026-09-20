@@ -12,6 +12,12 @@ Don't rewrite existing text in the repo's current language — that's churn, not
 content (code comments, doc additions, commit messages) goes in the language agreed for
 the project. Human-facing UI strings keep their current language.
 
+**UI copy is multilingual — change one key, change every locale.** Human-facing strings live
+in the per-locale bundles `scripts/lib/i18n-{en,ru,zh-Hans,es}.mjs` (English is the source; the
+English side is `scripts/lib/copy.mjs` + `i18n-en.mjs`), and all bundles must keep an IDENTICAL
+key set. When you add, edit or remove a string, update ALL four bundles in the same change;
+`assertComplete` / `npm test` / `npm run req` fail on drift. Dump bodies are never translated.
+
 ## Terminology (accumulate, don't invent new)
 
 The full glossary is **AGENTS/domain-model.md**: runtime product terms + our own
