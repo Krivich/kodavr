@@ -365,7 +365,7 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
   const about = {
     ...commonPage({
       base,
-      title: 'About',
+      title: 'Why Kodavr exists',
       description: 'The Kodavr manifesto, condensed.',
       urlPath: 'about/',
       logo,

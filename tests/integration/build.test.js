@@ -433,6 +433,48 @@ describe('build controller (integration)', () => {
     expect(sitemap).not.toContain(`${BASE_URL}/404`);
   });
 
+  it('KDV-COPY-12: /about/ is a six-plate sheet in the home design language — manifesto, authors, readers, mechanism, architecture, colophon', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+    const about = decodeEntities(await readFile(join(publicDir, 'about', 'index.html'), 'utf8'));
+
+    // The header contract (KDV-SURFACE-23) still opens the page.
+    expect(about).toContain('<p class="kicker">about the platform</p>');
+    expect(about).toContain('>Why Kodavr exists</h1>');
+    expect(about).toContain('class="lead"');
+
+    // Six numbered plates, in order, under the sheet's design roles.
+    const plates = [...about.matchAll(/data-plate="([^"]+)"/g)].map((m) => m[1]);
+    expect(plates).toEqual([
+      '01 · manifesto',
+      '02 · authors',
+      '03 · readers',
+      '04 · mechanism',
+      '05 · architecture',
+      '06 · colophon',
+    ]);
+
+    for (const heading of ['For authors', 'For readers', 'How it works', 'Architecture decisions']) {
+      expect(about, heading).toContain(`>${heading}</h2>`);
+    }
+
+    // The mechanism is the design system's ordered `.steps`, not a pile of cards.
+    expect(about).toContain('<ol class="steps">');
+    // The §7.10 story (KDV-COPY-08) and the 1x/10x thesis still reach /about/.
+    expect(about).toContain('A dump is a field report written by your agent in one prompt.');
+    expect(about).toContain('Packaging it so someone else can reuse it costs 10x');
+    // The §1.4 slogan colophon closes the page (KDV-COPY-11).
+    expect(about).toContain('class="slogan"');
+    expect(about).toContain('class="slogan-muted"');
+  });
+
+  it('KDV-SURFACE-24: the home hero links to /about/ with the design system CTA so a reader who cannot place the registry reaches the manifesto', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+    const home = decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'));
+    expect(home).toContain('<a class="cta" href="about/">About the platform</a>');
+  });
+
   it('KDV-SURFACE-04: every page ships the current consumption-contract version in <head> as a meta tag (sourced from machine.mjs)', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');

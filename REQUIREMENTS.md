@@ -79,6 +79,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-20**: The home storefront's trust-level legend names all five levels in §2.2 order with their meanings — each level a monospace token and a prose definition, led by one plain sentence explaining what the scale measures — from a single ordered source that also derives the discovery document's `trust_levels` list. *(§2.2, §6.1)*
 - ✅ **KDV-SURFACE-22**: The stylesheet is a documented design system: `docs/design-system.md` names every `:root` token and the role/component vocabulary (demo roles plus our extensions), and a guard test proves every class selector in `styles.css` is backed by a shipped hook (template, controller, page script or test) and that no selector is declared twice at the top level. *(§6.5)*
 - ✅ **KDV-SURFACE-23**: Every human route (`/`, `/reception/`, `/about/`, `/contribute/`) opens with one header block — a muted kicker naming the page, exactly one `h1` carrying its title and a `lead` opening sentence, in that order; the 404 shares the kicker and keeps exactly one screen-reader-only `h1`. *(§6.5)*
+- ✅ **KDV-SURFACE-24**: The home storefront's hero closes with the design system's `.cta` link "About the platform" to `/about/`, so a reader who cannot place the registry reaches the manifesto in one click. *(§6.1, §6.5)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -115,6 +116,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-COPY-09**: The agent lane (lead, copy label, Perplexity/Grok/ChatGPT/Claude labels and targets, best-effort ?q= prefill) is one copydeck source, and the gate text carries no literal fake [ 0 ] [ 1 ] affordance. *(§7.1, §7.12)*
 - ✅ **KDV-COPY-10**: The §7.14 home storefront human quickstart line is one copydeck source rendered verbatim under the "Check in at reception" link. *(§7.14)*
 - ✅ **KDV-COPY-11**: The §7.15 About page shows all three §1.4 brand slogans from one source — the lead exactly as-is, the other two muted and joined by ` · `. *(§7.15, §1.4)*
+- ✅ **KDV-COPY-12**: `/about/` is a six-plate sheet in the home storefront's design language — the manifesto (kicker, H1 "Why Kodavr exists", the 1x/10x lead, the §7.10 dump story and the publish-without-fear statement), For authors, For readers, How it works (an ordered `.steps` mechanism), Architecture decisions, and the §1.4 slogan colophon — reusing the design-system roles (plate, h2, prose, steps, block-statement, micro) with no page-specific CSS. *(§6.1, §6.5, §7.15)*
 
 ## KDV-CI — CI/CD pipeline (§8)
 
@@ -177,13 +179,13 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-STRUCT | 8 | 7 | 1 | 0 | 0 |
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
 | KDV-CONTRACT | 9 | 9 | 0 | 0 | 0 |
-| KDV-SURFACE | 22 | 22 | 0 | 0 | 0 |
+| KDV-SURFACE | 23 | 23 | 0 | 0 | 0 |
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
-| KDV-COPY | 11 | 11 | 0 | 0 | 0 |
+| KDV-COPY | 12 | 12 | 0 | 0 | 0 |
 | KDV-CI | 15 | 13 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
 | KDV-SCOPE | 6 | 6 | 0 | 0 | 0 |
-| **Total** | **122** | **112** | **10** | **0** | **0** |
+| **Total** | **124** | **114** | **10** | **0** | **0** |

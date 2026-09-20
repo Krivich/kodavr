@@ -12,24 +12,68 @@
   <section class="plate" data-plate="01 · manifesto">
     <p class="kicker">about the platform</p>
     <h1>{{title}}</h1>
-    <p class="lead"><strong>Kodavr</strong> is a registry of raw experience — "dumps" — with a machine-readable contract, open to any field: engineering, design, finance, construction, sales, and everything in between. Authors publish dumps without polishing; readers' agents adapt them to their own context.</p>
-    {{!-- §7.10/KDV-COPY-08: the "what is a dump" story — the demo's left-ruled
-         statement block. The prompt stays a copydeck expression (verbatim §7.10). --}}
+    <p class="lead">Making a thing costs 1x. Packaging it so someone else can reuse it costs 10x — the documentation, the generalised examples, the stripped-out private context, the upkeep. Almost everyone pays the first cost and almost no one pays the second, so 90% of useful experience dies in local folders: a working script, a hard-won workaround, a checklist only its author understands. Kodavr exists to break that asymmetry.</p>
     <blockquote class="block-statement">
       <p>{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p>
     </blockquote>
-    <ul class="prose">
-      <li>Dumps are raw: no polishing, no tailoring to an audience.</li>
-      <li>The contract is machine-readable, the source is open.</li>
-      <li>Readers meet dumps through their own agent, not through the platform — and the agent picks which dumps are worth its user's attention.</li>
-    </ul>
     <blockquote class="block-statement emph">
       <p>So publish without fear: your dump does not have to find its reader on its own. The agent selects what is interesting for its particular user, and then rewrites the dump for that user — longer or shorter, in this or another style, with explanations or without. Your raw text becomes exactly what the reader needs; both the selection and the adaptation happen on their side.</p>
     </blockquote>
+  </section>
+
+  <section class="plate" data-plate="02 · authors">
+    <h2>For authors</h2>
+    <p>You pay 1x to build the thing and 1x to dump it raw — in your own voice, dead ends included. No polishing, no generalising, no guessing who will read it. The expensive part of sharing — deciding what matters to a particular reader, on a particular stack, today — is not yours: it happens on the reader's side, inside their agent.</p>
+    <div class="prose">
+      <ul>
+        <li><strong>Raw is the point.</strong> Polish is expensive and lossy; raw material keeps the details a reader needs to judge for themselves.</li>
+        <li><strong>One conversation, one PR.</strong> The publishing skill drafts the dump, validates it against the contract, and opens the PR only after you say yes.</li>
+        <li><strong>Any field.</strong> Engineering, design, finance, construction, sales — the contract is the same everywhere.</li>
+        <li><strong>Attribution and provenance travel with the dump.</strong> Stakes, content flags, trust level, how it was generated, how far a human checked it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="plate" data-plate="03 · readers">
+    <h2>For readers</h2>
+    <p>You never read dumps — your agent does. It filters the registry against your task, picks what is worth your attention, and rewrites it for your situation: longer or shorter, in your language, against your stack, with or without explanations. The same dump becomes different reading for different people.</p>
+    <div class="prose">
+      <ul>
+        <li><strong>Adaptation, not quotation.</strong> The dump arrives as raw material plus a machine-readable contract, and lands in your context already reshaped.</li>
+        <li><strong>Synthesis across dumps.</strong> Your agent can weave several dumps into one read shaped to your task — "take these three dumps on agent context management and assemble what applies to my setup." Raw dumps are the raw material; the compilation is assembled on your side.</li>
+        <li><strong>Trust is declared, not implied.</strong> Every dump carries stakes and trust level, so an agent knows when to verify before relying — and warns you when the content says so.</li>
+        <li><strong>The stream compounds.</strong> Easier authoring means more raw experience in the registry, and more raw experience means richer synthesis for every reader.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="plate" data-plate="04 · mechanism">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li>The author writes a raw dump — their own account of what they did, with the dead ends left in.</li>
+      <li>The dump carries a machine-readable contract — a manifest with a stable slug, schema-checked fields and published JSON surfaces (the index, per-dump manifests, feeds). A machine can decide whether to read a dump before reading it.</li>
+      <li>Adaptation happens on the reader's side — the registry delivers raw material plus metadata; the reader's agent filters it, attributes it and reshapes it. The author ships a mechanism, not a plea: the contract is held by schema grammar and gates, not by asking everyone to be careful.</li>
+    </ol>
+  </section>
+
+  <section class="plate" data-plate="05 · architecture">
+    <h2>Architecture decisions</h2>
+    <div class="prose">
+      <ul>
+        <li><strong>Raw dumps, polished agents.</strong> The registry stores the raw material; the reader's agent does the adapting.</li>
+        <li><strong>Machine-readable contract first.</strong> The index is JSON, the protocol lives at <code>/.well-known/kodavr.json</code>, and documents are self-describing — an agent boots from the file itself, with no external config.</li>
+        <li><strong>Reading must be cheap.</strong> The index is built so an agent can decide what to open without tokenizing everything — lazy reading is a design constraint, not an optimization.</li>
+        <li><strong>Safety by soft delegation.</strong> Nothing in a dump executes. If an agent's rules ask for confirmation, it checks with its user in plain words — no jargon, no scare terms.</li>
+        <li><strong>Trust levels are part of the data.</strong> raw → self-tested → community-tested → adapted → library; the ladder is declared per dump and machine-checkable.</li>
+      </ul>
+    </div>
+    <p class="micro"><a href="/docs/decisions.md">Full architecture decisions — docs/decisions.md</a></p>
+  </section>
+
+  <section class="plate" data-plate="06 · colophon">
     <div class="mark-lg"><img src="/logo.svg" alt="Kodavr" width="64" height="64"></div>
     <p class="slogan">{{copy.brand_slogan_lead}}</p>
     <p class="slogan-muted">{{copy.brand_slogans_muted}}</p>
-    <p class="micro"><a href="/docs/decisions.md">Architecture decisions</a></p>
   </section>
 </main>
 {{> site/footer}}
