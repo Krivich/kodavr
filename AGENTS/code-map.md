@@ -96,6 +96,10 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: contentType, createStaticServer, resolveFile
   consumes: node:fs/promises, node:http, node:path
   invariants: — a path escaping the public root is never served
+- **scripts/lib/telegram-mirror.mjs** — renders a dump manifest + human brief as a Telegram post and sends the batch
+  exports: MIRROR_LIMIT, toTelegramHtml, renderMirrorPost, sendTelegram, previousDeploySha, mirrorDumps
+  consumes: ./markdown.mjs
+  invariants: — the result is valid Telegram HTML: balanced tags, no tables/headings, escaped text; — renderMirrorPost, sendTelegram, previousDeploySha and mirrorDumps never throw
 - **scripts/lib/verbatim.mjs** — the verbatim robots.txt and humans.txt the build must not alter
   exports: HUMANS_TXT, ROBOTS_TXT
   invariants: — these files are served verbatim; the engine's defaults are overwritten
@@ -110,6 +114,9 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/state-diet.mjs** — moves the STATE.md chronicle into docs/history/state.md
   consumes: node:fs, node:path, node:url
   invariants: — the STATE.md head keeps only "now"; history moves below the marker
+- **scripts/telegram-mirror.mjs** — posts every newly published dump to the Telegram channel after a deploy
+  consumes: node:child_process, node:fs, ./lib/manifest-card.mjs, ./lib/telegram-mirror.mjs
+  invariants: — the bot token is read from the environment only, never source; — the entry point always exits 0; a missing token/event/diff is a logged skip
 - **scripts/validate.mjs** — the KDV-CI content gate over content/dumps (§8.1)
   exports: loadBlackZoneCategories, shannonEntropy, validateContent, validateManifest
   consumes: ./lib/machine.mjs, node:fs/promises, node:path, node:url

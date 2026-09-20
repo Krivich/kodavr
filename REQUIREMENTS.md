@@ -135,6 +135,9 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CI-13**: `validate.yml` runs `npm run contract`, so every first-party module (`scripts/lib`, `scripts`, `input/controllers`) must open with a `CONTRACT` header whose `EXPORTS`/`CONSUMES` equal the module's real exports/imports both ways, and the generated index in `AGENTS/code-map.md` cannot drift from the code. *(§8.1)*
 - ✅ **KDV-CI-14**: A `pull_request` workflow (`dump-manifest.yml`) posts/updates a sticky comment rendering the changed dump's `manifest.json` fields for the reviewer, so the PR template carries no duplicated manifest data; same-repo PRs only (fork tokens are read-only and are skipped). *(§8.1; tests/unit/manifest-card.test.js)*
 - ✅ **KDV-CI-15**: The manifest card leads with the dump's `manifest.summary` hook and folds the `summary.md` brief into a collapsible section, so a reviewer grasps the dump at a glance; both are omitted when absent. *(§8.1; tests/unit/manifest-card.test.js)*
+- ✅ **KDV-CI-16**: The `@kodavr_xyz` Telegram mirror renders a published dump as a `parse_mode=HTML` post — `manifest.tags` as a leading hashtag line (hyphens become underscores) before the title, then the title, the `summary.md` brief converted to Telegram's HTML subset (tables/headings/list markers rebuilt, text escaped; the brief's leading level-1 heading is dropped because the manifest title already leads, unless the title is empty) and the dump link — falling back to an escaped `manifest.summary` when the brief is absent or contains a table, and truncating on block boundaries within the visible-text cap while always keeping the footer. *(§8.3; tests/unit/telegram-mirror.test.js)*
+- ✅ **KDV-CI-17**: After a successful `deploy` on `main`, a `workflow_run` workflow (`publish-telegram.yml`) checks out the run's `head_sha` with full history and runs the Telegram mirror; `previousDeploySha` finds the previous successful deploy's commit via the Actions runs API and only dump files ADDED since then are mirrored (no previous deploy → nothing is posted). *(§8.3; tests/unit/telegram-mirror.test.js)*
+- ✅ **KDV-CI-18**: The mirror orchestration sends each newly published dump to `@kodavr_xyz` (overridable via `TELEGRAM_CHAT_ID`) through the Bot API `sendMessage` with `parse_mode=HTML`, retrying once on 429/5xx/network errors; a missing token/chat/text is a silent skip, and an unparseable manifest is skipped without stopping the batch — the sender and the orchestrator never throw. *(§8.3; tests/unit/telegram-mirror.test.js)*
 
 ## KDV-MOD — Moderation and social layer (§9)
 
@@ -198,10 +201,10 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 12 | 12 | 0 | 0 | 0 |
-| KDV-CI | 15 | 13 | 2 | 0 | 0 |
+| KDV-CI | 18 | 16 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **135** | **124** | **10** | **1** | **0** |
+| **Total** | **138** | **127** | **10** | **1** | **0** |
