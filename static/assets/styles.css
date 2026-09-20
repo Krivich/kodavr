@@ -69,36 +69,74 @@ pre{font-family:var(--font-mono);white-space:pre-wrap;word-break:break-word;
   outline:1px solid var(--line-2);outline-offset:3px;background:var(--paper)}
 
 /* ============ 04 · MASTHEAD ============ */
-/* KDV-MOBILE-05: the masthead never wraps — the language switcher is a fixed
-   sibling on row 1 at the right. The left cluster (`.masthead-main`) is what
-   flows: its content-driven flex-wrap climbs the species chip and then the nav
-   onto the mark's row only when they fit, with no media/container breakpoints.
-   `--mark-size` is declared ONCE, component-scoped: the masthead is the common
-   ancestor of `.mark` and `.lang-switch`, so the switcher derives its centering
-   nudge from the mark's box with no second literal. (Component scope, not
-   `:root`: KDV-SURFACE-22 requires every `:root` token to be named in
-   docs/design-system.md, and this is internal masthead geometry.) */
-.masthead{--mark-size:34px;display:flex;align-items:flex-start;gap:var(--sp-4);flex-wrap:nowrap;
+/* KDV-MOBILE-05: the masthead is a QUERY CONTAINER (its OWN content width picks
+   the state, never the viewport) but an element cannot be styled by its own
+   container query, so it stays the padding/sticky box and the three-state grid
+   lives on `.masthead-inner`:
+     WIDE (default) row1 mark · chip · nav (flushed right) · switcher
+     MID   <T2      row1 mark · chip · switcher  ·  row2 nav (full width)
+     NARROW <T1     row1 mark · switcher         ·  row2 chip (full width)
+                                                  ·  row3 nav  (full width)
+   The switcher is pinned to `grid-row:1` in every state, so it can NEVER leave
+   the mark's row (auto-placement alone would drive it below the full-width rows
+   once the chip/nav are placed). The two `@container` blocks below are the only
+   reflow; the thresholds are literals because a container query cannot read a
+   custom prop.
+   `--mark-size` is declared ONCE, component-scoped: the mark's own box token,
+   with no second literal. (Component scope, not `:root`: KDV-SURFACE-22 requires
+   every `:root` token to be named in docs/design-system.md, and this is internal
+   masthead geometry.) */
+.masthead{--mark-size:34px;container-type:inline-size;container-name:masthead;
   padding:var(--sp-4) clamp(16px,4vw,40px);border-bottom:1px solid var(--line-2);
   position:sticky;top:0;z-index:10;background:var(--paper)}
-.masthead-main{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-4);
-  flex:1 1 auto;min-width:0}
+/* WIDE default. Column 3 (the nav track) absorbs the slack, and the nav's own
+   `justify-self:end` flushes it against the switcher — never a `margin-left:auto`
+   (which would also right-align the nav when it drops to a full-width row). */
+.masthead-inner{display:grid;align-items:center;column-gap:var(--sp-4);
+  grid-template-columns:auto minmax(0,auto) minmax(0,1fr) auto}
 /* A hidden chip (no declaration) leaves no empty group and no phantom gap. */
-.masthead-main .species-declaration:has(.species-chip[hidden]){display:none}
-.mark{width:var(--mark-size);height:var(--mark-size);display:grid;place-items:center;flex:none;background:var(--ink);
+.masthead .species-declaration:has(.species-chip[hidden]){display:none}
+.mark{grid-column:1;grid-row:1;width:var(--mark-size);height:var(--mark-size);display:grid;place-items:center;flex:none;background:var(--ink);
   color:var(--paper);font:700 15px/1 var(--font-mono);text-decoration:none}
 .mark:hover{text-decoration:none;opacity:.88}
 .mark svg,.mark img{width:28px;height:28px;display:block}
-/* KDV-MOBILE-05: a zero-base grow spacer between the cluster and the nav. It
-   never forces a wrap (base 0) and never changes the line break; on the wide line
-   it grows and flushes the nav against the switcher, while on a wrapped line it
-   stays on the wide line and the lone nav keeps its left alignment. NEVER a
-   `margin-left:auto` on `.nav` (that would right-align the wrapped nav too). */
-.masthead-spacer{flex:1 1 0;min-width:0}
-.nav{display:flex;gap:var(--sp-4);flex-wrap:wrap}
+/* `.species-declaration` and `.lang-switch` are placed by `.masthead-inner` here,
+   NOT in their own §09/§11 rules: those come later in the sheet and, at equal
+   specificity, would beat the `@container` overrides below. The descendant
+   selector raises the specificity above the base rule while staying clear of the
+   "no duplicate top-level selector" guard (KDV-SURFACE-22). */
+.masthead-inner>.species-declaration{grid-column:2;margin:0;max-width:none}
+.nav{grid-column:3;justify-self:end;display:flex;gap:var(--sp-4);flex-wrap:wrap}
 .nav a{font:500 12px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:6px 2px}
 .nav a:hover{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px}
 .nav a[aria-current="page"]{text-decoration:underline;text-decoration-color:var(--ink);font-weight:700}
+.masthead-inner>.lang-switch{grid-column:4;grid-row:1;justify-self:end}
+/* MID: the chip joins row 1; the nav drops to a full-inner-width row 2. `row-gap`
+   is only needed once there IS a second row.
+   T2 is the smallest content width at which the WIDE row keeps the nav on ONE
+   line — measured at mark 34 + chip 371 (en/es) + one-line nav 321 (es, the
+   widest) + switcher 81 + 3×16 gap ≈ 855 (ru ≈ 803); 860 rounds up so every
+   built locale stays single-line. Below T2 the nav gets its own full-width row. */
+@container masthead (max-width:860px){
+  .masthead-inner{grid-template-columns:auto auto minmax(0,1fr);row-gap:var(--sp-3)}
+  .mark{grid-column:1}
+  .masthead-inner>.species-declaration{grid-column:2}
+  .masthead-inner>.lang-switch{grid-column:3}
+  .nav{grid-column:1/-1;justify-self:stretch}
+}
+/* NARROW: only the mark and the switcher share row 1; the chip and then the nav
+   each get their own full-width row. With no declaration the chip is
+   `display:none`, so the nav auto-places straight onto row 2 — no empty row.
+   T1=520 is the smallest content width at which mark + chip + switcher still fit
+   on one line UNWRAPPED: mark 34 + widest chip 371 (en/es) + switcher 81 + 2×16
+   gap ≈ 518; 520 rounds up. Below it the chip is given its own full-width row. */
+@container masthead (max-width:520px){
+  .masthead-inner{grid-template-columns:minmax(0,1fr) auto}
+  .mark{grid-column:1}
+  .masthead-inner>.lang-switch{grid-column:2}
+  .masthead-inner>.species-declaration{grid-column:1/-1}
+  .nav{grid-column:1/-1}
+}
 
 /* ============ 05 · COLUMN & PLATES ============ */
 .sheet-inner{position:relative;max-width:46rem;margin-inline:auto;padding:clamp(28px,6vw,72px) var(--sp-5) var(--sp-8)}
@@ -340,8 +378,8 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 
 /* --- chrome: species declaration + the two footer cells ---------------- */
 
-/* §7.13: the pill carries the status text only — never a control. The group is
-   laid out by `.masthead-main`, so it needs no auto margin. */
+/* §7.13: the pill carries the status text only — never a control. The group's
+   grid placement is owned by `.masthead-inner` (§04), so it needs no auto margin. */
 .species-declaration{display:inline-flex;align-items:center;gap:8px;margin:0;
   color:var(--muted);font:400 11px/1.4 var(--font-mono)}
 .species-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;
@@ -461,18 +499,13 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
 
 /* --- language switcher + intelligent hint (§11/KDV-I18N-06) ----------- */
 
-/* The switcher is a compact mono <details> at the masthead's right. It is a
-   `flex:none` sibling of `.masthead-main`, so it always shares row 1 with the
-   mark at every width; the menu is a paper popover over the sticky header. It
-   works without JS (native details). */
-/* KDV-MOBILE-05: `.masthead` is `align-items:flex-start`, so the 44px tap box
-   and the 34px mark share a TOP edge and the control's midline sags by
-   (--tap - --mark-size) / 2 = 5px. A relative `top` nudge (NOT a margin: a
-   negative margin would shrink the flex line's cross size, and the header with
-   it) lands the box's centre on the mark's centre while the tap target stays
-   44px. `top` moves the containing block too, so the `top:100%` popover still
-   anchors right under the control. */
-.lang-switch{position:relative;flex:none;top:calc((var(--mark-size) - var(--tap)) / 2)}
+/* The switcher is a compact mono <details> at the masthead's right. It is a GRID
+   ITEM of `.masthead-inner` (placement in §04), pinned to row 1, so it always
+   shares the mark's row at every width; the menu is a paper popover over the
+   sticky header. It works without JS (native details). */
+/* KDV-MOBILE-05: `align-items:center` on the grid centres the 44px tap box on the
+   34px mark, so no vertical nudge is needed (the old relative `top` is gone). */
+.lang-switch{position:relative;flex:none}
 .lang-switch-summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
   min-height:var(--tap);padding:6px 2px;font:500 12px/1 var(--font-mono);letter-spacing:.08em;
   text-transform:uppercase;color:inherit}

@@ -378,21 +378,21 @@ test.describe('feed pagination (KDV-MOBILE-05)', () => {
   });
 });
 
-// §6.5/KDV-MOBILE-05: the masthead reflows PROGRESSIVELY by available room,
-// content-driven — NO media or container breakpoints. The logo mark, species
-// chip and nav share ONE left cluster (`.masthead-main`) that wraps internally;
-// the language switcher is a `flex:none` SIBLING of the cluster, so it ALWAYS
-// shares row 1 with the mark, at the far right. As room allows, the chip and
-// then the nav climb onto that first row (order: chip → nav). Visual order is
-// always mark, (chip), (nav), …switcher.
-//   VERY NARROW  row1 mark + switcher · row2 chip (only if declared) · row3 nav
-//   MEDIUM       row1 mark + chip + switcher · row2 nav
-//   WIDE         row1 mark + chip + nav + switcher
+// §6.5/KDV-MOBILE-05: the masthead is a CONTAINER-QUERY GRID keyed to its OWN
+// content width (not the viewport), with three deterministic states:
+//   NARROW  row1 mark + switcher · row2 chip (FULL inner width) · row3 nav (FULL width)
+//   MID     row1 mark + chip + switcher · row2 nav (FULL inner width)
+//   WIDE    row1 mark + chip + nav (flush right) + switcher
+// The switcher is pinned to row 1 in every state, so it never leaves the mark's
+// row. The threshold literals below mirror the `@container` blocks in
+// static/assets/styles.css §04 (a container query cannot read a custom prop).
 test.describe('masthead reflow by available room (KDV-MOBILE-05)', () => {
   const SPECIES_KEY = 'kodavr.species';
   const ROW = 8; // px tolerance for "box tops share a row"
   const CENTER = 2; // px tolerance for "the switcher's visual centre sits on the mark's"
-  const FLUSH = 24; // px: when the nav shares the mark row it ends within ~1 flex gap of the switcher
+  const FLUSH = 24; // px: on the WIDE row the nav ends within ~1 gap of the switcher
+  const T1 = 520; // NARROW: cw <= T1; MID: T1 < cw <= T2; WIDE: cw > T2
+  const T2 = 860;
 
   // §6.2: seed a valid declaration record before any page script runs, so the
   // SSR-hidden chip is revealed by site.js and the masthead must place it.
@@ -418,84 +418,172 @@ test.describe('masthead reflow by available room (KDV-MOBILE-05)', () => {
         const el = document.querySelector(sel);
         if (!el) return null;
         const r = el.getBoundingClientRect();
-        return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) };
+        return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), right: Math.round(r.right) };
       };
       const chip = document.querySelector('.masthead #species-chip');
+      const mast = document.querySelector('.masthead');
+      const inner = document.querySelector('.masthead-inner');
+      const mastStyle = mast ? getComputedStyle(mast) : null;
       return {
         mark: box('.masthead .mark'),
         chip: box('.masthead #species-chip'),
         chipVisible: chip ? !chip.hidden : false,
+        // The species group is the grid item that owns the chip's ROW.
+        speciesRow: box('.masthead .species-declaration'),
         nav: box('.masthead .nav'),
         switcher: box('.masthead .lang-switch'),
         summary: box('.masthead .lang-switch-summary'),
+        inner: box('.masthead-inner'),
+        contentW: mast && mastStyle
+          ? Math.round(mast.clientWidth - parseFloat(mastStyle.paddingLeft) - parseFloat(mastStyle.paddingRight))
+          : 0,
+        position: mastStyle ? mastStyle.position : null,
+        containerType: mastStyle ? mastStyle.containerType : null,
+        innerDisplay: inner ? getComputedStyle(inner).display : null,
         scrollWidth: document.documentElement.scrollWidth,
         innerWidth: window.innerWidth,
       };
     });
   }
 
-  // The invariant asserted at EVERY width: the switcher can never leave the
-  // mark's row; the chip and the nav may only sit at or below their left-hand
-  // neighbour, and when they share a row with the mark they must be ordered
-  // strictly left of the switcher (and of each other).
+  // The state the CSS container query resolves to, from the masthead's OWN
+  // content width. Mirrors the `@container` bounds in §04.
+  function stateOf(contentW) {
+    if (contentW <= T1) return 'narrow';
+    if (contentW <= T2) return 'mid';
+    return 'wide';
+  }
+
+  // True when a full-width row starts and ends exactly at `.masthead-inner`'s
+  // edges — the regression the old flex-sibling masthead confined to the cluster.
+  function spansInner(row, inner) {
+    return Boolean(row && inner)
+      && Math.abs(row.x - inner.x) <= 2
+      && Math.abs(row.right - inner.right) <= 2;
+  }
+
+  // The invariant asserted at EVERY width, plus the structure each state
+  // promises. Returns the state (narrow/mid/wide) so callers can assert it.
+  //   1. the switcher ALWAYS shares the mark's row, and its 44px tap box is
+  //      centred on the 34px mark;
+  //   2. NARROW: the chip row and the nav row each span the FULL inner width;
+  //   3. MID: the chip climbs onto row 1, the nav spans the full width on row 2;
+  //   4. WIDE: mark · chip · nav (flush against the switcher) · switcher on row 1.
   function expectMastheadInvariants(m, label) {
+    const state = stateOf(m.contentW);
     expect(m.scrollWidth, `no horizontal scroll — ${label}`).toBeLessThanOrEqual(m.innerWidth);
     expect(m.mark, `mark laid out — ${label}`).not.toBeNull();
     expect(m.nav, `nav laid out — ${label}`).not.toBeNull();
     expect(m.switcher, `switcher laid out — ${label}`).not.toBeNull();
     expect(m.summary, `switcher summary laid out — ${label}`).not.toBeNull();
+    expect(m.inner, `masthead-inner laid out — ${label}`).not.toBeNull();
 
     expect(Math.abs(m.mark.y - m.switcher.y), `switcher shares the mark row — ${label}`).toBeLessThanOrEqual(ROW);
 
     // KDV-MOBILE-05: the switcher's VISUAL centre sits on the mark's centre.
     // Top-edge equality alone is not enough: the 44px tap box and the 34px mark
     // would sag by (44 - 34) / 2 = 5px. The summary is measured (not the box)
-    // because that is what the eye reads as the control's midline.
+    // because that is what the eye reads as the control's midline. Grid
+    // `align-items:center` provides it now — there is no relative `top` nudge.
     const centerDelta = Math.abs(
       m.mark.y + m.mark.h / 2 - (m.summary.y + m.summary.h / 2),
     );
     expect(centerDelta, `switcher centred on the mark — ${label}`).toBeLessThanOrEqual(CENTER);
 
-    if (m.chipVisible) {
-      expect(m.chip.y, `chip at or below the mark row — ${label}`).toBeGreaterThanOrEqual(m.mark.y - 1);
-      if (Math.abs(m.chip.y - m.mark.y) <= ROW) {
-        expect(m.chip.x, `chip right of the mark — ${label}`).toBeGreaterThanOrEqual(m.mark.x);
-        expect(m.chip.x, `chip left of the switcher — ${label}`).toBeLessThan(m.switcher.x);
+    if (state === 'narrow') {
+      // The chip row and the nav row are FULL inner width (the defect: they were
+      // confined to the old cluster column, masthead-width − switcher-width).
+      expect(
+        spansInner(m.nav, m.inner),
+        `nav row spans the FULL inner width — ${label}`,
+      ).toBe(true);
+      expect(m.nav.y, `nav sits below the mark row — ${label}`).toBeGreaterThan(m.mark.y + ROW);
+      if (m.chipVisible) {
+        expect(
+          spansInner(m.speciesRow, m.inner),
+          `chip row spans the FULL inner width — ${label}`,
+        ).toBe(true);
+        expect(m.speciesRow.y, `chip drops below the mark row — ${label}`).toBeGreaterThan(m.mark.y + ROW);
+        expect(m.nav.y, `nav drops below the chip row — ${label}`).toBeGreaterThan(m.speciesRow.y + ROW);
       }
-      expect(m.nav.y, `nav at or below the chip — ${label}`).toBeGreaterThanOrEqual(m.chip.y - 1);
-    }
-    if (Math.abs(m.nav.y - m.mark.y) <= ROW) {
-      // KDV-MOBILE-05: on the WIDE line a grow-spacer before the nav pushes it
-      // flush against the switcher — the nav must end within one masthead flex
-      // gap (--sp-4 = 16px; small tolerance) of the switcher's left edge, not
-      // trail right after the chip.
-      const flush = m.switcher.x - (m.nav.x + m.nav.w);
-      expect(flush, `nav flush right against the switcher on the mark row — ${label}`).toBeLessThanOrEqual(FLUSH);
-      expect(flush, `nav does not overlap the switcher — ${label}`).toBeGreaterThanOrEqual(-1);
-      expect(m.nav.x, `nav left of the switcher on the mark row — ${label}`).toBeLessThan(m.switcher.x);
+    } else if (state === 'mid') {
+      expect(
+        spansInner(m.nav, m.inner),
+        `nav row spans the FULL inner width — ${label}`,
+      ).toBe(true);
+      expect(m.nav.y, `nav drops below the mark row — ${label}`).toBeGreaterThan(m.mark.y + ROW);
+      if (m.chipVisible) {
+        expect(
+          Math.abs(m.speciesRow.y - m.mark.y),
+          `chip climbs onto the mark row — ${label}`,
+        ).toBeLessThanOrEqual(ROW);
+        expect(m.speciesRow.x, `chip right of the mark — ${label}`).toBeGreaterThanOrEqual(m.mark.x);
+        expect(m.speciesRow.right, `chip left of the switcher — ${label}`).toBeLessThan(m.switcher.x);
+      }
     } else {
-      // KDV-MOBILE-05: on a WRAPPED line the nav is ALONE and stays left-aligned
-      // with the mark — the spacer lives on the wide line, so no `margin-left:auto`
-      // creeps onto the nav's own line.
-      expect(Math.abs(m.nav.x - m.mark.x), `nav stays left-aligned when wrapped — ${label}`).toBeLessThanOrEqual(CENTER);
+      expect(Math.abs(m.nav.y - m.mark.y), `nav climbs onto the mark row — ${label}`).toBeLessThanOrEqual(ROW);
+      const flush = m.switcher.x - (m.nav.x + m.nav.w);
+      expect(flush, `nav flush against the switcher on the mark row — ${label}`).toBeLessThanOrEqual(FLUSH);
+      expect(flush, `nav does not overlap the switcher — ${label}`).toBeGreaterThanOrEqual(-1);
+      if (m.chipVisible) {
+        expect(m.mark.x, `mark left of the chip — ${label}`).toBeLessThan(m.speciesRow.x);
+        expect(m.speciesRow.x, `chip left of the nav — ${label}`).toBeLessThan(m.nav.x);
+      } else {
+        expect(m.mark.x, `mark left of the nav — ${label}`).toBeLessThan(m.nav.x);
+      }
+      expect(m.nav.x, `nav left of the switcher — ${label}`).toBeLessThan(m.switcher.x);
     }
+    return state;
   }
 
-  test('KDV-MOBILE-05: the switcher stays on the mark row across the width matrix', async ({ page }) => {
+  // The regression the container-query grid removes: under the old flex-sibling
+  // masthead the chip and the nav were confined to the left cluster column
+  // (masthead width − switcher width). In NARROW each must span the FULL
+  // `.masthead-inner` width instead.
+  test('KDV-MOBILE-05: narrow chip and nav rows span the full inner width at 320 and 375', async ({ page }) => {
     await seedDeclaration(page);
+
+    for (const width of [320, 375]) {
+      await page.setViewportSize({ width, height: 700 });
+      await page.goto('/');
+      await expect(page.locator('.masthead #species-chip')).toBeVisible();
+
+      const m = await measureMasthead(page);
+      expect(stateOf(m.contentW), `320/375 land in the NARROW state — ${width}px`).toBe('narrow');
+      expectMastheadInvariants(m, `/ @ ${width}px`);
+
+      // The exact defect: chip/nav right edges were a switcher-width short of the
+      // inner right edge; now they are equal (within 2px).
+      expect(
+        Math.abs(m.speciesRow.right - m.inner.right),
+        `chip row right edge = inner right — ${width}px`,
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(m.nav.right - m.inner.right),
+        `nav row right edge = inner right — ${width}px`,
+      ).toBeLessThanOrEqual(2);
+      expect(Math.abs(m.nav.x - m.inner.x), `nav row left edge = inner left — ${width}px`).toBeLessThanOrEqual(2);
+    }
+  });
+
+  test('KDV-MOBILE-05: each width lands a documented state and keeps the switcher on row 1', async ({ page }) => {
+    await seedDeclaration(page);
+    const seen = new Set();
 
     for (const width of [320, 375, 420, 560, 768, 900, 1024, 1280]) {
       await page.setViewportSize({ width, height: 800 });
       await page.goto('/');
       await expect(page.locator('.masthead #species-chip')).toBeVisible();
 
-      expectMastheadInvariants(await measureMasthead(page), `/ @ ${width}px`);
+      const m = await measureMasthead(page);
+      seen.add(expectMastheadInvariants(m, `/ @ ${width}px`));
 
-      // The header is still sticky after every reflow.
-      expect(await page.locator('.masthead').evaluate((el) => getComputedStyle(el).position)).toBe('sticky');
+      // The header is still sticky, and the masthead itself is the query container.
+      expect(m.position, `sticky header — ${width}px`).toBe('sticky');
+      expect(m.containerType, `masthead is an inline-size query container — ${width}px`).toContain('inline-size');
 
-      // KDV-MOBILE-05: the vertical nudge must not displace the popover — it
-      // still opens directly under the control and never leaves the viewport.
+      // The popover still opens directly under the switcher and never leaves the
+      // viewport (there is no relative `top` nudge to displace it any more).
       const summaryBox = await page.locator('.masthead .lang-switch-summary').boundingBox();
       await page.locator('.masthead .lang-switch-summary').click();
       const menu = page.locator('.masthead .lang-switch-menu');
@@ -509,36 +597,40 @@ test.describe('masthead reflow by available room (KDV-MOBILE-05)', () => {
       ).toBeGreaterThanOrEqual(summaryBox.y + summaryBox.height - 1);
       await page.locator('.masthead .lang-switch-summary').click();
     }
+
+    // The matrix exercises all three states (narrow ≤ T1 < mid ≤ T2 < wide).
+    expect([...seen].sort()).toEqual(['mid', 'narrow', 'wide']);
   });
 
   test('KDV-MOBILE-05: very narrow, medium and wide each land the documented rows', async ({ page }) => {
     await seedDeclaration(page);
 
-    // VERY NARROW (320): row1 mark + switcher, row2 chip, row3 nav.
+    // NARROW (320, cw 258 < T1): row1 mark + switcher, row2 chip FULL, row3 nav FULL.
     await page.setViewportSize({ width: 320, height: 568 });
     await page.goto('/');
     await expect(page.locator('.masthead #species-chip')).toBeVisible();
     const narrow = await measureMasthead(page);
-    expectMastheadInvariants(narrow, '/ @ 320px');
-    expect(narrow.chip.y, 'chip drops below the mark row').toBeGreaterThan(narrow.mark.y + ROW);
-    expect(narrow.nav.y, 'nav drops below the chip row').toBeGreaterThan(narrow.chip.y + ROW);
+    expect(expectMastheadInvariants(narrow, '/ @ 320px')).toBe('narrow');
+    expect(narrow.speciesRow.y, 'chip drops below the mark row').toBeGreaterThan(narrow.mark.y + ROW);
+    expect(narrow.nav.y, 'nav drops below the chip row').toBeGreaterThan(narrow.speciesRow.y + ROW);
 
-    // MEDIUM (768): row1 mark + chip + switcher, row2 nav.
+    // MID (768, T1 < cw 677 ≤ T2): row1 mark + chip + switcher, row2 nav FULL.
     await page.setViewportSize({ width: 768, height: 800 });
     await page.goto('/');
-    const medium = await measureMasthead(page);
-    expectMastheadInvariants(medium, '/ @ 768px');
-    expect(Math.abs(medium.chip.y - medium.mark.y), 'chip climbs onto the mark row').toBeLessThanOrEqual(ROW);
-    expect(medium.nav.y, 'nav still drops below').toBeGreaterThan(medium.mark.y + ROW);
+    const mid = await measureMasthead(page);
+    expect(expectMastheadInvariants(mid, '/ @ 768px')).toBe('mid');
+    expect(Math.abs(mid.speciesRow.y - mid.mark.y), 'chip climbs onto the mark row').toBeLessThanOrEqual(ROW);
+    expect(mid.nav.y, 'nav still drops below').toBeGreaterThan(mid.mark.y + ROW);
+    expect(spansInner(mid.nav, mid.inner), 'nav row spans the full inner width').toBe(true);
 
-    // WIDE (1280): row1 mark + chip + nav + switcher, in that order.
+    // WIDE (1280, cw 1170 > T2): row1 mark + chip + nav + switcher, in that order.
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     const wide = await measureMasthead(page);
-    expectMastheadInvariants(wide, '/ @ 1280px');
+    expect(expectMastheadInvariants(wide, '/ @ 1280px')).toBe('wide');
     expect(Math.abs(wide.nav.y - wide.mark.y), 'nav climbs onto the mark row').toBeLessThanOrEqual(ROW);
-    expect(wide.mark.x).toBeLessThan(wide.chip.x);
-    expect(wide.chip.x).toBeLessThan(wide.nav.x);
+    expect(wide.mark.x).toBeLessThan(wide.speciesRow.x);
+    expect(wide.speciesRow.x).toBeLessThan(wide.nav.x);
     expect(wide.nav.x).toBeLessThan(wide.switcher.x);
   });
 
@@ -566,7 +658,7 @@ test.describe('masthead reflow by available room (KDV-MOBILE-05)', () => {
     await expect(page.locator('.masthead #species-chip')).toBeHidden();
 
     const m = await measureMasthead(page);
-    expectMastheadInvariants(m, '/ @ 320px (no declaration)');
+    expect(expectMastheadInvariants(m, '/ @ 320px (no declaration)')).toBe('narrow');
     expect(m.chipVisible).toBe(false);
 
     // The empty group leaves the flow entirely — no empty chip row.
@@ -574,48 +666,52 @@ test.describe('masthead reflow by available room (KDV-MOBILE-05)', () => {
       'none',
     );
 
-    // The nav follows the mark by exactly one flex gap (16px), not a chip-row.
+    // The nav auto-places straight onto row 2 (one row-gap below the mark row):
+    // no phantom chip row in between, and it still spans the full inner width.
     const gap = m.nav.y - (m.mark.y + m.mark.h);
     expect(gap).toBeGreaterThanOrEqual(-1);
     expect(gap, 'no phantom chip row between the mark and the nav').toBeLessThanOrEqual(24);
+    expect(spansInner(m.nav, m.inner), 'nav row spans the full inner width').toBe(true);
 
     // Wide: the nav climbs onto the mark row with no chip in between.
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     const wide = await measureMasthead(page);
-    expectMastheadInvariants(wide, '/ @ 1280px (no declaration)');
+    expect(expectMastheadInvariants(wide, '/ @ 1280px (no declaration)')).toBe('wide');
     expect(Math.abs(wide.nav.y - wide.mark.y), 'nav shares the mark row without a chip').toBeLessThanOrEqual(ROW);
   });
 
-  test('KDV-MOBILE-05: the reflow is structural (one wrapping cluster + a fixed switcher sibling), not a query', async ({ page }) => {
+  // KDV-MOBILE-05: the reflow is now a container-query GRID keyed to the
+  // masthead's OWN width, not the viewport and not a flex-wrap cluster.
+  test('KDV-MOBILE-05: the reflow is a container-query grid keyed to the masthead', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await page.goto('/');
 
     const css = await stylesheet(page);
-    // No container query and no fixed masthead reflow breakpoint left.
-    expect(css).not.toContain('@container');
-    expect(css).not.toContain('container-type');
-    // The cluster wraps; the masthead itself does not; the switcher is fixed.
-    expect(css).toMatch(/\.masthead\{[^}]*flex-wrap:nowrap/);
-    expect(css).toContain('.masthead-main{display:flex;flex-wrap:wrap;align-items:center;');
-    expect(css).toMatch(/\.lang-switch\{[^}]*flex:none/);
-    expect(css).not.toMatch(/\.lang-switch\{[^}]*margin-left:auto/);
+    expect(css).toContain('container-type:inline-size');
+    expect(css).toContain('container-name:masthead');
+    expect(css).toContain('@container masthead (max-width:860px)');
+    expect(css).toContain('@container masthead (max-width:520px)');
+    // The old flex cluster and grow-spacer are gone.
+    expect(css).not.toContain('.masthead-main');
+    expect(css).not.toContain('.masthead-spacer');
+    expect(css).not.toMatch(/\.masthead\{[^}]*display:flex/);
+    expect(css).not.toMatch(/\.masthead\{[^}]*flex-wrap:nowrap/);
+    // The flush-right mechanism is `justify-self:end` on the nav's own track,
+    // never `margin-left:auto` (which would right-align a full-width nav row too).
     expect(css).not.toMatch(/\.nav\{[^}]*margin-left:auto/);
-    // The flush-right mechanism is a 0-base grow spacer, never a nav margin.
-    expect(css).toMatch(/\.masthead-spacer\{[^}]*flex:1 1 0/);
-    expect(css).toMatch(/\.masthead-spacer\{[^}]*min-width:0/);
 
-    // DOM: the switcher is a direct child of `.masthead` (sibling of the
-    // cluster); the cluster holds mark → species → spacer → nav in that order
-    // (the spacer is the presentational grow item that flushes the nav right on
-    // the wide line, and is inert without JS).
-    expect(await page.locator('.masthead .lang-switch').evaluate((el) => el.parentElement.className)).toBe('masthead');
+    // Computed structure: the masthead is the query container; the inner wrapper
+    // is the grid; the four items are direct children in DOM order.
+    expect(await page.locator('.masthead').evaluate((el) => getComputedStyle(el).containerType)).toContain('inline-size');
+    expect(await page.locator('.masthead').evaluate((el) => getComputedStyle(el).position)).toBe('sticky');
+    expect(await page.locator('.masthead-inner').evaluate((el) => getComputedStyle(el).display)).toBe('grid');
     expect(
-      await page.locator('.masthead .masthead-main > *').evaluateAll((els) => els.map((el) => el.className.split(' ')[0])),
-    ).toEqual(['mark', 'species-declaration', 'masthead-spacer', 'nav']);
-
-    expect(await page.locator('.masthead').evaluate((el) => getComputedStyle(el).flexWrap)).toBe('nowrap');
-    expect(await page.locator('.masthead .masthead-main').evaluate((el) => getComputedStyle(el).flexWrap)).toBe('wrap');
+      await page.locator('.masthead .masthead-inner > *').evaluateAll((els) => els.map((el) => el.className.split(' ')[0])),
+    ).toEqual(['mark', 'species-declaration', 'nav', 'lang-switch']);
+    // The switcher is a grid item of the inner wrapper, NOT a flex sibling of
+    // the content cluster.
+    expect(await page.locator('.masthead .lang-switch').evaluate((el) => el.parentElement.className)).toBe('masthead-inner');
 
     // The old viewport reflow (`.nav`/`.lang-switch` inside a 720px @media) stays
     // gone. Other 720px media queries (trust scale, titleblock) are unrelated and
