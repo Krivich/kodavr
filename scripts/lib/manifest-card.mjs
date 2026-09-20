@@ -31,7 +31,12 @@ const FIELDS = [
   ['tags', 'Tags'],
 ];
 
-const cell = (value) => String(value).replace(/\|/g, '\\|').replace(/\s*\n+\s*/g, ' ').trim();
+// Author text is untrusted: escape angle brackets so a string cannot inject
+// raw HTML into the comment. `&` is left alone so existing entities are not double-escaped.
+const escapeAngles = (value) => String(value).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const cell = (value) =>
+  escapeAngles(String(value).replace(/\|/g, '\\|').replace(/\s*\n+\s*/g, ' ')).trim();
 const asCell = (value) => (Array.isArray(value) ? value.map(cell).join(', ') : cell(value));
 
 // dumpSlugsFromFiles(files) → every slug under content/dumps/<slug>/ in the list
@@ -58,7 +63,7 @@ export function renderManifestCard(manifest, slug, summaryBrief = '') {
   const parts = [CARD_MARKER, `### Dump manifest — \`${slug}\``, ''];
   // The hook always shows; the full human brief folds away for a one-click read.
   if (manifest.summary) parts.push(`**What it is:** ${cell(manifest.summary)}`, '');
-  const brief = String(summaryBrief || '').trim();
+  const brief = escapeAngles(String(summaryBrief || '').trim());
   if (brief) parts.push('<details><summary>Human brief (summary.md)</summary>', '', brief, '', '</details>', '');
   parts.push('| Field | Value |', '| --- | --- |', ...rows, '');
   parts.push(

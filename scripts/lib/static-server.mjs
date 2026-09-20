@@ -55,7 +55,15 @@ async function isFile(filePath) {
 // Resolve a request path to a file: directory → index.html, path traversal
 // clamped to the public root; a miss returns null so the caller serves 404.html.
 export async function resolveFile(root, urlPath) {
-  const decoded = decodeURIComponent((urlPath || '/').split('?')[0].split('#')[0]);
+  // §8.2/KDV-BUILD-13: a malformed `%` sequence throws URIError here; contain it
+  // as a miss so a bad request path is a 404, never a 500.
+  let decoded;
+  try {
+    decoded = decodeURIComponent((urlPath || '/').split('?')[0].split('#')[0]);
+  } catch (err) {
+    if (err instanceof URIError) return null;
+    throw err;
+  }
   const relative = decoded.replace(/^\/+/, '');
   const filePath = resolve(root, relative);
   if (filePath !== root && !filePath.startsWith(root + sep)) return null;

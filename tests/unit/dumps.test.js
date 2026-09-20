@@ -177,6 +177,126 @@ describe('dumps controller', () => {
     }
   });
 
+  it('KDV-BUILD-11: artifact links are scheme-filtered so a manifest cannot inject an executable href', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'kodavr-artifact-schemes-'));
+    try {
+      const dumpDir = join(root, 'content', 'dumps', 'sample-dump');
+      await mkdir(join(root, 'docs'), { recursive: true });
+      await mkdir(dumpDir, { recursive: true });
+      await writeFile(join(root, 'docs', 'SPEC.md'), '# spec');
+      await writeFile(join(dumpDir, 'manifest.schema.json'), '{}');
+
+      const dangerous = [
+        'javascript:alert(1)',
+        'JaVaScRiPt:alert(1)',
+        '  javascript:alert(1)',
+        'vbscript:msgbox(1)',
+        'data:text/html,<script>alert(1)</script>',
+        // KDV-BUILD-11: a browser strips ASCII tab/newline/CR from a URL before
+        // reading its scheme, so these would execute as `javascript:`; NUL is a
+        // C0 control character, never a legitimate scheme byte.
+        'java\nscript:alert(1)',
+        'java\rscript:alert(1)',
+        'java\tscript:alert(1)',
+        'java\u0000script:alert(1)',
+      ];
+      const safe = [
+        'https://example.test/doc',
+        'https://ok.example/x',
+        'mailto:someone@example.test',
+        'docs/SPEC.md',
+        'docs/notes.md',
+        'manifest.schema.json',
+        'missing.txt',
+      ];
+
+      const dump = {
+        slug: 'sample-dump',
+        dir: dumpDir,
+        raw: '# Body\n',
+        manifest: {
+          slug: 'sample-dump',
+          title: 'Sample Dump',
+          type: 'case',
+          domain: 'engineering',
+          date: '2026-09-14',
+          stakes: 'low',
+          trust_level: 'raw',
+          content_flags: [],
+          summary: 'Fixture.',
+          artifacts: [...dangerous, ...safe].map((path_or_url) => ({ kind: 'file', path_or_url })),
+        },
+      };
+
+      const { artifacts } = toDataset(dump, { repoRoot: root, repoUrl: REPOSITORY });
+
+      // Dangerous schemes never become an href.
+      expect(artifacts.slice(0, dangerous.length).map((a) => a.href)).toEqual(dangerous.map(() => null));
+      // Safe values keep their resolved href unchanged.
+      expect(artifacts.slice(dangerous.length).map((a) => a.href)).toEqual([
+        'https://example.test/doc',
+        'https://ok.example/x',
+        'mailto:someone@example.test',
+        `${REPOSITORY}/blob/main/docs/SPEC.md`,
+        'docs/notes.md',
+        `${REPOSITORY}/blob/main/content/dumps/sample-dump/manifest.schema.json`,
+        'missing.txt',
+      ]);
+      // `path_or_url` is ALWAYS left untouched — the machine contract keeps the author value.
+      expect(artifacts.map((a) => a.path_or_url)).toEqual([...dangerous, ...safe]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('KDV-BUILD-12: readDumps rejects a manifest whose slug or domain is not a safe path segment', async () => {
+    // §4-required fields, so only the slug/domain is the failure under test.
+    const base = {
+      title: 'Sample Dump',
+      type: 'case',
+      date: '2026-09-14',
+      stakes: 'low',
+      trust_level: 'raw',
+      content_flags: [],
+      summary: 'Fixture.',
+    };
+
+    const rootX = await mkdtemp(join(tmpdir(), 'kodavr-path-segment-'));
+    try {
+      const dir = join(rootX, 'x');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'raw.md'), '# Body\n');
+      await writeFile(join(dir, 'manifest.json'), JSON.stringify({ ...base, slug: '../evil', domain: 'engineering' }));
+      await expect(readDumps(rootX)).rejects.toThrow(/slug/i);
+    } finally {
+      await rm(rootX, { recursive: true, force: true });
+    }
+
+    const rootY = await mkdtemp(join(tmpdir(), 'kodavr-path-segment-'));
+    try {
+      const dir = join(rootY, 'y');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'raw.md'), '# Body\n');
+      await writeFile(join(dir, 'manifest.json'), JSON.stringify({ ...base, slug: 'sample-dump', domain: '../evil' }));
+      await expect(readDumps(rootY)).rejects.toThrow(/domain/i);
+    } finally {
+      await rm(rootY, { recursive: true, force: true });
+    }
+
+    const rootOk = await mkdtemp(join(tmpdir(), 'kodavr-path-segment-'));
+    try {
+      const dir = join(rootOk, 'z');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'raw.md'), '# Body\n');
+      await writeFile(join(dir, 'manifest.json'), JSON.stringify({ ...base, slug: 'sample-dump', domain: 'engineering' }));
+      const dumps = await readDumps(rootOk);
+      expect(dumps).toHaveLength(1);
+      expect(dumps[0].slug).toBe('sample-dump');
+    } finally {
+      await rm(rootOk, { recursive: true, force: true });
+    }
+  });
+
   it('KDV-BUILD-07: readDumps fails visibly when a manifest is missing', async () => {
     const root = await mkdtemp(join(tmpdir(), 'kodavr-dumps-'));
     try {

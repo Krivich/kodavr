@@ -90,7 +90,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   consumes: ./machine.mjs, node:fs, node:fs/promises, node:path
   invariants: — machine files and og:* stay absolute; only HTML links are rewritten
 - **scripts/lib/schema.mjs** — the self-description layer: the shared machine BIOS and the JSON Schemas embedded in (and served beside) index.json and every published manifest
-  exports: INDEX_SCHEMA_ID, MANIFEST_SCHEMA_ID, PLATFORM_DESCRIPTION, SCHEMA_DIALECT, buildIndexSchema, buildManifestSchema
+  exports: AUTHOR_DATA_NOTICE, INDEX_SCHEMA_ID, MANIFEST_SCHEMA_ID, PLATFORM_DESCRIPTION, SCHEMA_DIALECT, buildIndexSchema, buildManifestSchema
   invariants: — the platform paragraph has ONE source and appears verbatim in both schemas;; — every field a machine reads is described, so it can orient without fetching; — /.well-known/kodavr.json;; — the same schema object is both embedded (as `schema`) and served at its `$id`.
 - **scripts/lib/static-server.mjs** — a minimal static server for local preview and e2e
   exports: contentType, createStaticServer, resolveFile

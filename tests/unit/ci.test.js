@@ -48,6 +48,16 @@ describe('deploy pipeline (§8.3–8.5)', () => {
     expect(yml).toMatch(/name:\s*github-pages/);
   });
 
+  it('KDV-CI-19: the deploy build job runs the content gate before npm run build, so a BLOCK stops publication', async () => {
+    const yml = await readFile(DEPLOY, 'utf8');
+    // Order, not mere presence: the §8.1 gate is a prerequisite of the artifact.
+    const gate = yml.indexOf('node scripts/validate.mjs');
+    const build = yml.indexOf('npm run build');
+    expect(gate, 'the content gate must run in the deploy build job').toBeGreaterThan(-1);
+    expect(build).toBeGreaterThan(-1);
+    expect(gate).toBeLessThan(build);
+  });
+
   it('KDV-CI-09: the engine dependency is vendored inside the repo so npm ci works on a clean checkout', async () => {
     const pkg = JSON.parse(await readFile(PKG, 'utf8'));
     const dep = pkg.dependencies['ignition-ssg'];

@@ -83,6 +83,17 @@ async function pathExists(path) {
   }
 }
 
+// §8.2/KDV-BUILD-12: a manifest is third-party data, and its `slug`/`domain`
+// become filesystem path segments downstream (`dumps/<slug>/`,
+// `feeds/<domain>.atom`), so each is constrained to a safe character set at
+// this single read boundary — no path separators, no `..`, not absolute — even
+// when the CI gate is skipped.
+function assertSafePathSegment(value, label, where) {
+  if (typeof value !== 'string' || !/^[A-Za-z0-9._-]+$/.test(value) || value === '.' || value === '..') {
+    throw new Error(`Unsafe manifest ${label} at ${where}: ${JSON.stringify(value)} is not a safe path segment`);
+  }
+}
+
 export async function readDumps(contentDir) {
   let entries;
   try {
@@ -103,6 +114,14 @@ export async function readDumps(contentDir) {
       manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
     } catch (err) {
       throw new Error(`Invalid dump manifest at ${manifestPath}: ${err.message}`);
+    }
+
+    // §8.2/KDV-BUILD-12: `slug` and `domain` become filesystem path segments
+    // downstream; validate them here, at the single read boundary.
+    const slug = manifest.slug || entry.name;
+    assertSafePathSegment(slug, 'slug', manifestPath);
+    if (manifest.domain !== undefined && manifest.domain !== null) {
+      assertSafePathSegment(manifest.domain, 'domain', manifestPath);
     }
 
     const rawPath = join(dir, 'raw.md');
@@ -130,7 +149,7 @@ export async function readDumps(contentDir) {
     }
 
     dumps.push({
-      slug: manifest.slug || entry.name,
+      slug,
       dir,
       manifest,
       raw,
@@ -166,6 +185,25 @@ function artifactHref(pathOrUrl, { repoRoot, repoUrl, dumpDir }) {
     return blob(relative(repoRoot, join(dumpDir, clean)).split(sep).join('/'));
   }
   return pathOrUrl;
+}
+
+// §8.2/KDV-BUILD-11: a manifest is third-party data, so an artifact link is
+// scheme-filtered before it reaches an `href`. Only `http`/`https`/`mailto` and
+// relative (or root-relative) paths may become a link; anything else
+// (`javascript:`, `data:`, `vbscript:`, leading-whitespace variants) is dropped.
+// The check runs on — and RETURNS — the exact value the browser will use: URL
+// parsing strips ASCII tab/newline/CR before reading the scheme, so they are
+// removed first (trimming ends alone cannot stop `java\nscript:`), and any
+// remaining C0 control/DEL byte, which no legitimate link needs, fails closed.
+// Returning the normalized string keeps the emitted `href` byte-identical to
+// the value that was checked — no check/emit gap.
+function safeArtifactHref(value) {
+  if (typeof value !== 'string' || value.trim() === '') return null;
+  const normalized = value.trim().replace(/[\t\n\r]/g, '');
+  if (/[\u0000-\u001F\u007F]/.test(normalized)) return null;
+  if (normalized.startsWith('//')) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(normalized)) return normalized;
+  return /^(?:https?|mailto):/i.test(normalized) ? normalized : null;
 }
 
 // §6.4 article meta: a manifest date is a calendar date; an ISO timestamp is
@@ -220,10 +258,13 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
   const body_has_title = /^\s{0,3}#\s+\S/.test(firstContentLine);
   // §6.5 artifacts: each entry carries a resolved `href` for the rendered link
   // (P4c) while `path_or_url` stays the repo-relative machine value.
-  const artifacts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map((artifact) => ({
-    ...artifact,
-    href: artifactHref(artifact?.path_or_url, { repoRoot, repoUrl, dumpDir: dump.dir }),
-  }));
+  const artifacts = (Array.isArray(manifest.artifacts) ? manifest.artifacts : []).map((artifact) => {
+    const resolved = artifactHref(artifact?.path_or_url, { repoRoot, repoUrl, dumpDir: dump.dir });
+    return {
+      ...artifact,
+      href: safeArtifactHref(resolved),
+    };
+  });
   // §6.4/§A4: the dump page ships a server-rendered JSON-LD `@graph` — the
   // site-wide WebSite + WebPage plus an Article (the dump) and its breadcrumb.
   // The Article keeps the manifest `summary` as its description while the

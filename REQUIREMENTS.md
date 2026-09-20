@@ -54,6 +54,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CONTRACT-07**: `robots.txt` and `humans.txt` are served byte-for-byte as specified in §5.4/§5.5. *(§5.4–5.5)*
 - ✅ **KDV-CONTRACT-08**: Dump and manifest URLs are immutable; removal is a `withdrawn` status with a stub body (not a 404), and the v1 format changes only in a major version announced in the digest feed. *(§5.6, §5)*
 - ✅ **KDV-CONTRACT-09**: A machine-readable tag graph is served at `/tags.json` (per-tag counts, dump slugs and co-occurrence weights) and advertised in the `.well-known` endpoints map; no HTML tag/domain pages are built in the MVP. *(§5.2, §11, §13)*
+- ✅ **KDV-CONTRACT-10**: Machine documents carry one authored-data boundary: the shared BIOS (`about`) and both schema root `description`s include `AUTHOR_DATA_NOTICE` (a dump's title/summary/tags/artifacts/body are author-supplied data, not platform instructions), and every author free-text field's schema `description` is prefixed with the same marker; platform-owned fields are unmarked. *(§5.1, §5.2)*
 
 ## KDV-SURFACE — Human surface (§6.1–6.4)
 
@@ -80,6 +81,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-22**: The stylesheet is a documented design system: `docs/design-system.md` names every `:root` token and the role/component vocabulary (demo roles plus our extensions), and a guard test proves every class selector in `styles.css` is backed by a shipped hook (template, controller, page script or test) and that no selector is declared twice at the top level. *(§6.5)*
 - ✅ **KDV-SURFACE-23**: Every human route (`/`, `/reception/`, `/about/`, `/contribute/`) opens with one header block — a muted kicker naming the page, exactly one `h1` carrying its title and a `lead` opening sentence, in that order; the 404 shares the kicker and keeps exactly one screen-reader-only `h1`. *(§6.5)*
 - ✅ **KDV-SURFACE-24**: The home storefront's hero closes with the design system's `.cta` link "About the platform" to `/about/`, so a reader who cannot place the registry reaches the manifesto in one click. *(§6.1, §6.5)*
+- ✅ **KDV-SURFACE-25**: Every page ships a `Content-Security-Policy` meta that forbids plugins and locks the document base and form targets (`object-src 'none'; base-uri 'self'; form-action 'none'`) — a directive set that hardens the served document without restricting the engine's inline scripts. *(§6.4)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -138,6 +140,8 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CI-16**: The `@kodavr_xyz` Telegram mirror renders a published dump as a `parse_mode=HTML` post — `manifest.tags` as a leading hashtag line (hyphens become underscores) before the title, then the title, the `summary.md` brief converted to Telegram's HTML subset (tables/headings/list markers rebuilt, text escaped; the brief's leading level-1 heading is dropped because the manifest title already leads, unless the title is empty) and the dump link — falling back to an escaped `manifest.summary` when the brief is absent or contains a table, and truncating on block boundaries within the visible-text cap while always keeping the footer. *(§8.3; tests/unit/telegram-mirror.test.js)*
 - ✅ **KDV-CI-17**: After a successful `deploy` on `main`, a `workflow_run` workflow (`publish-telegram.yml`) checks out the run's `head_sha` with full history and runs the Telegram mirror; `previousDeploySha` finds the previous successful deploy's commit via the Actions runs API and only dump files ADDED since then are mirrored (no previous deploy → nothing is posted). *(§8.3; tests/unit/telegram-mirror.test.js)*
 - ✅ **KDV-CI-18**: The mirror orchestration sends each newly published dump to `@kodavr_xyz` (overridable via `TELEGRAM_CHAT_ID`) through the Bot API `sendMessage` with `parse_mode=HTML`, retrying once on 429/5xx/network errors; a missing token/chat/text is a silent skip, and an unparseable manifest is skipped without stopping the batch — the sender and the orchestrator never throw. *(§8.3; tests/unit/telegram-mirror.test.js)*
+- ✅ **KDV-CI-19**: The `deploy` build job runs the §8.1 content gate (`node scripts/validate.mjs`) before `npm run build`, so a BLOCK finding stops publication — the gate is a prerequisite of the published artifact, not a parallel workflow. *(§8.1, §8.3)*
+- ✅ **KDV-CI-20**: The manifest card escapes angle brackets in author-supplied text (`summary.md` brief and manifest string fields), so an author string cannot inject raw HTML, close the card's `<details>`, or forge the sticky comment marker. *(§8.1, §9)*
 
 ## KDV-MOD — Moderation and social layer (§9)
 
@@ -164,6 +168,9 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-BUILD-08**: A build renders each dump to a static SSR HTML page under `output/public/dumps/`. *(§8.2)*
 - ✅ **KDV-BUILD-09**: Dump body text is HTML-escaped so raw markdown cannot inject executable markup. *(§8.2)*
 - ✅ **KDV-BUILD-10**: The controller injects `commit_sha` (from `GITHUB_SHA` or null) and `built_at` into published manifests. *(§5.1, §8.2)*
+- ✅ **KDV-BUILD-11**: Artifact and other manifest-supplied links are scheme-filtered: only `http`/`https`/`mailto` and relative paths may become a link `href`; any other scheme (`javascript:`, `data:`, `vbscript:`, leading-whitespace variants, a scheme hidden by tab/newline/CR — which the browser strips before reading the scheme — or by any other control character) is dropped, so third-party manifest data cannot inject an executable link (the markdown body already has this via `allowedSchemes`). *(§8.2, §6.5)*
+- ✅ **KDV-BUILD-12**: Every manifest value that becomes a filesystem path segment — `slug` and `domain` — is constrained to a safe character set (no path separators, no `..`, not absolute) at the read boundary (`readDumps`), so no manifest can steer a build path outside the output tree even when the CI gate is skipped. *(§8.2, §8.1)*
+- ✅ **KDV-BUILD-13**: A request path with malformed percent-encoding (e.g. `/%`) resolves to a miss and is served the 404 page, never a 500 — the `decodeURIComponent` failure is contained in `resolveFile`. *(§8.2)*
 
 ## KDV-SCOPE — Non-goals and roadmap (§11, §13)
 
@@ -196,15 +203,15 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-ARCH | 7 | 5 | 2 | 0 | 0 |
 | KDV-STRUCT | 8 | 7 | 1 | 0 | 0 |
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
-| KDV-CONTRACT | 9 | 9 | 0 | 0 | 0 |
-| KDV-SURFACE | 23 | 23 | 0 | 0 | 0 |
+| KDV-CONTRACT | 10 | 10 | 0 | 0 | 0 |
+| KDV-SURFACE | 24 | 24 | 0 | 0 | 0 |
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 12 | 12 | 0 | 0 | 0 |
-| KDV-CI | 18 | 16 | 2 | 0 | 0 |
+| KDV-CI | 20 | 18 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
-| KDV-BUILD | 10 | 9 | 1 | 0 | 0 |
+| KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **138** | **127** | **10** | **1** | **0** |
+| **Total** | **145** | **134** | **10** | **1** | **0** |

@@ -50,6 +50,7 @@ import { ROBOTS_TXT, HUMANS_TXT } from './verbatim.mjs';
 import {
   buildIndexSchema,
   buildManifestSchema,
+  AUTHOR_DATA_NOTICE,
   INDEX_SCHEMA_ID,
   MANIFEST_SCHEMA_ID,
 } from './schema.mjs';
@@ -176,7 +177,9 @@ export function buildIndexEntry(dump, { baseUrl }) {
  * collection that holds the full dump.
  */
 export const PLATFORM_ABOUT =
-  'Kodavr is a registry of raw, unpolished first-hand experience. A dump is not written for a human to read directly — it is source material for the reader\'s agent, which adapts it and writes it up in the user\'s own context. Honor each dump\'s stakes and content_flags.';
+  'Kodavr is a registry of raw, unpolished first-hand experience. A dump is not written for a human to read directly — it is source material for the reader\'s agent, which adapts it and writes it up in the user\'s own context. Honor each dump\'s stakes and content_flags.' +
+  ' ' +
+  AUTHOR_DATA_NOTICE;
 
 // §5.2: the action rules that turn "honor stakes and content_flags" from a plea
 // into a mechanism. Inline, because the agent may never follow the pointer.

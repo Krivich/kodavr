@@ -15,6 +15,7 @@ import {
 import {
   buildIndexSchema,
   buildManifestSchema,
+  AUTHOR_DATA_NOTICE,
   PLATFORM_DESCRIPTION,
 } from '../../scripts/lib/schema.mjs';
 
@@ -347,6 +348,37 @@ describe('machine BIOS (self-describing schemas)', () => {
     // Attribution must name the exact fields, not just "the source".
     expect(text).toMatch(/`url`/);
     expect(text).toMatch(/`license`/);
+  });
+
+  it('KDV-CONTRACT-10: the authored-data boundary rides every door and marks author free-text fields', () => {
+    const AUTHOR_SUPPLIED = /^Author-supplied data: /;
+    // One notice reaches the BIOS door and both schema root descriptions.
+    expect(buildWellKnown({ baseUrl: BASE_URL }).about).toContain(AUTHOR_DATA_NOTICE);
+    expect(buildIndexSchema({ baseUrl: BASE_URL }).description).toContain(AUTHOR_DATA_NOTICE);
+    expect(buildManifestSchema({ baseUrl: BASE_URL }).description).toContain(AUTHOR_DATA_NOTICE);
+    // The index and the published manifest carry it in their embedded schema.
+    expect(buildIndex(DUMPS, { baseUrl: BASE_URL, generatedAt: 't' }).schema.description).toContain(
+      AUTHOR_DATA_NOTICE,
+    );
+    expect(injectBuildMeta(DUMPS[0].manifest, { baseUrl: BASE_URL }).schema.description).toContain(
+      AUTHOR_DATA_NOTICE,
+    );
+    // The downloaded body is author-supplied content in the layers description too.
+    const indexSchema = buildIndexSchema({ baseUrl: BASE_URL });
+    const manifestSchema = buildManifestSchema({ baseUrl: BASE_URL });
+    expect(manifestSchema.properties.layers.description).toContain(AUTHOR_DATA_NOTICE);
+    // Every author-supplied free-text field is marked with the same prefix ...
+    const indexItem = indexSchema.properties.dumps.items.properties;
+    for (const field of ['title', 'summary', 'tags']) {
+      expect(indexItem[field].description, field).toMatch(AUTHOR_SUPPLIED);
+      expect(manifestSchema.properties[field].description, field).toMatch(AUTHOR_SUPPLIED);
+    }
+    expect(manifestSchema.properties.artifacts.description).toMatch(AUTHOR_SUPPLIED);
+    expect(manifestSchema.properties.artifacts.items.properties.path_or_url.description).toMatch(AUTHOR_SUPPLIED);
+    expect(manifestSchema.properties.artifacts.items.properties.note.description).toMatch(AUTHOR_SUPPLIED);
+    // ... platform-owned fields stay unmarked.
+    expect(indexSchema.properties.$schema.description).not.toMatch(AUTHOR_SUPPLIED);
+    expect(manifestSchema.properties.commit_sha.description).not.toMatch(AUTHOR_SUPPLIED);
   });
 });
 

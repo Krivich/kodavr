@@ -675,6 +675,37 @@ describe('build controller (integration)', () => {
     expect(home).toMatch(/<a class="cta" href="about\/"[^>]*>About the platform<\/a>/);
   });
 
+  it('KDV-SURFACE-25: every built page ships the hardening CSP meta with its three independent directives and no default-src', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    const csp =
+      `<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'none'">`;
+
+    const routes = [
+      'index.html',
+      'reception/index.html',
+      'about/index.html',
+      'contribute/index.html',
+      '404.html',
+      'dumps/sample-dump/index.html',
+    ];
+    for (const route of routes) {
+      const html = await readFile(join(publicDir, ...route.split('/')), 'utf8');
+      // The meta lives inside <head>.
+      const head = html.slice(html.indexOf('<head'), html.indexOf('</head>'));
+      expect(head, route).toContain(csp);
+      // The three directives are independent: the shipped meta sets no
+      // default-src / script-src, which would block the engine's inline
+      // bootstrap scripts. (Checked on the meta element alone: the engine also
+      // inlines the template SOURCES, comments included, elsewhere in the body.)
+      const metas = head.match(/<meta http-equiv="Content-Security-Policy" content="[^"]*">/g) ?? [];
+      expect(metas, route).toHaveLength(1);
+      expect(metas[0], route).not.toContain('default-src');
+      expect(metas[0], route).not.toContain('script-src');
+    }
+  });
+
   it('KDV-SURFACE-04: every page ships the current consumption-contract version in <head> as a meta tag (sourced from machine.mjs)', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');

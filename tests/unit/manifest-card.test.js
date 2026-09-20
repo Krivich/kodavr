@@ -2,7 +2,7 @@
 // The dump's manifest.json is the single truth; this card renders it into a
 // sticky PR comment so a reviewer sees the fields without opening files.
 import { describe, it, expect } from 'vitest';
-import { renderManifestCard, dumpSlugsFromFiles } from '../../scripts/lib/manifest-card.mjs';
+import { renderManifestCard, dumpSlugsFromFiles, CARD_MARKER } from '../../scripts/lib/manifest-card.mjs';
 
 const MANIFEST = {
   slug: '2026-01-01-x',
@@ -61,5 +61,30 @@ describe('KDV-CI-14: the PR manifest card', () => {
     const bare = renderManifestCard({ type: 'case' }, 's');
     expect(bare).not.toContain('<details>');
     expect(bare).not.toContain('What it is:');
+  });
+
+  it('KDV-CI-20: escapes angle brackets in author text so it cannot inject HTML or forge the marker', () => {
+    // Manifest string fields: a summary hook and a field value carrying markup.
+    const card = renderManifestCard(
+      { type: 'note', summary: 'Hook <script>alert(1)</script>', title: '</details><b>x</b>' },
+      's',
+    );
+    expect(card).not.toContain('<script');
+    expect(card).not.toContain('</details>');
+    expect(card).not.toContain('<b>');
+    expect(card).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(card).toContain('&lt;/details&gt;&lt;b&gt;x&lt;/b&gt;');
+
+    // The summary.md brief is author text too: it must not forge the sticky marker.
+    const brief =
+      'Intro\n\n<!-- dump-manifest -->\n\n</details><script>alert(1)</script>\n\n**bold**\n\n- item';
+    const folded = renderManifestCard({ type: 'note' }, 's', brief);
+    expect(folded.startsWith(CARD_MARKER)).toBe(true);
+    expect(folded.split(CARD_MARKER).length - 1).toBe(1);
+    expect(folded).not.toContain('<script');
+    expect(folded).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+    // Markdown that uses no angle brackets passes through untouched.
+    expect(folded).toContain('**bold**');
+    expect(folded).toContain('- item');
   });
 });

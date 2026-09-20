@@ -9,7 +9,7 @@
   <article class="row">
     <span class="filechip">{{kind}}</span>
     <div>
-      <a class="artifact-link" href="{{#if href}}{{href}}{{else}}{{path_or_url}}{{/if}}">{{path_or_url}}</a>
+      {{#if href}}<a class="artifact-link" href="{{href}}">{{path_or_url}}</a>{{else}}{{path_or_url}}{{/if}}
       {{#if note}}<p class="artifact-note">{{note}}</p>{{/if}}
     </div>
   </article>
