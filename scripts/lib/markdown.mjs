@@ -66,5 +66,13 @@ const SANITIZE_OPTIONS = {
 export function renderMarkdown(markdown) {
   const source = String(markdown ?? '');
   const rawHtml = marked.parse(source);
-  return sanitizeHtml(rawHtml, SANITIZE_OPTIONS);
+  const sanitized = sanitizeHtml(rawHtml, SANITIZE_OPTIONS);
+  // KDV-MOBILE-02: a wide GFM table must not widen the page — give every table a
+  // horizontal-scroll container (static/assets/styles.css `.table-scroll`). The
+  // wrapper is added AFTER sanitize-html, so the allow-list never sees the `div`
+  // and the security posture is unchanged (the class is ours, not input). Marked
+  // emits flat, non-nested tables and the non-greedy match stops at the first
+  // `</table>`, so one replacement per table is exact; `&lt;table&gt;` escaped
+  // inside a code block has no literal tag and is not matched.
+  return sanitized.replace(/<table[\s\S]*?<\/table>/g, (table) => `<div class="table-scroll">${table}</div>`);
 }

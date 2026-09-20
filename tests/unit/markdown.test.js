@@ -73,4 +73,28 @@ describe('renderMarkdown', () => {
     expect(html).toContain('href="mailto:someone@example.test"');
     expect(html).not.toContain('data:');
   });
+
+  it('KDV-MOBILE-02: wraps every GFM table in a horizontal-scroll container', () => {
+    // The wrapper is added AFTER sanitize-html, so the allow-list never sees the
+    // `div` and the security posture is unchanged; the class is ours, not input.
+    const html = renderMarkdown(
+      [
+        '| a | b |',
+        '| --- | --- |',
+        '| one | two |',
+      ].join('\n'),
+    );
+
+    expect(html).toContain('<div class="table-scroll"><table');
+    expect(html).toContain('</table></div>');
+  });
+
+  it('KDV-MOBILE-02: a fenced code block containing literal <table> is escaped, not wrapped', () => {
+    // The regex only matches a real `<table` tag: marked escapes the angle
+    // brackets inside a fence to `&lt;table&gt;`, so no wrapper is added.
+    const html = renderMarkdown(['```', '<table>not a table</table>', '```'].join('\n'));
+
+    expect(html).toContain('&lt;table&gt;');
+    expect(html).not.toContain('table-scroll');
+  });
 });

@@ -64,6 +64,41 @@ test.describe('mobile 375x667', () => {
     expect(await noHorizontalScroll(page)).toBe(true);
   });
 
+  test('KDV-MOBILE-02: a wide markdown table and a long unbreakable inline token stay inside the frame', async ({ page }) => {
+    for (const width of [375, 320]) {
+      await page.setViewportSize({ width, height: 667 });
+      await page.goto(DUMP);
+
+      const measured = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        innerWidth: window.innerWidth,
+      }));
+      expect(
+        await noHorizontalScroll(page),
+        `no horizontal scroll at ${width}px (scrollWidth=${measured.scrollWidth} innerWidth=${measured.innerWidth})`,
+      ).toBe(true);
+
+      // KDV-MOBILE-02: a long unbreakable inline code token must shrink the
+      // paragraph's min-content (`overflow-wrap:anywhere`), never widen the frame.
+      const inline = page.locator('.hall p code', { hasText: 'unbreakable_inline_code_token' });
+      await expect(inline).toBeVisible();
+      const inlineBox = await inline.boundingBox();
+      expect(
+        inlineBox.x + inlineBox.width,
+        `the long inline code token stays inside the viewport at ${width}px`,
+      ).toBeLessThanOrEqual(width + 1);
+
+      const wrapper = page.locator('.hall .table-scroll').first();
+      await expect(wrapper).toBeVisible();
+      expect(await wrapper.evaluate((el) => getComputedStyle(el).overflowX)).toBe('auto');
+      expect(await wrapper.evaluate((el) => getComputedStyle(el, '::after').content)).toContain('scroll');
+      expect(
+        await wrapper.evaluate((el) => el.scrollWidth > el.clientWidth),
+        `the table actually scrolls inside its wrapper at ${width}px`,
+      ).toBe(true);
+    }
+  });
+
   test('KDV-MOBILE-03: artifacts render as cards and the manifest card is a collapsed accordion', async ({ page }) => {
     await page.goto(DUMP);
     await page.click('[data-gate-choice="machine"]');
