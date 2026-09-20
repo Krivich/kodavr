@@ -9,6 +9,12 @@
   'use strict';
 
   var SPECIES_KEY = 'kodavr.species';
+  // §11/KDV-I18N-06: the remembered language-switcher choice. A stored locale
+  // code also silences the intelligent hint for good.
+  var LANG_KEY = 'kodavr.lang';
+  // §11/KDV-I18N-06: the session-scoped "hint already shown" flag — one hint per
+  // session, so it does not nag on every navigation.
+  var LANG_HINT_KEY = 'kodavr.langHint';
   // §6.2: the shipped consumption-contract version is in the SSR <head>, so the
   // client can invalidate a declaration made against an older contract without
   // an extra request.
@@ -269,8 +275,180 @@
     initSpeciesChip();
   }
 
+  // §11/KDV-I18N-06: the remembered language choice (localStorage) and the
+  // session-scoped hint flag. Storage can throw (private mode / blocked cookies);
+  // every access is guarded and never throws.
+  function readLangChoice() {
+    try {
+      return window.localStorage.getItem(LANG_KEY);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function writeLangChoice(value) {
+    try {
+      window.localStorage.setItem(LANG_KEY, value);
+    } catch (err) {
+      // Non-persistent session: the choice is not remembered, but nothing breaks.
+    }
+  }
+
+  function hintShownThisSession() {
+    try {
+      return window.sessionStorage.getItem(LANG_HINT_KEY) !== null;
+    } catch (err) {
+      // Storage unavailable: treat as not shown.
+      return false;
+    }
+  }
+
+  function markLangHintShown() {
+    try {
+      window.sessionStorage.setItem(LANG_HINT_KEY, '1');
+    } catch (err) {
+      // Non-persistent session: the hint may repeat, but nothing breaks.
+    }
+  }
+
+  // The switcher entries (the same page in each BUILT locale), from the SSR menu.
+  function langLinks() {
+    var anchors = document.querySelectorAll('.lang-switch-menu a[data-lang-code]');
+    var links = [];
+    for (var i = 0; i < anchors.length; i++) {
+      links.push({
+        code: anchors[i].getAttribute('data-lang-code'),
+        endonym: (anchors[i].textContent || '').trim(),
+        href: anchors[i].getAttribute('href'),
+      });
+    }
+    return links;
+  }
+
+  function primarySubtag(tag) {
+    return String(tag || '').toLowerCase().split('-')[0];
+  }
+
+  // Pick the first browser language that names a built locale OTHER than the
+  // current page's. `navigator.languages` is ordered by preference; a full tag
+  // matches first, then the primary subtag (ru-RU → ru, zh-CN → zh-Hans).
+  function matchBrowserLocale(current, links) {
+    var langs = (navigator.languages && navigator.languages.length)
+      ? navigator.languages
+      : [navigator.language];
+    for (var i = 0; i < langs.length; i++) {
+      var tag = String(langs[i] || '').toLowerCase();
+      if (!tag) continue;
+      for (var j = 0; j < links.length; j++) {
+        var link = links[j];
+        var code = String(link.code).toLowerCase();
+        if (code !== current && (code === tag || primarySubtag(code) === primarySubtag(tag))) {
+          return link;
+        }
+      }
+    }
+    return null;
+  }
+
+  // §11/KDV-I18N-06: clear the hint and record the session flag. The switcher's
+  // default (SSR) accessible name is restored from `data-lang-label`, the target
+  // marker and the title are dropped, and the accent attribute is removed.
+  function clearLangHint(details) {
+    if (!details || !details.hasAttribute('data-lang-hint')) return;
+    details.removeAttribute('data-lang-hint');
+    var target = details.querySelector('[data-lang-hint-target]');
+    if (target) target.removeAttribute('data-lang-hint-target');
+    var summary = details.querySelector('summary');
+    if (summary) {
+      var label = summary.getAttribute('data-lang-label');
+      if (label) summary.setAttribute('aria-label', label);
+      summary.removeAttribute('title');
+    }
+    markLangHintShown();
+  }
+
+  // §11/KDV-I18N-06: the intelligent hint. When the browser prefers a BUILT
+  // locale (the SSR menu lists only built ones) other than this page's, and no
+  // explicit choice or earlier hint is stored, highlight the switcher: an accent
+  // attribute marks the state, the matching menu link is marked as the target,
+  // and the summary carries the localized suggestion in its accessible name and
+  // title — so it is never conveyed by colour alone. It never navigates.
+  function initLangHint(details) {
+    if (details.hasAttribute('data-lang-hint')) return;
+    if (readLangChoice()) return;
+    if (hintShownThisSession()) return;
+
+    var current = String(details.getAttribute('data-current-locale') || '').toLowerCase();
+    var match = matchBrowserLocale(current, langLinks());
+    if (!match) return;
+
+    var template = details.getAttribute('data-lang-hint-template') || '';
+    var hint = chipFill(template, '{language}', match.endonym);
+    var summary = details.querySelector('summary');
+    if (summary) {
+      var label = summary.getAttribute('aria-label') || '';
+      // Keep the plain label so clearLangHint can restore the SSR name.
+      summary.setAttribute('data-lang-label', label);
+      summary.setAttribute('aria-label', label ? label + ' — ' + hint : hint);
+      summary.setAttribute('title', hint);
+    }
+
+    var anchors = details.querySelectorAll('.lang-switch-menu a[data-lang-code]');
+    for (var i = 0; i < anchors.length; i++) {
+      if (anchors[i].getAttribute('data-lang-code') === match.code) {
+        anchors[i].setAttribute('data-lang-hint-target', '');
+      }
+    }
+    details.setAttribute('data-lang-hint', '');
+  }
+
+  // §11/KDV-I18N-06: the native <details> switcher needs JS for the niceties —
+  // closing on an outside click / Escape, remembering the chosen locale, and the
+  // intelligent hint. Without JS it opens and navigates as an ordinary <details>.
+  function initLangSwitch() {
+    var details = document.querySelector('.lang-switch');
+    if (!details) return;
+
+    // §11/KDV-I18N-06: following any language link stores the explicit choice and
+    // clears the hint (recording the session flag), so it never fights the target.
+    var anchors = details.querySelectorAll('.lang-switch-menu a[data-lang-code]');
+    for (var i = 0; i < anchors.length; i++) {
+      (function (anchor) {
+        anchor.addEventListener('click', function () {
+          writeLangChoice(anchor.getAttribute('data-lang-code'));
+          clearLangHint(details);
+        });
+      })(anchors[i]);
+    }
+
+    // §11/KDV-I18N-06: opening the switcher means the visitor engaged with the
+    // choice — clear the hint and remember that it was shown this session.
+    details.addEventListener('toggle', function () {
+      if (details.open) clearLangHint(details);
+    });
+
+    document.addEventListener('click', function (event) {
+      if (details.open && !details.contains(event.target)) details.open = false;
+    });
+    document.addEventListener('keydown', function (event) {
+      if (!details.open) return;
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        details.open = false;
+        var summary = details.querySelector('summary');
+        if (summary) summary.focus();
+      }
+    });
+
+    initLangHint(details);
+  }
+
+  function initLangUI() {
+    initLangSwitch();
+  }
+
   window.Kodavr = {
     SPECIES_KEY: SPECIES_KEY,
+    LANG_KEY: LANG_KEY,
     getSpecies: getSpecies,
     getDeclaration: getDeclaration,
     setSpecies: setSpecies,
@@ -280,11 +458,16 @@
     announce: announce,
   };
 
-  // The chip lives in the shared header, parsed after this head-loaded script:
-  // fill it once the DOM is ready (a controller may also refresh it later).
+  // The chip and the language UI live in the shared header, parsed after this
+  // head-loaded script: fill them once the DOM is ready (a controller may also
+  // refresh the chip later).
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSpeciesChip);
+    document.addEventListener('DOMContentLoaded', function () {
+      initSpeciesChip();
+      initLangUI();
+    });
   } else {
     initSpeciesChip();
+    initLangUI();
   }
 })();

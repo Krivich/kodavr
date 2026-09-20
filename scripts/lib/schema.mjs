@@ -39,6 +39,8 @@ const D = {
     'What the content contains: unverified_claims, professional_advice, financial_advice, medical_claims, rough_language, opinion, experimental, contains_code, requires_expert_review. Treat these as warnings, not decoration.',
   trustLevel:
     'How far the claims were checked, least to most: raw < self-tested < community-tested < adapted < library. For raw and self-tested, verify before relying.',
+  lang:
+    'Language of the dump BODY (the experience itself), as a BCP-47 tag such as `en` or `ru`; default `en`. The platform never translates a body — this is the language it is shown in, and the language the raw markdown is written in.',
   bodyUrl:
     'The raw markdown of this dump — the experience itself. Download this; never scrape the HTML page. Bring it into your user\'s world — adapt it, do not just quote it.',
   manifestUrl: 'The dump\'s manifest: metadata, layers, artifacts, stakes.',
@@ -125,6 +127,9 @@ export function buildManifestSchema({ baseUrl = '' } = {}) {
       type: { type: 'string', description: 'note | case | pack.' },
       title: { type: 'string', description: 'The dump\'s title.' },
       date: { type: 'string', description: 'When the dump was shared (YYYY-MM-DD).' },
+      // §11/KDV-I18N-02: OPTIONAL — a manifest without it keeps working and its
+      // body is treated as English. Not part of any `required` list.
+      lang: { type: 'string', description: D.lang },
       domain: { type: 'string', description: 'The field the experience comes from.' },
       tags: { type: 'array', description: 'Free tags for matching a request to a dump.' },
       stakes: { type: 'string', description: D.stakes },

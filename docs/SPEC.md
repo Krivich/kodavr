@@ -765,7 +765,7 @@ The previously planned `2026-09-20-economist-docflow` pack was withdrawn before 
 
 ## 11. MVP Non-Goals (explicitly NOT doing)
 
-Client-side search; comments outside GitHub Issues; backend/DB/auth; private dumps; tag and domain pages; monetisation and paid tiers; analytics/tracking; auto-publication without human approval of an author's first dump; federation/mirrors beyond git clones; mobile app; multilingualism; "social" features (likes, ratings, author subscriptions).
+Client-side search; comments outside GitHub Issues; backend/DB/auth; private dumps; tag and domain pages; monetisation and paid tiers; analytics/tracking; auto-publication without human approval of an author's first dump; federation/mirrors beyond git clones; mobile app; machine translation of dump bodies (they are preserved in the author's original language); "social" features (likes, ratings, author subscriptions).
 
 ---
 

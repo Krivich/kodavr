@@ -13,6 +13,9 @@
  *   serializeJsonLd — serializes a graph, escaping angle brackets against injection
  * INVARIANTS:
  *   — every serialized graph is safe inside a script tag (angle brackets are escaped)
+ *   — `inLanguage` is caller-supplied and never assumed: the frame nodes (WebSite/
+ *     WebPage/CollectionPage) take the page's UI locale, the Article takes the dump
+ *     body's own language (KDV-I18N-05) — the body is never translated
  */
 
 // scripts/lib/jsonld.mjs — server-rendered Schema.org JSON-LD (§6.4, §A4).

@@ -6,6 +6,7 @@ import { mkdtemp, mkdir, cp, readFile, readdir, stat, rm, writeFile } from 'node
 import { XMLValidator } from 'fast-xml-parser';
 import { buildProject } from '../../scripts/lib/build.mjs';
 import { ROUTE_PAGES, FOOTER_REPORT_URL } from '../../scripts/lib/pages.mjs';
+import { t } from '../../scripts/lib/i18n.mjs';
 import { ROBOTS_TXT, HUMANS_TXT } from '../../scripts/lib/verbatim.mjs';
 import { CONTRACT_VERSION, TRUST_LEGEND_LEAD, TRUST_LEVEL_MEANINGS } from '../../scripts/lib/machine.mjs';
 import {
@@ -433,13 +434,212 @@ describe('build controller (integration)', () => {
     expect(sitemap).not.toContain(`${BASE_URL}/404`);
   });
 
+  it('KDV-I18N-01 + KDV-I18N-03: the ru, zh-Hans and es bundles emit fully localized pages, while English stays English', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    // Every UI route plus the dump page is emitted under the ru prefix (SSR).
+    const ruRoutes = [
+      'ru/index.html',
+      'ru/reception/index.html',
+      'ru/about/index.html',
+      'ru/contribute/index.html',
+      'ru/dumps/sample-dump/index.html',
+    ];
+    for (const route of ruRoutes) {
+      expect(await exists(join(publicDir, ...route.split('/'))), route).toBe(true);
+    }
+    // The 404 stays single (deferred per-locale): no /ru/404.html.
+    expect(await exists(join(publicDir, 'ru', '404.html'))).toBe(false);
+
+    // The frame is Russian and the document language is ru.
+    const ruAbout = await readFile(join(publicDir, 'ru', 'about', 'index.html'), 'utf8');
+    expect(ruAbout).toContain('<html lang="ru">');
+    expect(ruAbout).toContain('>Зачем существует Kodavr</h1>');
+    expect(ruAbout).toContain(t('ABOUT_FOR_AUTHORS_HEADING', 'ru'));
+    expect(ruAbout).not.toContain('>Why Kodavr exists</h1>');
+
+    const ruDump = await readFile(join(publicDir, 'ru', 'dumps', 'sample-dump', 'index.html'), 'utf8');
+    expect(ruDump).toContain('<html lang="ru">');
+    expect(decodeEntities(ruDump)).toContain(t('GATE_TITLE', 'ru'));
+    // The dump body is content, not frame: it is never translated.
+    expect(ruDump).toContain('<h1>Sample Heading</h1>');
+
+    // §11/KDV-I18N-09: the ru frame's internal PAGE links are locale-aware — the
+    // plates come from the catalog and the About/Reception CTAs, the feed item
+    // link, the logo and the dump FAB stay inside /ru/. The machine quickstart
+    // (`/index.json`) stays canonical. `locale_prefix` is on every dataset.
+    const ruHome = await readFile(join(publicDir, 'ru', 'index.html'), 'utf8');
+    expect(ruHome).toContain('<html lang="ru">');
+    expect(ruHome).toContain('data-plate="01 · реестр"');
+    expect(ruHome).not.toContain('data-plate="01 · registry"');
+    expect(ruHome).toContain('href="../ru/about/"');
+    expect(ruHome).toContain('href="../ru/reception/"');
+    expect(ruHome).toContain('../ru/dumps/');
+    expect(ruAbout).toContain('data-plate="01 · манифест"');
+    expect(ruDump).toMatch(/<a class="fab" href="\.\.\/\.\.\/\.\.\/ru\/"/);
+    expect(ruDump).toContain('data-plate="06 · артефакты"');
+
+    // The extra locale-frame `href` must never leak into the canonical machine
+    // index (KDV-I18N-08): `/index.json` entries keep their absolute `url` only.
+    const index = JSON.parse(await readFile(join(publicDir, 'index.json'), 'utf8'));
+    expect(index.dumps.every((entry) => !('href' in entry))).toBe(true);
+    const manifest = JSON.parse(await readFile(join(publicDir, 'dumps', 'sample-dump', 'manifest.json'), 'utf8'));
+    expect('href' in manifest).toBe(false);
+
+    // §11/KDV-I18N-01 phase 7a: the zh-Hans bundle activates the whole /zh/
+    // product; the frame is Chinese and `<html lang>` is zh-Hans.
+    const zhRoutes = [
+      'zh/index.html',
+      'zh/reception/index.html',
+      'zh/about/index.html',
+      'zh/contribute/index.html',
+      'zh/dumps/sample-dump/index.html',
+    ];
+    for (const route of zhRoutes) {
+      expect(await exists(join(publicDir, ...route.split('/'))), route).toBe(true);
+    }
+    // The 404 stays single (deferred per-locale): no /zh/404.html.
+    expect(await exists(join(publicDir, 'zh', '404.html'))).toBe(false);
+
+    const zhAbout = await readFile(join(publicDir, 'zh', 'about', 'index.html'), 'utf8');
+    expect(zhAbout).toContain('<html lang="zh-Hans">');
+    expect(zhAbout).toContain(`>${t('ABOUT_PAGE_TITLE', 'zh-Hans')}</h1>`);
+    expect(zhAbout).toContain(t('ABOUT_FOR_AUTHORS_HEADING', 'zh-Hans'));
+    expect(zhAbout).not.toContain('>Why Kodavr exists</h1>');
+
+    const zhDump = await readFile(join(publicDir, 'zh', 'dumps', 'sample-dump', 'index.html'), 'utf8');
+    expect(zhDump).toContain('<html lang="zh-Hans">');
+    expect(decodeEntities(zhDump)).toContain(t('GATE_TITLE', 'zh-Hans'));
+    // The dump body is content, not frame: it is never translated.
+    expect(zhDump).toContain('<h1>Sample Heading</h1>');
+
+    // §11/KDV-I18N-01 phase 7b: the es bundle activates the whole /es/ product;
+    // the frame is Spanish and `<html lang>` is es. This completes wave 1.
+    const esRoutes = [
+      'es/index.html',
+      'es/reception/index.html',
+      'es/about/index.html',
+      'es/contribute/index.html',
+      'es/dumps/sample-dump/index.html',
+    ];
+    for (const route of esRoutes) {
+      expect(await exists(join(publicDir, ...route.split('/'))), route).toBe(true);
+    }
+    // The 404 stays single (deferred per-locale): no /es/404.html.
+    expect(await exists(join(publicDir, 'es', '404.html'))).toBe(false);
+
+    const esAbout = await readFile(join(publicDir, 'es', 'about', 'index.html'), 'utf8');
+    expect(esAbout).toContain('<html lang="es">');
+    expect(esAbout).toContain(`>${t('ABOUT_PAGE_TITLE', 'es')}</h1>`);
+    expect(esAbout).toContain(t('ABOUT_FOR_AUTHORS_HEADING', 'es'));
+    expect(esAbout).not.toContain('>Why Kodavr exists</h1>');
+
+    const esDump = await readFile(join(publicDir, 'es', 'dumps', 'sample-dump', 'index.html'), 'utf8');
+    expect(esDump).toContain('<html lang="es">');
+    expect(decodeEntities(esDump)).toContain(t('GATE_TITLE', 'es'));
+    // The dump body is content, not frame: it is never translated.
+    expect(esDump).toContain('<h1>Sample Heading</h1>');
+
+    // The English pages stay English (no visible English change from phase 4b).
+    const enAbout = await readFile(join(publicDir, 'about', 'index.html'), 'utf8');
+    expect(enAbout).toContain('<html lang="en">');
+    expect(enAbout).toContain('>Why Kodavr exists</h1>');
+    expect(enAbout).not.toContain('Зачем существует Kodavr');
+    expect(enAbout).not.toContain('Kodavr 为何存在');
+
+    // The sitemap lists the localized URLs too (hreflang arrives in phase 5).
+    const sitemap = await readFile(join(publicDir, 'sitemap.xml'), 'utf8');
+    expect(XMLValidator.validate(sitemap)).toBe(true);
+    expect(sitemap).toContain(`${BASE_URL}/ru/about/`);
+    expect(sitemap).toContain(`${BASE_URL}/ru/dumps/sample-dump/`);
+    expect(sitemap).toContain(`${BASE_URL}/zh/about/`);
+    expect(sitemap).toContain(`${BASE_URL}/zh/dumps/sample-dump/`);
+    expect(sitemap).toContain(`${BASE_URL}/es/about/`);
+    expect(sitemap).toContain(`${BASE_URL}/es/dumps/sample-dump/`);
+
+    // The per-locale page counts are surfaced in the message so a drift is visible.
+    const ruPages = (await listFiles(publicDir)).filter((f) => f.startsWith('ru/') && f.endsWith('.html'));
+    expect(ruPages.length, `ru html pages: ${ruPages.join(', ')}`).toBeGreaterThanOrEqual(5);
+    const zhPages = (await listFiles(publicDir)).filter((f) => f.startsWith('zh/') && f.endsWith('.html'));
+    expect(zhPages.length, `zh html pages: ${zhPages.join(', ')}`).toBeGreaterThanOrEqual(5);
+    const esPages = (await listFiles(publicDir)).filter((f) => f.startsWith('es/') && f.endsWith('.html'));
+    expect(esPages.length, `es html pages: ${esPages.join(', ')}`).toBeGreaterThanOrEqual(5);
+  });
+
+  it('KDV-I18N-04: every built page carries the alternate-locale cluster (hreflang + x-default) and the sitemap mirrors it as xhtml:link', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    // The English home: self-canonical, the en/ru/zh-Hans/es cluster over the
+    // built locales, x-default → the default (en) variant, one og:locale:alternate
+    // per other built locale.
+    const enHome = await readFile(join(publicDir, 'index.html'), 'utf8');
+    expect(enHome).toContain(`<link rel="canonical" href="${BASE_URL}/">`);
+    expect(enHome).toContain(`<link rel="alternate" hreflang="en" href="${BASE_URL}/">`);
+    expect(enHome).toContain(`<link rel="alternate" hreflang="ru" href="${BASE_URL}/ru/">`);
+    expect(enHome).toContain(`<link rel="alternate" hreflang="zh-Hans" href="${BASE_URL}/zh/">`);
+    expect(enHome).toContain(`<link rel="alternate" hreflang="es" href="${BASE_URL}/es/">`);
+    expect(enHome).toContain(`<link rel="alternate" hreflang="x-default" href="${BASE_URL}/">`);
+    expect(enHome).toContain('<meta property="og:locale" content="en_US">');
+    expect(enHome).toContain('<meta property="og:locale:alternate" content="ru_RU">');
+    expect(enHome).toContain('<meta property="og:locale:alternate" content="zh_CN">');
+    expect(enHome).toContain('<meta property="og:locale:alternate" content="es_ES">');
+
+    // The Russian variants carry the same cluster, their own og:locale, and an
+    // x-default that still points at the default-locale variant.
+    const ruRoutes = [
+      ['ru/index.html', `${BASE_URL}/`],
+      ['ru/about/index.html', `${BASE_URL}/about/`],
+      ['ru/dumps/sample-dump/index.html', `${BASE_URL}/dumps/sample-dump/`],
+    ];
+    for (const [route, xDefault] of ruRoutes) {
+      const html = await readFile(join(publicDir, ...route.split('/')), 'utf8');
+      expect(html, route).toContain('<html lang="ru">');
+      expect(html, route).toContain(`<link rel="alternate" hreflang="en" href="${BASE_URL}/`);
+      expect(html, route).toContain(`<link rel="alternate" hreflang="ru" href="${BASE_URL}/ru/`);
+      expect(html, route).toContain(`<link rel="alternate" hreflang="x-default" href="${xDefault}">`);
+      expect(html, route).toContain('<meta property="og:locale" content="ru_RU">');
+      expect(html, route).toContain('<meta property="og:locale:alternate" content="en_US">');
+    }
+    // Canonical stays self-referential per locale.
+    expect(await readFile(join(publicDir, 'ru', 'about', 'index.html'), 'utf8')).toContain(
+      `<link rel="canonical" href="${BASE_URL}/ru/about/">`,
+    );
+    expect(await readFile(join(publicDir, 'ru', 'dumps', 'sample-dump', 'index.html'), 'utf8')).toContain(
+      `<link rel="canonical" href="${BASE_URL}/ru/dumps/sample-dump/">`,
+    );
+
+    // The sitemap declares the xhtml namespace and mirrors each page's cluster.
+    const sitemap = await readFile(join(publicDir, 'sitemap.xml'), 'utf8');
+    expect(XMLValidator.validate(sitemap)).toBe(true);
+    expect(sitemap).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
+    const enAbout = urlBlock(sitemap, `${BASE_URL}/about/`);
+    expect(enAbout).toContain(`<xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}/about/"/>`);
+    expect(enAbout).toContain(`<xhtml:link rel="alternate" hreflang="ru" href="${BASE_URL}/ru/about/"/>`);
+    expect(enAbout).toContain(`<xhtml:link rel="alternate" hreflang="zh-Hans" href="${BASE_URL}/zh/about/"/>`);
+    expect(enAbout).toContain(`<xhtml:link rel="alternate" hreflang="es" href="${BASE_URL}/es/about/"/>`);
+    expect(enAbout).toContain(`<xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}/about/"/>`);
+    expect(urlBlock(sitemap, `${BASE_URL}/ru/about/`)).toContain(
+      `<xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}/about/"/>`,
+    );
+    expect(urlBlock(sitemap, `${BASE_URL}/zh/about/`)).toContain(
+      `<xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}/about/"/>`,
+    );
+    expect(urlBlock(sitemap, `${BASE_URL}/es/about/`)).toContain(
+      `<xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}/about/"/>`,
+    );
+  });
+
   it('KDV-COPY-12: /about/ is a six-plate sheet in the home design language — manifesto, authors, readers, mechanism, architecture, colophon', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const about = decodeEntities(await readFile(join(publicDir, 'about', 'index.html'), 'utf8'));
 
-    // The header contract (KDV-SURFACE-23) still opens the page.
-    expect(about).toContain('<p class="kicker">about the platform</p>');
+    // The header contract (KDV-SURFACE-23) still opens the page. The kicker is
+    // now a dataset binding, so match the class and text (ignition may add its
+    // data-ignition-text attribute before the `>`).
+    expect(about).toMatch(/<p class="kicker"[^>]*>about the platform<\/p>/);
     expect(about).toContain('>Why Kodavr exists</h1>');
     expect(about).toContain('class="lead"');
 
@@ -472,7 +672,7 @@ describe('build controller (integration)', () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const home = decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'));
-    expect(home).toContain('<a class="cta" href="about/">About the platform</a>');
+    expect(home).toMatch(/<a class="cta" href="about\/"[^>]*>About the platform<\/a>/);
   });
 
   it('KDV-SURFACE-04: every page ships the current consumption-contract version in <head> as a meta tag (sourced from machine.mjs)', async () => {
@@ -1312,7 +1512,9 @@ describe('build controller (integration)', () => {
     const css = await readFile(join(publicDir, 'assets', 'styles.css'), 'utf8');
     expect(css).toMatch(/\.pagination-arrow\s*\{[^}]*min-height:\s*var\(--tap\)/);
     expect(css).toMatch(/\.pagination-arrow\s*\{[^}]*min-width:\s*var\(--tap\)/);
-  });
+    // Building a 12-dump fixture now renders four locales (KDV-I18N-01); the
+    // heavier build needs more than the 5s default when the suite runs in parallel.
+  }, 30000);
 
   it('KDV-SURFACE-02: no tag or domain routes/pages are built in the MVP', async () => {
     tmpRoot = await setupProject(['sample-dump', 'sample-dump-two']);

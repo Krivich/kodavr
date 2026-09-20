@@ -1,15 +1,18 @@
 {{!-- ignition: noblock --}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{lang}}"{{#if rtl}} dir="rtl"{{/if}}>
 <head>
 {{> site/head}}
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">{{copy.skip_to_content}}</a>
 <div class="sheet">
 {{> site/header}}
 <main id="main" tabindex="-1" class="dump-page sheet-inner">
   {{#unless body_has_title}}<h1 class="dump-title">{{title}}</h1>{{/unless}}
+  {{!-- §11/KDV-I18N-02: shown only when the dump body's language differs from
+       the frame's — the body itself is never translated. --}}
+  {{#if body_lang_note}}<p class="micro">{{body_lang_note}}</p>{{/if}}
   {{!-- §6.2: a declared machine can still see the warning + pinned prompt + the
        §7.12 lane in the hall header, and undo the choice. Hidden in SSR. --}}
   <section class="card" id="machine-panel" hidden>
@@ -28,12 +31,12 @@
        text arrives through the dataset, so the region announces the acceptance.
        #a11y-status above keeps its own announcements untouched. --}}
   <p class="declaration-toast" hidden role="status" aria-live="polite" data-toast-text="{{copy.declaration_toast}}"></p>
-  <section class="plate" data-plate="06 · artifacts">
+  <section class="plate" data-plate="{{copy.dumps_plate_artifacts}}">
 {{> site/artifacts}}
   <p class="dump-discuss"><a href="{{issues_url}}" rel="noopener noreferrer">{{copy.discuss_label}}</a></p>
 {{> site/manifest-card}}
   </section>
-  <a class="fab" href="/" aria-label="Back to feed">&#x2190;</a>
+  <a class="fab" href="{{locale_prefix}}/" aria-label="{{copy.back_to_feed}}">&#x2190;</a>
 </main>
 {{> site/footer}}
 </div>

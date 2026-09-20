@@ -432,6 +432,38 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
 .not-found-text{margin:0;background:var(--block);border:1px solid var(--line);border-left:3px solid var(--ink);
   padding:var(--sp-3) var(--sp-4);font:400 13px/1.7 var(--font-mono);width:fit-content;max-width:100%;overflow-x:auto}
 
+/* --- language switcher + intelligent hint (§11/KDV-I18N-06) ----------- */
+
+/* The switcher is a compact mono <details> at the masthead's right; the menu is
+   a paper popover over the sticky header. It works without JS (native details). */
+.lang-switch{position:relative;flex:none;margin-left:var(--sp-2)}
+.lang-switch-summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  min-height:var(--tap);padding:6px 2px;font:500 12px/1 var(--font-mono);letter-spacing:.08em;
+  text-transform:uppercase;color:inherit}
+.lang-switch-summary::-webkit-details-marker{display:none}
+.lang-switch-summary::after{content:"▾";font-size:.8em;color:var(--muted);transition:transform .15s}
+.lang-switch[open]>.lang-switch-summary::after{transform:rotate(180deg)}
+.lang-switch-menu{position:absolute;right:0;top:100%;z-index:20;min-width:10rem;margin:0;
+  padding:var(--sp-1) 0;list-style:none;background:var(--paper);
+  border:1px solid var(--line);outline:1px solid var(--line-2);outline-offset:2px}
+.lang-switch-menu a{display:flex;align-items:center;gap:8px;min-height:var(--tap);padding:8px var(--sp-4);
+  font:400 13px/1.4 var(--font-prose);text-decoration:none;color:var(--ink)}
+.lang-switch-menu a:hover{background:var(--block);text-decoration:none}
+.lang-switch-menu a[aria-current="true"]{font-weight:700}
+.lang-switch-menu a[aria-current="true"]::before{content:"";width:6px;height:6px;flex:none;background:var(--accent)}
+
+/* The intelligent hint (KDV-I18N-06): site.js adds `data-lang-hint` to the
+   switcher when the browser prefers another BUILT locale. The summary becomes an
+   accent-coloured, underlined control with a small dot; the pulse is decorative
+   (the accessible name/title carry the suggestion), so the hint never depends on
+   colour alone. NOTE: reduced motion keeps the static accent, dropping the pulse
+   (see §17). */
+.lang-switch[data-lang-hint] .lang-switch-summary{color:var(--accent);
+  text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
+.lang-switch[data-lang-hint] .lang-switch-summary::before{content:"";width:6px;height:6px;flex:none;
+  border-radius:50%;background:var(--accent);animation:lang-hint-pulse 2s ease-in-out infinite}
+@keyframes lang-hint-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 /* =====================================================================
    16 · MOBILE (< 480px) — KDV-MOBILE-01
    ===================================================================== */
@@ -456,6 +488,9 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
 
   /* §7.13: below 480px the declaration group sits flush with the mark. */
   .species-declaration{margin-left:0}
+
+  /* §11/KDV-I18N-06: the switcher keeps the masthead's right edge. */
+  .lang-switch{margin-left:auto}
 }
 
 /* ============ 17 · ACCESSIBILITY: reduced motion ============ */
@@ -463,4 +498,6 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
   *{transition:none!important;animation:none!important}
   /* the one-shot declaration toast keeps its reveal, without motion */
   .declaration-toast{transition:none!important;animation:none!important}
+  /* the language hint keeps its static accent (dot + underline), without the pulse */
+  .lang-switch[data-lang-hint] .lang-switch-summary::before{animation:none!important}
 }

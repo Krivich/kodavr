@@ -555,6 +555,23 @@ export async function collectHtmlFiles(dir) {
 }
 
 /**
+ * §11/KDV-I18N-04: a generated URL path → its locale and locale-neutral path
+ * (`ru/about/` → `{ locale: 'ru', neutral: 'about/' }`), so the sibling locales
+ * of one page collapse into a single alternate cluster in the sitemap.
+ */
+function splitLocale(urlPath, locales) {
+  for (const { code, prefix } of locales) {
+    if (!prefix) continue;
+    const bare = prefix.replace(/^\//, '');
+    if (urlPath === bare || urlPath.startsWith(`${bare}/`)) {
+      return { locale: code, neutral: urlPath.slice(bare.length).replace(/^\//, '') };
+    }
+  }
+  const fallback = locales.find(({ prefix }) => !prefix) ?? locales[0];
+  return { locale: fallback?.code ?? null, neutral: urlPath };
+}
+
+/**
  * Regenerate sitemap.xml from the actual HTML files, mapping pretty URLs:
  * `dumps/<slug>/index.html` → `${baseUrl}/dumps/<slug>/`.
  *
@@ -562,8 +579,16 @@ export async function collectHtmlFiles(dir) {
  * canonical URL, so it is excluded; each dump's `lastmod` is its own manifest
  * date while other pages carry the build date; priority ranks home over dumps
  * over auxiliary routes.
+ *
+ * §11/KDV-I18N-04: every URL carries the `xhtml:link` alternates of the BUILT
+ * locales that emit the same locale-neutral page (plus `x-default` → the default
+ * locale's variant). A single-locale page is left without alternates — a locale
+ * that is not emitted is never linked.
  */
 export async function writeSitemap({ outputDir, baseUrl, dumps = [], generatedAt } = {}) {
+  // Lazy import: a static `./i18n.mjs` edge would close the cycle
+  // `machine → i18n → i18n-en → copy → machine` and break module init.
+  const { LOCALES, DEFAULT_LOCALE } = await import('./i18n.mjs');
   const base = normalizeBaseUrl(baseUrl);
   const buildDate = generatedAt ?? new Date().toISOString();
   const dumpDates = new Map();
@@ -574,37 +599,52 @@ export async function writeSitemap({ outputDir, baseUrl, dumps = [], generatedAt
 
   const files = await collectHtmlFiles(outputDir);
   const urls = [];
+  // locale-neutral path → (locale code → absolute loc) for the alternate clusters.
+  const clusters = new Map();
   for (const file of files) {
     const rel = relative(outputDir, file).split(sep).join('/');
     let urlPath = rel.replace(/\.html$/, '').replace(/\/index$/, '/');
     if (urlPath === 'index') urlPath = '';
     if (urlPath === '404') continue;
+    const { locale, neutral } = splitLocale(urlPath, LOCALES);
     const isHome = urlPath === '';
     const isDump = dumpDates.has(urlPath);
+    const loc = isHome ? `${base}/` : `${base}/${urlPath}`;
     urls.push({
-      loc: isHome ? `${base}/` : `${base}/${urlPath}`,
+      loc,
       lastmod: isDump ? dumpDates.get(urlPath) : buildDate,
       changefreq: 'weekly',
       priority: isHome ? '1.0' : isDump ? '0.8' : '0.5',
+      neutral,
     });
+    if (!clusters.has(neutral)) clusters.set(neutral, new Map());
+    clusters.get(neutral).set(locale, loc);
   }
 
   const body = urls
-    .map(
-      (url) => [
-        '  <url>',
-        `    <loc>${escapeXml(url.loc)}</loc>`,
+    .map((url) => {
+      const group = clusters.get(url.neutral);
+      const variants = LOCALES.filter(({ code }) => group.has(code));
+      const lines = [`    <loc>${escapeXml(url.loc)}</loc>`];
+      if (variants.length > 1) {
+        for (const { code, htmlLang } of variants) {
+          lines.push(`    <xhtml:link rel="alternate" hreflang="${htmlLang}" href="${escapeXml(group.get(code))}"/>`);
+        }
+        const xDefault = group.get(DEFAULT_LOCALE) ?? group.get(variants[0].code);
+        lines.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefault)}"/>`);
+      }
+      lines.push(
         `    <lastmod>${url.lastmod}</lastmod>`,
         `    <changefreq>${url.changefreq}</changefreq>`,
         `    <priority>${url.priority}</priority>`,
-        '  </url>',
-      ].join('\n'),
-    )
+      );
+      return ['  <url>', ...lines, '  </url>'].join('\n');
+    })
     .join('\n');
 
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     body,
     '</urlset>',
     '',

@@ -13,10 +13,20 @@
 <meta name="robots" content="{{robots}}">
 {{!-- §6.4 canonical: absolute so it is stable under any host/subpath. --}}
 <link rel="canonical" href="{{canonical_url}}">
+{{!-- §11/KDV-I18N-04: the hreflang alternate cluster over the BUILT locales; the
+      x-default entry names the default-locale variant. Absolute, so the P2c
+      relativize pass leaves them untouched. --}}
+{{#each alternates}}
+<link rel="alternate" hreflang="{{hreflang}}" href="{{href}}">
+{{/each}}
 {{!-- §6.4 Atom autodiscovery; relativized per page by the P2c pass. --}}
-<link rel="alternate" type="application/atom+xml" title="Kodavr dumps" href="/feeds/all.atom">
+<link rel="alternate" type="application/atom+xml" title="{{copy.feed_title}}" href="/feeds/all.atom">
 <meta property="og:site_name" content="{{og_site_name}}">
 <meta property="og:locale" content="{{og_locale}}">
+{{!-- §11/KDV-I18N-04: one alternate open-graph locale per OTHER built locale. --}}
+{{#each og_locale_alternates}}
+<meta property="og:locale:alternate" content="{{this}}">
+{{/each}}
 <meta property="og:title" content="{{og_title}}">
 <meta property="og:description" content="{{og_description}}">
 <meta property="og:image" content="{{og_image}}">

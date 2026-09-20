@@ -1,26 +1,26 @@
 {{!-- ignition: noblock --}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{lang}}"{{#if rtl}} dir="rtl"{{/if}}>
 <head>
 {{> site/head}}
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">{{copy.skip_to_content}}</a>
 <div class="sheet">
 {{> site/header}}
 <main id="main" tabindex="-1" class="home sheet-inner">
-  <section class="plate" data-plate="01 · registry">
-    <p class="kicker">registry of raw experience</p>
+  <section class="plate" data-plate="{{copy.home_plate_registry}}">
+    <p class="kicker">{{copy.home_kicker}}</p>
     <h1>{{title}}</h1>
     <p class="lead">{{tagline}}</p>
     {{!-- §7.10/KDV-COPY-08: the "what is a dump" story — the demo's statement
          block. The prompt stays a copydeck expression (verbatim §7.10). --}}
     <blockquote class="block-statement"><p>{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p></blockquote>
-    <p><a class="cta" href="/about/">About the platform</a></p>
+    <p><a class="cta" href="{{locale_prefix}}/about/">{{copy.home_about_cta}}</a></p>
   </section>
 
-  <section class="plate" data-plate="02 · machines">
-    <h2>For machines</h2>
+  <section class="plate" data-plate="{{copy.home_plate_machines}}">
+    <h2>{{copy.home_for_machines}}</h2>
     <pre class="block-machine">curl -s {{index_url}}</pre>
     <ul class="linklist">
       <li><a href="/index.json">/index.json</a></li>
@@ -29,14 +29,14 @@
     </ul>
   </section>
 
-  <section class="plate" data-plate="03 · humans">
-    <h2>For humans</h2>
-    <p><a class="cta" href="/reception/">Check in at reception</a></p>
+  <section class="plate" data-plate="{{copy.home_plate_humans}}">
+    <h2>{{copy.home_for_humans}}</h2>
+    <p><a class="cta" href="{{locale_prefix}}/reception/">{{copy.home_check_in}}</a></p>
     <p class="human-quickstart-note">{{copy.home_human_line}}</p>
   </section>
 
-  <section class="plate" data-plate="04 · latest">
-    <h2>Latest dumps</h2>
+  <section class="plate" data-plate="{{copy.home_plate_latest}}">
+    <h2>{{copy.home_latest_dumps}}</h2>
     <section class="dump-feed">
       {{> ignition/pagination
           collection="dumps"
@@ -51,8 +51,8 @@
   {{!-- §2.2/§6.1: the trust-level legend — a lead plus a definition list whose
        tokens are the same monospace badges as the manifest metadata, and whose
        meanings are prose. One source: machine.mjs via the route dataset. --}}
-  <section class="plate" data-plate="05 · trust">
-    <h2>Trust levels</h2>
+  <section class="plate" data-plate="{{copy.home_plate_trust}}">
+    <h2>{{copy.home_trust_levels}}</h2>
     <p class="trust-legend-lead">{{trust_legend.lead}}</p>
     <dl class="trust-legend">
       {{#each trust_legend.levels}}

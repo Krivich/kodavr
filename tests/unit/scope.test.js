@@ -120,7 +120,7 @@ describe('MVP non-goals (§11)', () => {
     }
   });
 
-  it('KDV-SCOPE-05: no auto-publication of a first dump, no federation/mirrors, no mobile app, no i18n', () => {
+  it('KDV-SCOPE-07 + KDV-SCOPE-08 + KDV-SCOPE-09: no auto-publication of a first dump, no federation/mirrors, no mobile app', () => {
     // Publication waits for a merged PR: deploy only ever runs on push to main.
     const deploy = read('.github/workflows/deploy.yml');
     expect(deploy).toMatch(/push:/);
@@ -134,15 +134,11 @@ describe('MVP non-goals (§11)', () => {
 
     const pkg = JSON.parse(read('package.json'));
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    for (const banned of ['capacitor', '@capacitor/core', 'react-native', 'cordova', 'i18next', 'vue-i18n']) {
+    for (const banned of ['capacitor', '@capacitor/core', 'react-native', 'cordova']) {
       expect(deps, banned).not.toHaveProperty(banned);
     }
-    for (const dir of ['android', 'ios', 'locales', 'i18n']) {
+    for (const dir of ['android', 'ios']) {
       expect(exists(dir), dir).toBe(false);
-    }
-    // English is the only language of every template.
-    for (const file of templates()) {
-      expect(readFileSync(file, 'utf8'), file).not.toMatch(/lang="(?!en")/);
     }
   });
 

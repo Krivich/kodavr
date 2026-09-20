@@ -8,6 +8,7 @@
  *   toDataset — manifest + body → the engine's dump dataset
  * CONSUMES:
  *   ./copy.mjs — resolved copydeck slices for the dump page
+ *   ./i18n.mjs — the default locale and the locale registry
  *   ./jsonld.mjs — the per-dump schema.org graph
  *   ./machine.mjs — the §5.1 index entry and provenance
  *   ./markdown.mjs — markdown → sanitized HTML
@@ -23,11 +24,15 @@ import { existsSync } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { renderMarkdown } from './markdown.mjs';
+import { DEFAULT_LOCALE, getLocale, t } from './i18n.mjs';
 import { AGENT_HOOK, HIGH_STAKES_DISCLAIMER, withdrawnStub } from './copy.mjs';
 import { DEFAULT_LICENSE, ISSUES_URL, REPOSITORY_BRANCH } from './machine.mjs';
 import {
   dumpCopySlices,
   buildNav,
+  buildAlternates,
+  buildLanguages,
+  ogLocaleAlternates,
   HOME_TAGLINE,
   OG_IMAGE_PATH,
   OG_IMAGE_WIDTH,
@@ -186,14 +191,22 @@ function demoteBriefHeadings(html) {
   });
 }
 
-export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repoUrl = null, builtAt = null } = {}) {
+export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repoUrl = null, builtAt = null, locale = DEFAULT_LOCALE } = {}) {
   const { slug, manifest, raw, summary } = dump;
   const base = String(baseUrl ?? '').replace(/\/+$/, '');
+  // §11: a non-default locale serves the page under its URL prefix; the default
+  // locale keeps today's unprefixed URLs byte-for-byte.
+  const { prefix, code, htmlLang, dir, ogLocale } = getLocale(locale);
+  const localizedBase = prefix ? `${base}${prefix}` : base;
   // §5.6/§9: a withdrawn dump keeps its URL and manifest, but its body is
   // replaced by a stub stating the reason. The manifest card is a separate
   // partial, so it survives the replacement.
   const withdrawn = manifest.status === 'withdrawn';
   const body = withdrawn ? withdrawnStub(manifest.withdrawal_reason) : raw;
+  // §11/KDV-I18N-02: the body is never translated — it is shown in its own
+  // language. `lang` is an OPTIONAL manifest field (BCP-47, default `en`); the
+  // dataset states the difference from the page's UI locale honestly.
+  const bodyLang = manifest.lang || 'en';
   let body_html = renderMarkdown(body);
   // §7.9: high-stakes dumps carry the disclaimer at the top of the body.
   if (!withdrawn && manifest.stakes === 'high') {
@@ -216,21 +229,24 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
   // The Article keeps the manifest `summary` as its description while the
   // preview line (`abstract`) is the platform agent hook; the same hook, not the
   // summary, is what the page's meta/og/twitter descriptions carry.
-  const canonical = `${base}/dumps/${slug}/`;
+  const canonical = `${localizedBase}/dumps/${slug}/`;
   // §5.1/§7.11: the raw layer is the full dump. Its published URL, not the HTML
   // projection, is what a machine is handed — derived exactly as in index.json.
   const rawFile = (Array.isArray(dump.layers) ? dump.layers.find((layer) => layer?.name === 'raw')?.file : null) ?? 'raw.md';
-  const bodyUrl = `${base}/dumps/${slug}/${rawFile}`;
-  const manifestUrl = `${base}/dumps/${slug}/manifest.json`;
+  const bodyUrl = `${localizedBase}/dumps/${slug}/${rawFile}`;
+  const manifestUrl = `${localizedBase}/dumps/${slug}/manifest.json`;
   const indexUrl = `${base}/index.json`;
   const image = `${base}${OG_IMAGE_PATH}`;
   const organization = jsonldOrganization({ name: SITE_NAME, url: `${base}/`, logo: image });
-  const website = jsonldWebsite({ name: SITE_NAME, base, description: HOME_TAGLINE, image });
+  // §11/KDV-I18N-05: the split — the frame (WebSite/WebPage) speaks in the page's
+  // UI locale, while the Article speaks for the dump body in the body's language.
+  const website = jsonldWebsite({ name: SITE_NAME, base, description: HOME_TAGLINE, image, inLanguage: htmlLang });
   const webpage = jsonldWebpage({
     websiteId: website['@id'],
     url: canonical,
     name: manifest.title,
     description: AGENT_HOOK,
+    inLanguage: htmlLang,
   });
   const article = jsonldArticle({
     url: canonical,
@@ -245,8 +261,17 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     tags: Array.isArray(manifest.tags) ? manifest.tags : [],
     section: manifest.domain,
     image,
+    inLanguage: bodyLang,
   });
   const breadcrumb = jsonldBreadcrumb({ base, url: canonical, title: manifest.title });
+  // §11/KDV-I18N-02: a visible, localized note only when the body's language
+  // differs from the page's UI locale. `LANGUAGE_NAMES` is localized; an unknown
+  // code falls back to the raw tag — the reader sees the code, never a wrong name.
+  const languageNames = t('LANGUAGE_NAMES', locale);
+  const body_lang_note =
+    bodyLang === htmlLang
+      ? null
+      : t('BODY_LANGUAGE_NOTE', locale, { language: languageNames[bodyLang] ?? bodyLang });
   return {
     slug,
     title: manifest.title,
@@ -284,7 +309,26 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     og_image_alt: `${manifest.title} — a Kodavr dump`,
     og_type: 'article',
     og_site_name: SITE_NAME,
-    og_locale: SITE_LOCALE,
+    og_locale: locale === DEFAULT_LOCALE ? SITE_LOCALE : ogLocale,
+    // §11/KDV-I18N-04: the same alternate-locale cluster the route pages carry —
+    // hreflang over the built locales (plus x-default) and one
+    // og:locale:alternate per other built locale.
+    alternates: buildAlternates(`dumps/${slug}/`, { base }),
+    // §11/KDV-I18N-06: the header switcher — this same dump in each built locale.
+    languages: buildLanguages(`dumps/${slug}/`, locale),
+    og_locale_alternates: ogLocaleAlternates(locale),
+    // §11/KDV-I18N-01: the dump layout reads its document language from the
+    // dataset — `lang` always, `dir` only for an RTL locale.
+    lang: htmlLang,
+    rtl: dir === 'rtl',
+    // §11/KDV-I18N-09: the built locale's URL prefix ('' for en, '/ru', '/zh',
+    // '/es') — the hall's internal page links (logo, FAB, reset) bind it so a
+    // localized dump never navigates back into the English frame.
+    locale_prefix: prefix,
+    // §11/KDV-I18N-06: the page's own locale is on EVERY dataset (the offer reads
+    // it); a non-default locale also carries `htmlLang`/`dir` for the templates.
+    locale: code,
+    ...(locale === DEFAULT_LOCALE ? {} : { htmlLang, dir }),
     robots: 'index,follow',
     // §6.4 article meta — dump pages only. `head.hbs` renders it behind the
     // presence of this object, so route pages never emit `article:*`.
@@ -301,11 +345,14 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     // /logo.svg; og:image above stays a separate absolute canonical URL.
     logo_svg: logo,
     // §6.6: a dump is not one of the primary-nav routes, so no item is current.
-    nav: buildNav(null),
+    nav: buildNav(null, locale),
     // §7.11: the prompt is a bare boot address to this dump's own manifest,
     // whose embedded schema names the `raw` layer to download.
-    copy: dumpCopySlices({ manifestUrl }),
+    copy: dumpCopySlices({ manifestUrl, locale }),
     body_has_title,
+    // §11/KDV-I18N-02: null unless the body language differs from the frame's —
+    // the template renders it only when non-null.
+    body_lang_note,
     body_html,
     // §6.3: the optional `summary.md` layer is the author's brief for a human
     // stranger, rendered through the same sanitized markdown pipeline as the

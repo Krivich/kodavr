@@ -18,6 +18,7 @@ import {
   RECEPTION_ANNOUNCEMENT,
   COPIED_ANNOUNCEMENT,
 } from '../../scripts/lib/copy.mjs';
+import { EN } from '../../scripts/lib/i18n-en.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const FIXTURES = fileURLToPath(new URL('../fixtures', import.meta.url));
@@ -107,7 +108,11 @@ describe('accessibility: landmarks and skip link (KDV-A11Y-01)', () => {
 
   for (const [name, content] of layouts) {
     it(`${name}: skip link is the first body control and main is targetable`, () => {
-      expect(content).toMatch(/<body>\s*<a class="skip-link" href="#main">Skip to content<\/a>/);
+      // Phase 3a migrated the functional layouts to `{{copy.skip_to_content}}`;
+      // about/contribute still carry the literal until phase 3b. The contract —
+      // a skip link with that text as the first body control — is what is asserted.
+      expect(content).toMatch(/<body>\s*<a class="skip-link" href="#main">(?:Skip to content|\{\{copy\.skip_to_content\}\})<\/a>/);
+      expect(EN.SKIP_TO_CONTENT).toBe('Skip to content');
       expect(content).toMatch(/<main id="main" tabindex="-1"/);
       // The header/footer landmarks live in the shared partials the layout
       // includes, so assert both the include and the partial markup.
@@ -131,7 +136,8 @@ describe('accessibility: landmarks and skip link (KDV-A11Y-01)', () => {
 describe('accessibility: keyboard and current state (KDV-A11Y-04)', () => {
   it('the header nav is labelled and renders the current item from data', () => {
     const header = template('site/header.hbs');
-    expect(header).toMatch(/<nav class="nav" aria-label="Primary">/);
+    expect(header).toMatch(/<nav class="nav" aria-label="\{\{copy\.nav_primary\}\}">/);
+    expect(EN.NAV_PRIMARY).toBe('Primary');
     expect(header).toMatch(/\{\{#each nav\}\}/);
     expect(header).toMatch(/aria-current="page"/);
   });
@@ -161,10 +167,13 @@ describe('accessibility: keyboard and current state (KDV-A11Y-04)', () => {
 
   it('pagination is labelled and marks the current page with named arrows', () => {
     const page = template('home/page.hbs');
-    expect(page).toMatch(/<nav class="pagination" aria-label="Pagination">/);
+    expect(page).toMatch(/<nav class="pagination" aria-label="\{\{copy\.pagination_label\}\}">/);
     expect(page).toMatch(/aria-current="page"/);
-    expect(page).toMatch(/aria-label="Previous page"/);
-    expect(page).toMatch(/aria-label="Next page"/);
+    expect(page).toMatch(/aria-label="\{\{copy\.pagination_prev\}\}"/);
+    expect(page).toMatch(/aria-label="\{\{copy\.pagination_next\}\}"/);
+    expect(EN.PAGINATION_LABEL).toBe('Pagination');
+    expect(EN.PAGINATION_PREV).toBe('Previous page');
+    expect(EN.PAGINATION_NEXT).toBe('Next page');
   });
 
   it('the agent lane ships real, labelled controls (KDV-A11Y-04)', () => {
@@ -190,7 +199,8 @@ describe('accessibility: media and sr-only (KDV-A11Y-06)', () => {
   it('every informative image has a name; the icon-only FAB keeps its label', () => {
     expect(template('about.hbs')).toMatch(/<img src="\/logo\.svg" alt="Kodavr"/);
     expect(template('site/header.hbs')).toMatch(/alt="Kodavr"/);
-    expect(template('dumps.hbs')).toContain('aria-label="Back to feed"');
+    expect(template('dumps.hbs')).toContain('aria-label="{{copy.back_to_feed}}"');
+    expect(EN.BACK_TO_FEED).toBe('Back to feed');
   });
 });
 
@@ -215,7 +225,8 @@ describe('accessibility: accessible gate modal (KDV-A11Y-02)', () => {
     // §6.5 P0-1: each door is a button whose descriptive label is its accessible
     // name (visible text, no aria-label — WCAG 2.5.3). The §7.1 digit stays as
     // an aria-hidden badge, so a bare "0"/"1" is never the accessible name.
-    expect(gate).toMatch(/<div class="gate-doors" role="group" aria-label="Entry declaration">/);
+    expect(gate).toMatch(/<div class="gate-doors" role="group" aria-label="\{\{copy\.gate_doors_label\}\}">/);
+    expect(EN.GATE_DOORS_LABEL).toBe('Entry declaration');
     expect(gate).toMatch(
       /data-gate-choice="machine"[\s\S]*?<span class="door-label">\{\{copy\.gate_machine_door\}\}<\/span>/,
     );

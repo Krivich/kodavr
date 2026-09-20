@@ -5,6 +5,7 @@
  *   buildProject — runs the whole build and returns the dump count
  * CONSUMES:
  *   ./dumps.mjs — read the dumps and build their datasets
+ *   ./i18n.mjs — the active locales and the dataset coordinate
  *   ./ignition.mjs — spawn the vendored engine
  *   ./machine.mjs — write index.json, feeds, tags, sitemap
  *   ./pages.mjs — route datasets, SEO, the logo
@@ -21,9 +22,10 @@ import { copyFile, mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/p
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { readDumps, toDataset } from './dumps.mjs';
+import { datasetName, parseDataset, translatedLocales } from './i18n.mjs';
 import { runIgnition } from './ignition.mjs';
 import { writeMachineFiles, writeSitemap, resolveAuthorFromCi, resolveRepository } from './machine.mjs';
-import { buildRouteDatasets, readLogoSvg, ROUTE_PAGES } from './pages.mjs';
+import { buildRouteDatasets, readLogoSvg, routeOutputPath, ROUTE_PAGES } from './pages.mjs';
 import { relativizeSite } from './relativize.mjs';
 
 const require = createRequire(import.meta.url);
@@ -78,34 +80,71 @@ async function publishStaticTree(fromDir, toDir) {
   }
 }
 
-// Move each single-page route from the engine's `<layout>/main.html` to its
+// Move each dump from the engine's `dumps/<dataset>.html` to the pretty URL its
+// dataset coordinate maps to (`<prefix>/dumps/<slug>/index.html`). The dataset
+// name returned by the engine is parsed with `parseDataset` before mapping, so
+// `<locale>__<slug>` lands under the locale prefix.
+async function publishDumpPages(publicDir, dumps, activeLocales) {
+  for (const locale of activeLocales) {
+    for (const dump of dumps) {
+      const name = datasetName(locale, dump.slug);
+      const { locale: parsedLocale, key } = parseDataset(name);
+      const to = routeOutputPath({ locale: parsedLocale, layout: 'dumps', key });
+      const toPath = join(publicDir, ...to.split('/'));
+      const from = join(publicDir, 'dumps', `${name}.html`);
+      try {
+        await mkdir(dirname(toPath), { recursive: true });
+        await rename(from, toPath);
+      } catch (err) {
+        throw new Error(`Failed to publish pretty URL for dump "${dump.slug}": ${err.message}`);
+      }
+    }
+  }
+}
+
+// Move each single-page route from the engine's `<layout>/<dataset>.html` to its
 // spec URL and drop the leftover source dir for moved pages.
 //
-// A paginated route is different: the engine emits no `<layout>/main.html`, only
-// `<layout>/<dataset>/page/N.html`. Page 1 is COPIED to the spec URL so the site
-// root stays server-rendered (SEO, §6.4) while page file 1 stays in place for the
-// pagination "1"/prev links; the rest of the page files stay at their engine
-// URLs and are picked up by relativizeSite / the sitemap like any other HTML.
-async function publishRoutePages(publicDir) {
-  for (const page of ROUTE_PAGES) {
-    const to = join(publicDir, ...page.to.split('/'));
-    if (page.paginated) {
-      const from = join(publicDir, page.layout, page.dataset ?? 'main', 'page', '1.html');
-      try {
-        await copyFile(from, to);
-      } catch (err) {
-        throw new Error(`Failed to publish paginated route "${page.to}" from ${from}: ${err.message}`);
+// A paginated route is different: the engine emits no `<layout>/<dataset>.html`,
+// only `<layout>/<dataset>/page/N.html`. Page 1 is COPIED to the spec URL so the
+// site root stays server-rendered (SEO, §6.4) while page file 1 stays in place
+// for the pagination "1"/prev links; the rest of the page files stay at their
+// engine URLs and are picked up by relativizeSite / the sitemap like any other
+// HTML. Each active locale's dataset is parsed back from its generated name, so
+// the engine output is the single source of the emitted coordinate.
+async function publishRoutePages(publicDir, activeLocales) {
+  for (const locale of activeLocales) {
+    for (const page of ROUTE_PAGES) {
+      const name = datasetName(locale, page.dataset ?? 'main');
+      const { locale: parsedLocale, key } = parseDataset(name);
+      const to = routeOutputPath({
+        locale: parsedLocale,
+        layout: page.layout,
+        key,
+        paginated: page.paginated,
+      });
+      if (!to) continue; // deferred per-locale 404: never emitted
+      const toPath = join(publicDir, ...to.split('/'));
+      if (page.paginated) {
+        const from = join(publicDir, page.layout, name, 'page', '1.html');
+        try {
+          await mkdir(dirname(toPath), { recursive: true });
+          await copyFile(from, toPath);
+        } catch (err) {
+          throw new Error(`Failed to publish paginated route "${to}" from ${from}: ${err.message}`);
+        }
+        continue;
       }
-      continue;
-    }
-    const from = join(publicDir, page.layout, 'main.html');
-    try {
-      await rename(from, to);
-    } catch (err) {
-      throw new Error(`Failed to publish route "${page.to}" from ${from}: ${err.message}`);
-    }
-    if (page.cleanup) {
-      await rm(join(publicDir, page.cleanup), { recursive: true, force: true });
+      const from = join(publicDir, page.layout, `${name}.html`);
+      try {
+        await mkdir(dirname(toPath), { recursive: true });
+        await rename(from, toPath);
+      } catch (err) {
+        throw new Error(`Failed to publish route "${to}" from ${from}: ${err.message}`);
+      }
+      if (page.cleanup) {
+        await rm(join(publicDir, page.cleanup), { recursive: true, force: true });
+      }
     }
   }
 }
@@ -138,24 +177,37 @@ export async function buildProject({
   await rm(dataRoot, { recursive: true, force: true });
   await mkdir(dumpsDataDir, { recursive: true });
 
-  for (const dump of dumps) {
-    const dataset = toDataset(dump, {
-      baseUrl: domain,
-      logo: logoSvg,
-      repoRoot: root,
-      repoUrl,
-      builtAt: generatedAt,
-    });
-    await writeFile(join(dumpsDataDir, `${dataset.slug}.json`), JSON.stringify(dataset, null, 2), 'utf8');
+  // §11: a locale is built only when it has a message bundle; until then its
+  // `t()` throws (fail-visible). Only `en` has a bundle in this phase, so every
+  // written file and every published path is exactly today's.
+  const activeLocales = translatedLocales();
+
+  for (const locale of activeLocales) {
+    for (const dump of dumps) {
+      const dataset = toDataset(dump, {
+        baseUrl: domain,
+        logo: logoSvg,
+        repoRoot: root,
+        repoUrl,
+        builtAt: generatedAt,
+        locale,
+      });
+      await writeFile(join(dumpsDataDir, `${datasetName(locale, dump.slug)}.json`), JSON.stringify(dataset, null, 2), 'utf8');
+    }
   }
 
-  // Static human-surface routes: one `main` dataset per layout. Datasets carry
-  // the copydeck slices and SEO fields the templates render.
-  const routeDatasets = buildRouteDatasets(dumps, { baseUrl: domain, logo: logoSvg });
-  for (const [layout, dataset] of Object.entries(routeDatasets)) {
-    const layoutDir = join(dataRoot, layout);
-    await mkdir(layoutDir, { recursive: true });
-    await writeFile(join(layoutDir, 'main.json'), JSON.stringify(dataset, null, 2), 'utf8');
+  // Static human-surface routes: one `main` dataset per layout per active locale.
+  // Datasets carry the copydeck slices and SEO fields the templates render. The
+  // deferred per-locale 404 (no mapped path) is never written, so the engine
+  // cannot emit it.
+  for (const locale of activeLocales) {
+    const routeDatasets = buildRouteDatasets(dumps, { baseUrl: domain, logo: logoSvg, locale });
+    for (const layout of Object.keys(routeDatasets)) {
+      if (!routeOutputPath({ locale, layout, key: 'main' })) continue;
+      const layoutDir = join(dataRoot, layout);
+      await mkdir(layoutDir, { recursive: true });
+      await writeFile(join(layoutDir, `${datasetName(locale, 'main')}.json`), JSON.stringify(routeDatasets[layout], null, 2), 'utf8');
+    }
   }
 
   // Clean stale generated public output before the engine build.
@@ -168,21 +220,11 @@ export async function buildProject({
   // Author-owned static assets land in the public root (logo, stylesheet).
   await publishStaticTree(join(root, 'static'), publicDir);
 
-  // Pretty URLs — the engine writes dumps/<slug>.html, we own dumps/<slug>/index.html.
-  for (const dump of dumps) {
-    const from = join(publicDir, 'dumps', `${dump.slug}.html`);
-    const toDir = join(publicDir, 'dumps', dump.slug);
-    const to = join(toDir, 'index.html');
-    try {
-      await mkdir(toDir, { recursive: true });
-      await rename(from, to);
-    } catch (err) {
-      throw new Error(`Failed to publish pretty URL for dump "${dump.slug}": ${err.message}`);
-    }
-  }
+  // Pretty URLs — the engine writes dumps/<dataset>.html, we own the mapped path.
+  await publishDumpPages(publicDir, dumps, activeLocales);
 
-  // Single-page routes: engine `<layout>/main.html` → spec URLs.
-  await publishRoutePages(publicDir);
+  // Single-page routes: engine `<layout>/<dataset>.html` → spec URLs.
+  await publishRoutePages(publicDir, activeLocales);
 
   // Host-agnostic internal links (P2c): once every HTML page sits at its final
   // depth, rewrite root-relative href/src to document-relative so the same

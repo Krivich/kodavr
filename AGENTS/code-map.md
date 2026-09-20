@@ -33,7 +33,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — the icon is generated, never hand-edited
 - **scripts/lib/build.mjs** — the one build pipeline: content → datasets → engine → machine files
   exports: buildProject
-  consumes: ./dumps.mjs, ./ignition.mjs, ./machine.mjs, ./pages.mjs, ./relativize.mjs, node:fs/promises, node:module, node:path
+  consumes: ./dumps.mjs, ./i18n.mjs, ./ignition.mjs, ./machine.mjs, ./pages.mjs, ./relativize.mjs, node:fs/promises, node:module, node:path
   invariants: — one build timestamp for every artifact (article:modified_time, manifest built_at, machine files); — static/ is the only author-owned tree the build copies into the public root
 - **scripts/lib/copy.mjs** — the single source of truth for every human string (§7)
   exports: AGENT_HOOK, AGENT_LANE_HINT, AGENT_LANE_LEAD, AGENT_LANE_LEAD_KODAVR, AGENT_LINKS, agentLinks, BRAND_SLOGAN_LEAD, BRAND_SLOGANS, BRAND_SLOGANS_MUTED, BRIEF_BLOCK, BRIEF_CTA, BRIEF_FALLBACK, BRIEF_HEADING, BRIEF_NOTE, BRIEF_NOTE_PLATFORM, BRIEF_REPORT, BRIEF_SLOT, CHIP_HUMAN_LABEL, CHIP_MACHINE_TEMPLATE, CHIP_TITLE_TEMPLATE, CHIP_WITHDRAW_LABEL, chipMachine, chipTitle, COPIED_ANNOUNCEMENT, COPIED_LABEL, DECLARATION_TOAST, DISCUSS_LABEL, DUMP_DEFINITION, DUMP_LEAD, DUMP_PROMPT, DUMP_TAIL, dumpPrompt, FOOTER_CONTRACT, FOOTER_LICENCES, FOOTER_REPORT_LABEL, FOOTER_TEXT, GATE_BUTTONS, GATE_CHOICES_BLOCK, GATE_DUTIES, GATE_DUTIES_BLOCK, GATE_DUTIES_LEAD, GATE_HOOK, GATE_HUMAN_DOOR, GATE_HUMAN_LABEL, GATE_HUMAN_LINE, GATE_KICKER, GATE_LANE_BLOCK, GATE_MACHINE_DOOR, GATE_MACHINE_LABEL, GATE_MACHINE_LINE, GATE_PROMPT_SLOT, GATE_REST, GATE_TEXT, GATE_TITLE, HALL_ANNOUNCEMENT, HIGH_STAKES_DISCLAIMER, HOME_HUMAN_LINE, NOT_FOUND_TEXT, POST_GATE_LINE, PROMPT_TEXT, README_INTRO_TEXT, LANE_COPY_LABEL, RECEPTION_ANNOUNCEMENT, RECEPTION_RATING, RECEPTION_TEXT, RECEPTION_TITLE, RECEPTION_WALL, RESET_HUMAN_LABEL, RESET_LABEL, WHAT_IS_A_DUMP, withdrawnStub
@@ -41,15 +41,35 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — one truth per string: docs/SPEC.md §7 and this module must agree verbatim
 - **scripts/lib/dumps.mjs** — reads content/dumps/* and turns each into an Ignition dataset
   exports: buildLayers, escapeHtml, readDumps, toDataset
-  consumes: ./copy.mjs, ./jsonld.mjs, ./machine.mjs, ./markdown.mjs, ./pages.mjs, node:fs, node:fs/promises, node:path
+  consumes: ./copy.mjs, ./i18n.mjs, ./jsonld.mjs, ./machine.mjs, ./markdown.mjs, ./pages.mjs, node:fs, node:fs/promises, node:path
   invariants: — the manifest is the truth; the body is only rendered, never invented
+- **scripts/lib/i18n-en.mjs** — the English message bundle — the copydeck plus the structural UI/extra strings
+  exports: EN
+  consumes: ./copy.mjs, ./machine.mjs
+  invariants: — copydeck values are referenced from copy.mjs, never retyped; — structural UI strings with no copy.mjs home live in the explicit UI section; — non-string entries (arrays/objects) ride the bundle verbatim, never placeholder-substituted
+- **scripts/lib/i18n-es.mjs** — the Spanish message bundle — a faithful draft translation of the English catalog
+  exports: ES
+  consumes: ./copy.mjs, ./machine.mjs
+  invariants: — same keys and value types as `EN`; a missing key stays a loud assertComplete error; — machine-canonical tokens (duty names, trust levels, filenames, URLs, placeholders); — ride verbatim; only the prose around them is translated; — this is a translation DRAFT: the owner reviews it before it is considered final
+- **scripts/lib/i18n-ru.mjs** — the Russian message bundle — a faithful draft translation of the English catalog
+  exports: RU
+  consumes: ./copy.mjs, ./machine.mjs
+  invariants: — same keys and value types as `EN`; a missing key stays a loud assertComplete error; — machine-canonical tokens (duty names, trust levels, filenames, URLs, placeholders); — ride verbatim; only the prose around them is translated; — this is a translation DRAFT: the owner reviews it before it is considered final
+- **scripts/lib/i18n-zh-Hans.mjs** — the Simplified Chinese message bundle — a faithful draft translation of the English catalog
+  exports: ZH_HANS
+  consumes: ./copy.mjs, ./machine.mjs
+  invariants: — same keys and value types as `EN`; a missing key stays a loud assertComplete error; — machine-canonical tokens (duty names, trust levels, filenames, URLs, placeholders); — ride verbatim; only the prose around them is translated; — this is a translation DRAFT: the owner reviews it before it is considered final
+- **scripts/lib/i18n.mjs** — the locale registry and the loud keyed translator over the copydeck
+  exports: LOCALES, DEFAULT_LOCALE, getLocale, translatedLocales, datasetName, parseDataset, t, assertComplete
+  consumes: ./i18n-en.mjs, ./i18n-ru.mjs, ./i18n-zh-Hans.mjs, ./i18n-es.mjs
+  invariants: — no silent fallback: an unknown locale, a bundle-less locale or a missing key throws; — non-string values pass through verbatim; {placeholder} substitution applies to strings only
 - **scripts/lib/ignition.mjs** — spawns the vendored Ignition engine as a child process
   exports: runIgnition
   consumes: node:child_process, node:path, node:url
   invariants: — a non-zero engine exit is a loud build failure, never silent
 - **scripts/lib/jsonld.mjs** — safe schema.org JSON-LD graphs for every page
   exports: JSONLD_CONTEXT, jsonldArticle, jsonldBreadcrumb, jsonldCollectionPage, jsonldItemList, jsonldOrganization, jsonldWebpage, jsonldWebsite, serializeJsonLd
-  invariants: — every serialized graph is safe inside a script tag (angle brackets are escaped)
+  invariants: — every serialized graph is safe inside a script tag (angle brackets are escaped); — `inLanguage` is caller-supplied and never assumed: the frame nodes (WebSite/; — WebPage/CollectionPage) take the page's UI locale, the Article takes the dump; — body's own language (KDV-I18N-05) — the body is never translated
 - **scripts/lib/machine.mjs** — the machine-first surface: index.json, well-known, feeds, tags, sitemap
   exports: AGENT_DUTIES, CONSUMPTION_CONTRACT_SEE, CONTENT_FLAGS_VOCABULARY, CONTRACT_VERSION, DEFAULT_LICENSE, ISSUES_URL, PLATFORM_ABOUT, REPOSITORY, REPOSITORY_BRANCH, STAKES_VOCABULARY, TRUST_LEGEND_LEAD, TRUST_LEVELS, TRUST_LEVEL_MEANINGS, buildAtom, buildIndex, buildIndexEntry, buildTagGraph, buildWellKnown, collectHtmlFiles, escapeXml, injectBuildMeta, readGitHubEvent, resolveAuthorFromCi, resolveAuthorMeta, resolveRepository, writeMachineFiles, writeSitemap
   consumes: ./schema.mjs, ./verbatim.mjs, node:fs, node:fs/promises, node:path
@@ -62,9 +82,9 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   consumes: marked, sanitize-html
   invariants: — third-party markdown can never inject executable markup
 - **scripts/lib/pages.mjs** — datasets for the static human-surface routes (§6.1)
-  exports: HOME_TAGLINE, MANIFEST_LABELS, OG_IMAGE_ALT, OG_IMAGE_HEIGHT, OG_IMAGE_PATH, OG_IMAGE_TYPE, OG_IMAGE_WIDTH, OG_TAGLINE, ROUTE_PAGES, SITE_LOCALE, SITE_NAME, SITE_NAV, buildNav, buildRouteDatasets, dumpCopySlices, FOOTER_REPORT_URL, readLogoSvg
-  consumes: ./copy.mjs, ./jsonld.mjs, ./machine.mjs, node:fs/promises, node:path
-  invariants: — templates never retype contract text: it comes from copy.mjs
+  exports: COPY_FIELDS, FOOTER_REPORT_URL, HOME_TAGLINE, MANIFEST_LABELS, OG_IMAGE_ALT, OG_IMAGE_HEIGHT, OG_IMAGE_PATH, OG_IMAGE_TYPE, OG_IMAGE_WIDTH, OG_TAGLINE, ROUTE_PAGES, SITE_LOCALE, SITE_NAME, SITE_NAV, agentLinksFor, buildNav, buildAlternates, buildLanguages, ogLocaleAlternates, buildRouteDatasets, catalogKeyFor, routeOutputPath, copyField, copyFields, dumpCopySlices, promptFor, readLogoSvg
+  consumes: ./i18n.mjs, ./i18n-en.mjs, ./jsonld.mjs, ./machine.mjs, node:fs/promises, node:path
+  invariants: — templates never retype contract text: it comes from the locale catalog; — a copy field is catalog-backed, or explicitly non-catalog
 - **scripts/lib/relativize.mjs** — rewrites internal links to be host-agnostic (root or Pages subpath)
   exports: htmlDepth, relativizeHtml, relativizeSite
   consumes: ./machine.mjs, node:fs, node:fs/promises, node:path

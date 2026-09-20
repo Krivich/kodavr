@@ -2,7 +2,7 @@
      link + note). Call at column 0: the engine compiles partials without
      preventIndent, so an indented call would shift this markup. --}}
 <section class="artifacts">
-  <h2 class="card-h">Artifacts</h2>
+  <h2 class="card-h">{{copy.artifacts_heading}}</h2>
   {{#if artifacts.length}}
   <div class="card" style="padding:0">
   {{#each artifacts}}
@@ -16,6 +16,6 @@
   {{/each}}
   </div>
   {{else}}
-  <p class="artifacts-empty">No artifacts.</p>
+  <p class="artifacts-empty">{{copy.artifacts_empty}}</p>
   {{/if}}
 </section>

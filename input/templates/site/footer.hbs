@@ -1,8 +1,8 @@
 <footer class="titleblock">
   {{!-- §7.3: four cells — advisory (the two copydeck lines, kept as a <pre> so
        the newlines survive), licences, contract and the JS-free report link. --}}
-  <div><b>advisory</b><pre class="footer-copy">{{copy.footer}}</pre></div>
-  <div><b>licences</b><span class="val">{{copy.footer_licences}}</span></div>
-  <div><b>contract</b><span class="val">{{copy.footer_contract}}</span></div>
-  <div><b>report</b><a class="footer-report" href="{{copy.footer_report_url}}">{{copy.footer_report_label}}</a></div>
+  <div><b>{{copy.footer_cell_advisory}}</b><pre class="footer-copy">{{copy.footer}}</pre></div>
+  <div><b>{{copy.footer_cell_licences}}</b><span class="val">{{copy.footer_licences}}</span></div>
+  <div><b>{{copy.footer_cell_contract}}</b><span class="val">{{copy.footer_contract}}</span></div>
+  <div><b>{{copy.footer_cell_report}}</b><a class="footer-report" href="{{copy.footer_report_url}}">{{copy.footer_report_label}}</a></div>
 </footer>

@@ -17,9 +17,9 @@
        never the name (KDV-A11Y-02, WCAG 2.5.3 Label in Name). The copydeck
        keeps the [0]/[1] enumeration, so the label derives from the choice line
        with the marker stripped: nothing is retyped and nothing prints twice. --}}
-  <div class="gate-doors" role="group" aria-label="Entry declaration">
+  <div class="gate-doors" role="group" aria-label="{{copy.gate_doors_label}}">
     <button type="button" class="door" data-gate-choice="machine"><span class="door-digit" aria-hidden="true">0</span><span class="door-label">{{copy.gate_machine_door}}</span></button>
-    <span class="gate-or" aria-hidden="true">or</span>
+    <span class="gate-or" aria-hidden="true">{{copy.gate_or}}</span>
     <button type="button" class="door" data-gate-choice="human"><span class="door-digit" aria-hidden="true">1</span><span class="door-label">{{copy.gate_human_door}}</span></button>
   </div>
   <pre class="gate-rest">{{copy.gate_rest}}</pre>

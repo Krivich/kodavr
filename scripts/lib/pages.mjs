@@ -2,6 +2,8 @@
  * CONTRACT: scripts/lib/pages.mjs
  * ROLE: datasets for the static human-surface routes (§6.1)
  * EXPORTS:
+ *   COPY_FIELDS — the dataset copy field groups the route and dump surfaces assemble
+ *   FOOTER_REPORT_URL — the §7.3 report link (new Issue, risk template preselected)
  *   HOME_TAGLINE — the home storefront tagline (SEO description)
  *   MANIFEST_LABELS — field labels for the human-readable manifest card
  *   OG_IMAGE_ALT — the OG image alt text
@@ -14,86 +16,41 @@
  *   SITE_LOCALE — the og:locale value
  *   SITE_NAME — the site name
  *   SITE_NAV — the primary navigation links
+ *   agentLinksFor — the §7.12 jump links with the localized prompt pre-filled
  *   buildNav — the nav array for a page whose path is current
+ *   buildAlternates — the hreflang alternate cluster for a page's built locales
+ *   buildLanguages — the header switcher entries (same page, each built locale)
+ *   ogLocaleAlternates — the `og:locale:alternate` codes for a page's other locales
  *   buildRouteDatasets — one dataset per layout route
+ *   catalogKeyFor — a dataset field name → its catalog key (null when not catalog-backed)
+ *   routeOutputPath — a { locale, layout, key } coordinate → its public-relative path
+ *   copyField — one dataset field resolved through `t` for a locale
+ *   copyFields — a field list resolved into a `{ field: value }` object
  *   dumpCopySlices — the §7.1–7.12 copydeck slices a dump page needs
- *   FOOTER_REPORT_URL — the §7.3 report link (new Issue, risk template preselected)
+ *   promptFor — the universal or per-dump boot prompt for a locale
  *   readLogoSvg — reads the trusted wordmark for inlining
  * CONSUMES:
- *   ./copy.mjs — every human string (single source of truth)
+ *   ./i18n.mjs — the locale registry, the default locale and the translator
+ *   ./i18n-en.mjs — the English copy catalog
  *   ./jsonld.mjs — the per-page schema.org graph
  *   ./machine.mjs — the §5.1 index entry and well-known document
  *   node:fs/promises — read the logo
  *   node:path — join paths
  * INVARIANTS:
- *   — templates never retype contract text: it comes from copy.mjs
+ *   — templates never retype contract text: it comes from the locale catalog
+ *   — a copy field is catalog-backed, or explicitly non-catalog
  */
 
 // scripts/lib/pages.mjs — datasets for the static human-surface routes (§6.1).
 // The controller owns every route's data: prose that belongs to the copydeck is
-// pulled from copy.mjs (single source of truth), the home feed reuses the §5.1
-// index-entry shape, and SEO fields are assembled here — templates never retype
-// contract text.
+// resolved from the locale catalog (surface-copy.mjs), the home feed reuses the
+// §5.1 index-entry shape, and SEO fields are assembled here — templates never
+// retype contract text.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
-  FOOTER_TEXT,
-  FOOTER_LICENCES,
-  FOOTER_CONTRACT,
-  FOOTER_REPORT_LABEL,
-  GATE_TITLE,
-  GATE_KICKER,
-  GATE_HOOK,
-  GATE_REST,
-  GATE_DUTIES_LEAD,
-  GATE_DUTIES,
-  GATE_MACHINE_LABEL,
-  GATE_HUMAN_LABEL,
-  GATE_MACHINE_DOOR,
-  GATE_HUMAN_DOOR,
-  RECEPTION_RATING,
-  RECEPTION_TITLE,
-  RECEPTION_WALL,
-  BRIEF_HEADING,
-  BRIEF_NOTE,
-  BRIEF_NOTE_PLATFORM,
-  BRIEF_CTA,
-  BRIEF_REPORT,
-  BRIEF_FALLBACK,
-  PROMPT_TEXT,
-  LANE_COPY_LABEL,
-  NOT_FOUND_TEXT,
-  POST_GATE_LINE,
-  COPIED_LABEL,
-  CHIP_MACHINE_TEMPLATE,
-  CHIP_HUMAN_LABEL,
-  CHIP_TITLE_TEMPLATE,
-  CHIP_WITHDRAW_LABEL,
-  COPIED_ANNOUNCEMENT,
-  DECLARATION_TOAST,
-  HALL_ANNOUNCEMENT,
-  RECEPTION_ANNOUNCEMENT,
-  RESET_HUMAN_LABEL,
-  RESET_LABEL,
-  DISCUSS_LABEL,
-  DUMP_DEFINITION,
-  DUMP_LEAD,
-  DUMP_PROMPT,
-  DUMP_TAIL,
-  HOME_HUMAN_LINE,
-  BRAND_SLOGAN_LEAD,
-  BRAND_SLOGANS_MUTED,
-  AGENT_LANE_LEAD,
-  AGENT_LANE_LEAD_KODAVR,
-  AGENT_LANE_HINT,
-  agentLinks,
-  dumpPrompt,
-} from './copy.mjs';
-import {
   ISSUES_URL,
   CONTRACT_VERSION,
-  TRUST_LEGEND_LEAD,
-  TRUST_LEVEL_MEANINGS,
   buildIndexEntry,
   buildWellKnown,
 } from './machine.mjs';
@@ -104,30 +61,231 @@ import {
   jsonldItemList,
   serializeJsonLd,
 } from './jsonld.mjs';
+import { DEFAULT_LOCALE, getLocale, t, translatedLocales } from './i18n.mjs';
+import { EN } from './i18n-en.mjs';
 
-// Field labels for the human-readable manifest card (§6.3.3). Structural UI
-// strings, not copydeck prose, so they live next to the route datasets.
-export const MANIFEST_LABELS = Object.freeze({
-  heading: 'Manifest',
-  title: 'Title',
-  type: 'Type',
-  domain: 'Domain',
-  date: 'Date',
-  stakes: 'Stakes',
-  content_flags: 'Content flags',
-  trust_level: 'Trust level',
-  summary: 'Summary',
-  manifest: 'manifest.json',
-  index: 'index.json',
+// §11/KDV-I18N-07 phase 4a: a dataset field's catalog key is its uppercased
+// name (`gate_title` → `GATE_TITLE`); these few copydeck names differ.
+const KEY_EXCEPTIONS = Object.freeze({
+  footer: 'FOOTER_TEXT',
+  notFound: 'NOT_FOUND_TEXT',
+  copy_label: 'LANE_COPY_LABEL',
+  prompt: 'PROMPT_TEXT',
+  labels: 'MANIFEST_LABELS',
+  agent_links: 'AGENT_LINKS',
+  lane_lead: 'AGENT_LANE_LEAD',
 });
 
-export const HOME_TAGLINE =
-  'A registry of raw experience — "dumps" — with a machine-readable contract. Share gears, not text.';
+// Fields that are not translated prose: the shipped contract version and the
+// assembled report URL stay literal on every locale.
+const NON_CATALOG = new Set(['contract_version', 'footer_report_url']);
+
+// catalogKeyFor(field) → the catalog key backing a dataset field, or null for a
+// non-catalog field. The key is derived once, never retyped per surface.
+export function catalogKeyFor(field) {
+  if (NON_CATALOG.has(field)) return null;
+  return KEY_EXCEPTIONS[field] ?? field.toUpperCase();
+}
+
+// copyField(field, locale, params) → the localized value.
+export function copyField(field, locale, params) {
+  const key = catalogKeyFor(field);
+  if (!key) throw new Error(`pages: dataset field "${field}" is not catalog-backed`);
+  return t(key, locale, params);
+}
+
+// copyFields(fields, locale) → `{ field: value }` for a whole group, in order.
+export function copyFields(fields, locale) {
+  return Object.fromEntries(fields.map((field) => [field, copyField(field, locale)]));
+}
+
+// promptFor(locale, { manifestUrl }) → the universal §7.4 prompt, or the §7.11
+// bare boot address to a dump's own manifest.
+export function promptFor(locale, { manifestUrl = null } = {}) {
+  return manifestUrl ? t('PROMPT_TEMPLATE', locale, { url: manifestUrl }) : copyField('prompt', locale);
+}
+
+// agentLinksFor(locale, prompt) → the §7.12 jump targets with the prompt
+// pre-filled where the agent supports it (brand labels stay).
+export function agentLinksFor(locale, prompt) {
+  return t('AGENT_LINKS', locale).map((agent) => ({
+    id: agent.id,
+    label: agent.label,
+    href: agent.prefill ? `${agent.href}?${agent.prefill}=${encodeURIComponent(prompt)}` : agent.href,
+  }));
+}
+
+// The field groups the surfaces spread, in the order their objects carry them.
+export const COPY_FIELDS = Object.freeze({
+  ui: Object.freeze([
+    'skip_to_content',
+    'nav_primary',
+    'feed_title',
+    'back_to_feed',
+    'footer_cell_advisory',
+    'footer_cell_licences',
+    'footer_cell_contract',
+    'footer_cell_report',
+    'gate_or',
+    'gate_doors_label',
+    'artifacts_heading',
+    'artifacts_empty',
+    'home_kicker',
+    'home_about_cta',
+    'home_for_machines',
+    'home_for_humans',
+    'home_check_in',
+    'home_latest_dumps',
+    'home_trust_levels',
+    'pagination_label',
+    'pagination_prev',
+    'pagination_next',
+    'reception_kicker',
+    'reception_lead',
+    'not_found_kicker',
+    'not_found_note',
+    'not_found_cta',
+    // §11/KDV-I18N-09: the numbered section-plate labels (`01 · registry`),
+    // bound as `data-plate` attributes. They travel with every route/dump dataset
+    // through this one UI group, so no template retypes a plate again.
+    'home_plate_registry',
+    'home_plate_machines',
+    'home_plate_humans',
+    'home_plate_latest',
+    'home_plate_trust',
+    'about_plate_manifesto',
+    'about_plate_authors',
+    'about_plate_readers',
+    'about_plate_mechanism',
+    'about_plate_architecture',
+    'about_plate_colophon',
+    'contribute_plate_authors',
+    'contribute_plate_flow',
+    'contribute_plate_schema',
+    'contribute_plate_licences',
+    'reception_plate_checkin',
+    'dumps_plate_artifacts',
+    'notfound_plate_void',
+    // §11/KDV-I18N-06: the header language switcher and its intelligent hint.
+    'lang_switch_label',
+    'lang_hint',
+  ]),
+  chip: Object.freeze([
+    'chip_machine_template',
+    'chip_human_label',
+    'chip_title_template',
+    'chip_withdraw_label',
+  ]),
+  footer: Object.freeze(['footer', 'footer_licences', 'footer_contract', 'footer_report_label']),
+  home: Object.freeze(['home_human_line']),
+  brand: Object.freeze(['brand_slogan_lead', 'brand_slogans_muted']),
+  about: Object.freeze([
+    'about_kicker',
+    'about_lead',
+    'about_no_fear',
+    'about_for_authors_heading',
+    'about_for_authors_lead',
+    'about_authors_raw_title',
+    'about_authors_raw_body',
+    'about_authors_pr_title',
+    'about_authors_pr_body',
+    'about_authors_field_title',
+    'about_authors_field_body',
+    'about_authors_attribution_title',
+    'about_authors_attribution_body',
+    'about_for_readers_heading',
+    'about_for_readers_lead',
+    'about_readers_adaptation_title',
+    'about_readers_adaptation_body',
+    'about_readers_synthesis_title',
+    'about_readers_synthesis_body',
+    'about_readers_trust_title',
+    'about_readers_trust_body',
+    'about_readers_stream_title',
+    'about_readers_stream_body',
+    'about_mechanism_heading',
+    'about_mechanism_step1',
+    'about_mechanism_step2',
+    'about_mechanism_step3',
+    'about_arch_heading',
+    'about_arch_raw_title',
+    'about_arch_raw_body',
+    'about_arch_contract_title',
+    'about_arch_contract_body_lead',
+    'about_arch_contract_body_tail',
+    'about_arch_cheap_title',
+    'about_arch_cheap_body',
+    'about_arch_safety_title',
+    'about_arch_safety_body',
+    'about_arch_trust_title',
+    'about_arch_trust_body',
+    'about_decisions_label',
+  ]),
+  contribute: Object.freeze([
+    'contribute_kicker',
+    'contribute_lead',
+    'contribute_bring_heading',
+    'contribute_step_fork_lead',
+    'contribute_step_fork_and',
+    'contribute_step_pr',
+    'contribute_step_ci',
+    'contribute_schema_heading',
+    'contribute_schema_required',
+    'contribute_check_secrets',
+    'contribute_check_examples',
+    'contribute_check_redactions_lead',
+    'contribute_check_redactions_tail',
+    'contribute_check_stakes',
+    'contribute_check_generated_by',
+    'contribute_check_heavy',
+    'contribute_licences_heading',
+    'contribute_licences_lead',
+    'contribute_house_rules_label',
+    'contribute_issues_label',
+  ]),
+  gate: Object.freeze([
+    'gate_kicker',
+    'gate_title',
+    'gate_hook',
+    'gate_duties_lead',
+    'gate_duties',
+    'gate_rest',
+    'gate_machine_label',
+    'gate_human_label',
+    'gate_machine_door',
+    'gate_human_door',
+  ]),
+  receptionHead: Object.freeze(['reception_wall', 'reception_rating', 'reception_title']),
+  reception: Object.freeze([
+    'reception_wall',
+    'reception_rating',
+    'reception_title',
+    'brief_heading',
+    'brief_note_platform',
+    'brief_cta',
+    'brief_report',
+  ]),
+  dumpBrief: Object.freeze([
+    'brief_heading',
+    'brief_note',
+    'brief_cta',
+    'brief_report',
+    'brief_fallback',
+  ]),
+  notfound: Object.freeze(['notFound']),
+});
+
+// §6.3.3/§11: the human-readable manifest card labels. One source — the English
+// bundle's `MANIFEST_LABELS` — so a locale switch localizes the card too.
+export const MANIFEST_LABELS = EN.MANIFEST_LABELS;
+
+// §11/KDV-I18N-07: the storefront and social taglines are catalog entries; these
+// exports stay for the OG-image generator and the surface tests.
+export const HOME_TAGLINE = EN.HOME_TAGLINE;
 
 // §6.4: the social card speaks to the human who shares a dump, not to a crawler,
 // so it leads with "read it through your agent" instead of the contract wording.
-export const OG_TAGLINE =
-  'A registry of raw experience — "dumps" — which you read through your favorite AI agent. Share gears, not text.';
+export const OG_TAGLINE = EN.OG_TAGLINE;
 
 // §6.6: the primary navigation is data, not markup. Every route dataset carries
 // the same four links with at most one marked `current`; `site/header` renders
@@ -139,9 +297,22 @@ export const SITE_NAV = Object.freeze([
   { href: '/contribute/', label: 'contribute' },
 ]);
 
+// §11/KDV-I18N-07 phase 4a: the nav labels are catalog strings; the hrefs carry
+// the locale prefix (phase 2). One mapping, never a retyped label.
+const NAV_LABEL_KEYS = Object.freeze({
+  home: 'NAV_HOME',
+  reception: 'NAV_RECEPTION',
+  about: 'NAV_ABOUT',
+  contribute: 'NAV_CONTRIBUTE',
+});
+
 /** The nav array for a page whose own path is `currentHref` (null = no match). */
-export function buildNav(currentHref) {
-  return SITE_NAV.map((item) => ({ ...item, current: item.href === currentHref }));
+export function buildNav(currentHref, locale = DEFAULT_LOCALE) {
+  const { prefix } = getLocale(locale);
+  return SITE_NAV.map((item) => {
+    const href = `${prefix}${item.href}`;
+    return { ...item, label: t(NAV_LABEL_KEYS[item.label], locale), href, current: href === currentHref };
+  });
 }
 
 // §7.3/§9: the footer's visible report/takedown channel. GitHub's new-Issue form
@@ -151,15 +322,11 @@ export const FOOTER_REPORT_URL = `${ISSUES_URL}/new?template=risk-report.md`;
 
 // §7.3: the titleblock's four cells are ONE dataset slice carried by every route
 // (the shared `commonPage`, the reception/404 overrides and the dump slices all
-// spread it), so the footer cannot drift between surfaces. The cell values are
-// the copydeck's one truth (copy.mjs); only the report URL is assembled here.
-const FOOTER_COPY = Object.freeze({
-  footer: FOOTER_TEXT,
-  footer_licences: FOOTER_LICENCES,
-  footer_contract: FOOTER_CONTRACT,
-  footer_report_label: FOOTER_REPORT_LABEL,
-  footer_report_url: FOOTER_REPORT_URL,
-});
+// spread it), so the footer cannot drift between surfaces. The copydeck cells
+// resolve through the locale catalog; only the report URL is assembled here.
+function footerCopy(locale) {
+  return { ...copyFields(COPY_FIELDS.footer, locale), footer_report_url: FOOTER_REPORT_URL };
+}
 
 // §6.4: one social card for the whole site — a real 1200x630 PNG, published
 // from `static/assets/og-default.png` (regenerate with `npm run og-image`).
@@ -185,6 +352,21 @@ export const ROUTE_PAGES = Object.freeze([
   { layout: 'notfound', to: '404.html', cleanup: 'notfound' },
 ]);
 
+// routeOutputPath({ locale, layout, key, paginated }) → the public-relative
+// output path for a dataset coordinate. UI routes get the locale's URL prefix;
+// a dump (`layout: 'dumps'`, `key` = slug) gets `<prefix>/dumps/<key>/`. The 404
+// is single and default-locale only (per-locale 404 is deferred) — null elsewhere.
+export function routeOutputPath({ locale, layout, key, paginated = false }) {
+  const { prefix } = getLocale(locale);
+  if (layout === 'dumps') {
+    return prefix ? `${prefix}/dumps/${key}/index.html` : `dumps/${key}/index.html`;
+  }
+  const page = ROUTE_PAGES.find((route) => route.layout === layout);
+  if (!page) throw new Error(`pages: no route for layout "${layout}"`);
+  if (layout === 'notfound') return locale === DEFAULT_LOCALE ? page.to : null;
+  return prefix ? `${prefix}/${page.to}` : page.to;
+}
+
 // §6.5: the header logo ships inline (one less request, no FOUT). The source
 // lives at `static/logo.svg`; the controller reads it at build time and every
 // dataset carries it so the shared `site/header` partial can triple-stash it.
@@ -196,15 +378,47 @@ function normalizeBaseUrl(baseUrl) {
   return String(baseUrl ?? '').replace(/\/+$/, '');
 }
 
-// §7.13: the header species status chip's copydeck strings. They ride with
-// `copy.footer` so every route — including the 404 and the dump hall — renders
-// the same hidden skeleton from the one source in copy.mjs.
-const CHIP_COPY = {
-  chip_machine_template: CHIP_MACHINE_TEMPLATE,
-  chip_human_label: CHIP_HUMAN_LABEL,
-  chip_title_template: CHIP_TITLE_TEMPLATE,
-  chip_withdraw_label: CHIP_WITHDRAW_LABEL,
-};
+// §11/KDV-I18N-04: the hreflang alternate cluster for a locale-neutral page path
+// ('' for home, 'reception/', 'dumps/<slug>/'). Only the BUILT locales enter the
+// cluster — a locale that is not emitted is never linked. `x-default` names the
+// default locale's variant; every href is an absolute canonical URL.
+export function buildAlternates(urlPath, { base = '', locales = translatedLocales() } = {}) {
+  const root = normalizeBaseUrl(base);
+  const variants = locales.map((code) => {
+    const { prefix, htmlLang } = getLocale(code);
+    const path = prefix
+      ? (urlPath ? `${prefix}/${urlPath}` : `${prefix}/`)
+      : (urlPath ? `/${urlPath}` : '/');
+    return { code, hreflang: htmlLang, href: `${root}${path}` };
+  });
+  if (!variants.length) return [];
+  const xDefault = variants.find((variant) => variant.code === DEFAULT_LOCALE) ?? variants[0];
+  return [
+    ...variants.map(({ hreflang, href }) => ({ hreflang, href })),
+    { hreflang: 'x-default', href: xDefault.href },
+  ];
+}
+
+// §11/KDV-I18N-06: the header language-switcher entries for a locale-neutral page
+// path — the SAME page in every BUILT locale, as root-relative hrefs (the P2c
+// relativize pass turns them document-relative, so the switcher stays host-
+// agnostic). `endonym` is the locale's own name; `current` marks the page's own
+// locale (rendered as `aria-current="true"`); `hreflang` is the anchor's tag.
+export function buildLanguages(urlPath, locale = DEFAULT_LOCALE, locales = translatedLocales()) {
+  return locales.map((code) => {
+    const { prefix, htmlLang, endonym } = getLocale(code);
+    const path = prefix
+      ? (urlPath ? `${prefix}/${urlPath}` : `${prefix}/`)
+      : (urlPath ? `/${urlPath}` : '/');
+    return { code, endonym, href: path, hreflang: htmlLang, current: code === locale };
+  });
+}
+
+// §11/KDV-I18N-04: the `og:locale:alternate` values — every OTHER built locale's
+// OG locale code, in registry order.
+export function ogLocaleAlternates(locale = DEFAULT_LOCALE, locales = translatedLocales()) {
+  return locales.filter((code) => code !== locale).map((code) => getLocale(code).ogLocale);
+}
 
 function commonPage({
   base,
@@ -216,16 +430,26 @@ function commonPage({
   extraGraph = [],
   withJsonLd = true,
   extraCopy = {},
+  locale = DEFAULT_LOCALE,
+  seoLocales = translatedLocales(),
 }) {
-  const url = urlPath ? `${base}/${urlPath}` : `${base}/`;
+  const { prefix, code, htmlLang, dir, ogLocale } = getLocale(locale);
+  // §11: a non-default locale lives under its URL prefix; the default stays bare.
+  const localizedUrlPath = prefix
+    ? (urlPath ? `${prefix}/${urlPath}` : `${prefix}/`)
+    : (urlPath ? `/${urlPath}` : '/');
+  const url = `${base}${localizedUrlPath}`;
   const image = `${base}${OG_IMAGE_PATH}`;
   // §6.6: `urlPath` is route-relative ('', 'reception/', '404'); the nav hrefs are
   // root-absolute, so normalize before matching the current item.
-  const currentHref = urlPath ? `/${urlPath}` : '/';
+  const navPath = urlPath ? `/${urlPath}` : '/';
+  const currentHref = prefix ? `${prefix}${navPath}` : navPath;
   // §6.4/§A4: every indexable page ships a server-rendered JSON-LD `@graph`
   // (WebSite + WebPage) on top of the ordinary meta block. The 404 opts out.
-  const website = jsonldWebsite({ name: SITE_NAME, base, description: HOME_TAGLINE, image });
-  const webpage = jsonldWebpage({ websiteId: website['@id'], url, name: title, description });
+  // §11/KDV-I18N-05: the frame speaks in the page's UI locale — the graph's
+  // `inLanguage` is never the hardcoded English default.
+  const website = jsonldWebsite({ name: SITE_NAME, base, description: t('HOME_TAGLINE', locale), image, inLanguage: htmlLang });
+  const webpage = jsonldWebpage({ websiteId: website['@id'], url, name: title, description, inLanguage: htmlLang });
   return {
     title,
     og_title: title,
@@ -242,19 +466,41 @@ function commonPage({
     og_image_alt: OG_IMAGE_ALT,
     og_type: 'website',
     og_site_name: SITE_NAME,
-    og_locale: SITE_LOCALE,
+    og_locale: locale === DEFAULT_LOCALE ? SITE_LOCALE : ogLocale,
+    // §11/KDV-I18N-04: the alternate-locale SEO cluster — hreflang variants over
+    // the built locales (plus x-default) and one og:locale:alternate per other
+    // built locale. Absolute, so the P2c relativize pass leaves them alone.
+    alternates: buildAlternates(urlPath, { base, locales: seoLocales }),
+    // §11/KDV-I18N-06: the header switcher — the same page in each built locale.
+    languages: buildLanguages(urlPath, locale, seoLocales),
+    og_locale_alternates: ogLocaleAlternates(locale, seoLocales),
     robots,
     logo_svg: logo,
     // §6.6: landmarks/nav are shared markup; the data says which route is current.
-    nav: buildNav(currentHref),
+    nav: buildNav(currentHref, locale),
+    // §11/KDV-I18N-01: every layout reads its document language from the dataset
+    // (`lang` always, `dir` only when a locale is RTL) — never a literal.
+    lang: htmlLang,
+    rtl: dir === 'rtl',
+    // §11/KDV-I18N-09: the built locale's URL prefix ('' for en, '/ru', '/zh',
+    // '/es'). Internal PAGE links in the frame bind `{{locale_prefix}}/…` so the
+    // ru frame never links the English page. Assets/machine files stay canonical.
+    locale_prefix: prefix,
+    // §11/KDV-I18N-06: the page's own locale is on EVERY dataset — the first-visit
+    // offer compares it against `navigator.languages`. A non-default locale also
+    // carries its raw `htmlLang`/`dir` for the templates.
+    locale: code,
+    ...(locale === DEFAULT_LOCALE ? {} : { htmlLang, dir }),
     copy: {
       // §6.2: the shipped contract version reaches head.hbs; site.js compares it
       // with the stored declaration record and re-asks after a bump.
       contract_version: CONTRACT_VERSION,
       // §7.13: the header chip's copydeck strings, on every route.
-      ...CHIP_COPY,
+      ...copyFields(COPY_FIELDS.chip, locale),
       // §7.3: the titleblock's four cells, one source for every route.
-      ...FOOTER_COPY,
+      ...footerCopy(locale),
+      // §11: the structural frame chrome (skip link, nav, pagination, kickers).
+      ...copyFields(COPY_FIELDS.ui, locale),
       // Route-specific copydeck strings (e.g. the home human line, the About
       // slogans) ride in through `extraCopy`, so the shared skeleton stays one place.
       ...extraCopy,
@@ -268,13 +514,30 @@ function commonPage({
  * `contribute/main.json` and `notfound/main.json` datasets.
  *
  * @param {Array<{slug: string, manifest: object, raw: string}>} dumps
- * @param {{baseUrl?: string, logo?: string}} [options]
+ * @param {{baseUrl?: string, logo?: string, locale?: string}} [options]
  * @returns {Record<string, object>} layout → dataset (dataset name is `main`)
  */
-export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
+export function buildRouteDatasets(dumps, { baseUrl, logo, locale = DEFAULT_LOCALE } = {}) {
   const base = normalizeBaseUrl(baseUrl);
+  const { prefix, htmlLang } = getLocale(locale);
   const entries = dumps.map((dump) => buildIndexEntry(dump, { baseUrl: base }));
-  const homeTitle = 'A registry for machines';
+  // §11/KDV-I18N-09: the home feed is paginated BOTH server-side and client-side
+  // (`ignition/pagination` re-renders the page with only `items`/`pagination`, so
+  // a top-level `locale_prefix` would not survive). The item link is therefore
+  // baked as a root-relative, locale-prefixed `href` on each entry. A copy is
+  // made so the canonical absolute-`url` entries keep feeding the JSON-LD
+  // ItemList and never leak the extra field into `/index.json` or manifests.
+  const feedItems = entries.map((entry) => ({ ...entry, href: `${prefix}/dumps/${entry.slug}/` }));
+  // §11/KDV-I18N-07: the SEO fields and the storefront story resolve per locale,
+  // so a non-default frame changes copy without touching a template.
+  const homeTitle = t('HOME_TITLE', locale);
+  const tagline = t('HOME_TAGLINE', locale);
+  const whatIsADump = {
+    definition: t('DUMP_DEFINITION', locale),
+    lead: t('DUMP_LEAD', locale),
+    prompt: t('DUMP_PROMPT', locale),
+    tail: t('DUMP_TAIL', locale),
+  };
   const websiteId = `${base}/#website`;
   const itemListId = `${base}/#itemlist`;
 
@@ -282,11 +545,12 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
     ...commonPage({
       base,
       title: homeTitle,
-      description: HOME_TAGLINE,
+      description: tagline,
       urlPath: '',
       logo,
-      // §7.14: the "For humans" block's quickstart line, from the copydeck.
-      extraCopy: { home_human_line: HOME_HUMAN_LINE },
+      locale,
+      // §7.14: the "For humans" block's quickstart line, from the catalog.
+      extraCopy: copyFields(COPY_FIELDS.home, locale),
       // §6.4: the storefront feed is a CollectionPage whose ItemList enumerates
       // the dumps (position, url, name) alongside the always-present WebPage.
       extraGraph: [
@@ -294,8 +558,9 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
           websiteId,
           url: `${base}/`,
           name: homeTitle,
-          description: HOME_TAGLINE,
+          description: tagline,
           itemListId,
+          inLanguage: htmlLang,
         }),
         jsonldItemList({
           id: itemListId,
@@ -303,115 +568,109 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
         }),
       ],
     }),
-    tagline: HOME_TAGLINE,
+    tagline,
     // §7.10: the "what is a dump" story — the storefront's first thing after
     // the positioning line, laid out from its parts (definition/lead/prompt/tail).
-    what_is_a_dump: {
-      definition: DUMP_DEFINITION,
-      lead: DUMP_LEAD,
-      prompt: DUMP_PROMPT,
-      tail: DUMP_TAIL,
-    },
+    what_is_a_dump: whatIsADump,
     index_url: `${base}/index.json`,
     well_known_url: `${base}/.well-known/kodavr.json`,
     feed_url: `${base}/feeds/all.atom`,
     trust_levels: buildWellKnown().trust_levels,
     // §2.2/§6.1: the storefront legend — one lead + the five level/meaning
     // pairs. The pairs are the same ordered table the §5.2 `trust_levels` list
-    // derives from (machine.mjs), so the page cannot invent its own meanings.
+    // derives from (machine.mjs); the dataset legend resolves through the locale
+    // catalog while the machine files keep their canonical English (KDV-I18N-08).
     trust_legend: {
-      lead: TRUST_LEGEND_LEAD,
-      levels: TRUST_LEVEL_MEANINGS,
+      lead: t('TRUST_LEGEND_LEAD', locale),
+      levels: t('TRUST_LEVEL_MEANINGS', locale),
     },
-    dumps: entries,
+    dumps: feedItems,
   };
 
+  const receptionPrompt = promptFor(locale);
   const reception = {
     ...commonPage({
       base,
-      title: 'Reception',
-      description: 'How humans read Kodavr through their own agent.',
+      title: t('RECEPTION_PAGE_TITLE', locale),
+      description: t('RECEPTION_PAGE_DESCRIPTION', locale),
       urlPath: 'reception/',
       logo,
+      locale,
     }),
     copy: {
       contract_version: CONTRACT_VERSION,
-      ...CHIP_COPY,
+      ...copyFields(COPY_FIELDS.chip, locale),
       // §7.3: the titleblock's four cells (advisory · licences · contract · report).
-      ...FOOTER_COPY,
-      // §7.2 v2: the wall and the rating are separate from the brief tier, so
-      // the template renders each exactly once (no text on screen twice).
-      reception_wall: RECEPTION_WALL,
-      reception_rating: RECEPTION_RATING,
-      reception_title: RECEPTION_TITLE,
-      // §6.3/§7.2 v2: the reception block's third tier. /reception/ has no dump
-      // and no `brief_html`; its middle is the platform note, never the
-      // dump-oriented fallback (which would promise a manifest not on the page).
-      brief_heading: BRIEF_HEADING,
-      brief_note_platform: BRIEF_NOTE_PLATFORM,
-      brief_cta: BRIEF_CTA,
-      brief_report: BRIEF_REPORT,
-      prompt: PROMPT_TEXT,
-      lane_lead: AGENT_LANE_LEAD_KODAVR,
-      agent_lane_hint: AGENT_LANE_HINT,
-      agent_links: agentLinks(PROMPT_TEXT),
-      copy_label: LANE_COPY_LABEL,
-      copied_label: COPIED_LABEL,
-      copied_announcement: COPIED_ANNOUNCEMENT,
-      reset_label: RESET_LABEL,
+      ...footerCopy(locale),
+      // §11: the structural frame chrome (kicker, lead, nav, pagination).
+      ...copyFields(COPY_FIELDS.ui, locale),
+      // §7.2 v2: the wall, the rating and the brief tier — reception's own group.
+      ...copyFields(COPY_FIELDS.reception, locale),
+      prompt: receptionPrompt,
+      lane_lead: t('AGENT_LANE_LEAD_KODAVR', locale),
+      agent_lane_hint: copyField('agent_lane_hint', locale),
+      agent_links: agentLinksFor(locale, receptionPrompt),
+      copy_label: copyField('copy_label', locale),
+      copied_label: copyField('copied_label', locale),
+      copied_announcement: copyField('copied_announcement', locale),
+      reset_label: copyField('reset_label', locale),
     },
   };
 
   const about = {
     ...commonPage({
       base,
-      title: 'Why Kodavr exists',
-      description: 'The Kodavr manifesto, condensed.',
+      title: t('ABOUT_PAGE_TITLE', locale),
+      description: t('ABOUT_PAGE_DESCRIPTION', locale),
       urlPath: 'about/',
       logo,
+      locale,
       // §7.15: all three brand slogans from one source — the lead renders as-is,
       // the other two as the muted tail.
       extraCopy: {
-        brand_slogan_lead: BRAND_SLOGAN_LEAD,
-        brand_slogans_muted: BRAND_SLOGANS_MUTED,
+        ...copyFields(COPY_FIELDS.brand, locale),
+        ...copyFields(COPY_FIELDS.about, locale),
       },
     }),
-    what_is_a_dump: {
-      definition: DUMP_DEFINITION,
-      lead: DUMP_LEAD,
-      prompt: DUMP_PROMPT,
-      tail: DUMP_TAIL,
-    },
+    what_is_a_dump: whatIsADump,
   };
 
   const contribute = {
     ...commonPage({
       base,
-      title: 'Contribute',
-      description: 'How to bring a dump to Kodavr.',
+      title: t('CONTRIBUTE_PAGE_TITLE', locale),
+      description: t('CONTRIBUTE_PAGE_DESCRIPTION', locale),
       urlPath: 'contribute/',
       logo,
+      locale,
+      extraCopy: copyFields(COPY_FIELDS.contribute, locale),
     }),
   };
 
   const notfound = {
     ...commonPage({
       base,
-      title: 'Dump not found',
-      description: 'This dump does not exist.',
+      title: t('NOT_FOUND_PAGE_TITLE', locale),
+      description: t('NOT_FOUND_PAGE_DESCRIPTION', locale),
       urlPath: '404',
       logo,
+      locale,
       // §6.4: the 404 is served for arbitrary missing paths — never index it and
-      // never advertise structured data for it.
+      // never advertise structured data for it. It is emitted only for the
+      // default locale (deferred per-locale 404), so its hreflang cluster must
+      // not link a `/ru/404` that does not exist.
       robots: 'noindex,follow',
       withJsonLd: false,
+      seoLocales: [DEFAULT_LOCALE],
     }),
     copy: {
       contract_version: CONTRACT_VERSION,
-      ...CHIP_COPY,
+      ...copyFields(COPY_FIELDS.chip, locale),
       // §7.3: the titleblock's four cells (advisory · licences · contract · report).
-      ...FOOTER_COPY,
-      notFound: NOT_FOUND_TEXT,
+      ...footerCopy(locale),
+      // §11: the structural frame chrome (404 kicker/note/CTA, skip link).
+      ...copyFields(COPY_FIELDS.ui, locale),
+      notFound: copyField('notFound', locale),
     },
   };
 
@@ -423,66 +682,50 @@ export function buildRouteDatasets(dumps, { baseUrl, logo } = {}) {
  * §7.11: with a manifest URL the prompt is the bare boot address to that dump's
  * manifest; without it, the universal §7.4 prompt.
  */
-export function dumpCopySlices({ manifestUrl = null } = {}) {
-  const prompt = manifestUrl ? dumpPrompt(manifestUrl) : PROMPT_TEXT;
+export function dumpCopySlices({ manifestUrl = null, locale = DEFAULT_LOCALE } = {}) {
+  const prompt = promptFor(locale, { manifestUrl });
   return {
     // §6.2: the shipped contract version reaches head.hbs on dump pages too;
     // site.js compares it with the stored declaration record and re-asks on a bump.
     contract_version: CONTRACT_VERSION,
     // §7.13: the dump hall's header chip uses the same copydeck skeleton.
-    ...CHIP_COPY,
+    ...copyFields(COPY_FIELDS.chip, locale),
+    // §11: the structural frame chrome (skip link, back-to-feed, footer names).
+    ...copyFields(COPY_FIELDS.ui, locale),
     // §6.6: the gate modal's accessible name/description; the visible §7.1 v2
     // prose stays verbatim — kicker, H1, hook and the duties line lead the
-    // first screen, the full declaration sits below the fold. The machine panel
-    // leads with the same hook.
-    gate_kicker: GATE_KICKER,
-    gate_title: GATE_TITLE,
-    gate_hook: GATE_HOOK,
-    gate_duties_lead: GATE_DUTIES_LEAD,
-    gate_duties: GATE_DUTIES,
-    gate_rest: GATE_REST,
-    gate_machine_label: GATE_MACHINE_LABEL,
-    gate_human_label: GATE_HUMAN_LABEL,
-    // §6.5 P0-1: each door renders the §7.1 choice line as its visible label
-    // (the digit is a separate badge), so the label needs its own copy key.
-    gate_machine_door: GATE_MACHINE_DOOR,
-    gate_human_door: GATE_HUMAN_DOOR,
+    // first screen, the full declaration sits below the fold.
+    ...copyFields(COPY_FIELDS.gate, locale),
     // §7.2 v2: the wall, the brief tier and the 18+ rating render as separate
     // elements, so the reception block never prints any line twice.
-    reception_wall: RECEPTION_WALL,
-    reception_rating: RECEPTION_RATING,
-    reception_title: RECEPTION_TITLE,
+    ...copyFields(COPY_FIELDS.receptionHead, locale),
     // §6.3/§7.2 v2: the reception block's brief tier — the rendered `summary.md`
     // (`brief_html`, wired by the dump dataset, falsy without the layer) is the
     // real payload; these are the surrounding heading/note/CTA/report and the
     // honest fallback for the missing layer.
-    brief_heading: BRIEF_HEADING,
-    brief_note: BRIEF_NOTE,
-    brief_cta: BRIEF_CTA,
-    brief_report: BRIEF_REPORT,
-    brief_fallback: BRIEF_FALLBACK,
+    ...copyFields(COPY_FIELDS.dumpBrief, locale),
     prompt,
     // §7.12: the human fast lane renders once per surface (the gate dialog and
     // the reception block each pass their own copy target).
-    lane_lead: AGENT_LANE_LEAD,
-    agent_lane_hint: AGENT_LANE_HINT,
-    agent_links: agentLinks(prompt),
-    copy_label: LANE_COPY_LABEL,
-    copied_label: COPIED_LABEL,
-    copied_announcement: COPIED_ANNOUNCEMENT,
+    lane_lead: copyField('lane_lead', locale),
+    agent_lane_hint: copyField('agent_lane_hint', locale),
+    agent_links: agentLinksFor(locale, prompt),
+    copy_label: copyField('copy_label', locale),
+    copied_label: copyField('copied_label', locale),
+    copied_announcement: copyField('copied_announcement', locale),
     // §6.6 announcements for the SSR role="status" region.
-    hall_announcement: HALL_ANNOUNCEMENT,
-    reception_announcement: RECEPTION_ANNOUNCEMENT,
-    reset_label: RESET_LABEL,
+    hall_announcement: copyField('hall_announcement', locale),
+    reception_announcement: copyField('reception_announcement', locale),
+    reset_label: copyField('reset_label', locale),
     // §6.2: the machine panel's reset link (hall header, machine-declared).
-    reset_human_label: RESET_HUMAN_LABEL,
-    post_gate_line: POST_GATE_LINE,
+    reset_human_label: copyField('reset_human_label', locale),
+    post_gate_line: copyField('post_gate_line', locale),
     // §6.2/§6.6: the one-shot declaration toast, shown when the visitor enters
     // the hall by pressing "0". The text reaches the DOM through the dataset.
-    declaration_toast: DECLARATION_TOAST,
-    discuss_label: DISCUSS_LABEL,
+    declaration_toast: copyField('declaration_toast', locale),
+    discuss_label: copyField('discuss_label', locale),
     // §7.3: the titleblock's four cells, the same one source every route spreads.
-    ...FOOTER_COPY,
-    labels: MANIFEST_LABELS,
+    ...footerCopy(locale),
+    labels: copyField('labels', locale),
   };
 }
