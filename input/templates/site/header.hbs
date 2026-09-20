@@ -1,4 +1,10 @@
 <header class="masthead">
+  {{!-- §6.5/KDV-MOBILE-05: the left cluster owns the flowing content (logo mark,
+       species status, nav) and wraps INTERNALLY; the language switcher is its
+       SIBLING so it can never leave the mark's row — the masthead itself does not
+       wrap. The reflow is content-driven (flex-wrap), with no media/container
+       breakpoints. DOM order stays mark, species, nav. --}}
+  <div class="masthead-main">
   {{!-- §6.5: inline the trusted logo (triple-stash) — no separate request.
        The <img> is the build-time fallback when the controller supplies no
        logo_svg (e.g. a dataset built without the static tree). --}}
@@ -11,14 +17,21 @@
        role="status": a live region must not wrap an interactive link, and it
        would capture the announce() role fallback. The wrapper is the group
        site.js walks to find the withdraw link (the link stays OUTSIDE the
-       pill); `.nav` owns the masthead's auto margin, so the species group sits
-       left of the nav (demo layout). --}}
+       pill); `.masthead-main` owns the flowing layout, so the species group
+       climbs onto the mark's row only when it fits (demo layout). --}}
   <p class="species-declaration">
     <span class="species-chip" id="species-chip" hidden
        data-machine-label="{{copy.chip_machine_template}}"
        data-human-label="{{copy.chip_human_label}}"
        data-title-template="{{copy.chip_title_template}}"><span class="species-chip-text"></span></span><span class="species-separator" aria-hidden="true">·</span><a class="species-chip-withdraw" href="{{locale_prefix}}/" data-withdraw hidden>{{copy.chip_withdraw_label}}</a>
   </p>
+  {{!-- §6.5/KDV-MOBILE-05: a presentational grow-spacer between the cluster and
+       the nav. Base size 0, so it never forces a wrap and never changes where the
+       line breaks; on the WIDE line it grows and flushes the nav (and everything
+       after it on that line) against the language switcher. On a wrapped line the
+       spacer stays on the wide line, so the nav alone stays left-aligned — no
+       `margin-left:auto` on `.nav`. Inert without JS (no roles, no content). --}}
+  <span class="masthead-spacer" aria-hidden="true"></span>
   {{!-- §6.6: the nav is data-driven (route datasets carry `nav` with a `current`
        flag rendered as aria-current="page"); the static list is the fallback. --}}
   <nav class="nav" aria-label="{{copy.nav_primary}}">
@@ -33,6 +46,7 @@
     <a href="{{locale_prefix}}/contribute/">contribute</a>
     {{/if}}
   </nav>
+  </div>
   {{!-- §11/KDV-I18N-06: the language switcher — a native <details>, so it opens
        and closes without JS. The summary shows the current locale's endonym; the
        menu lists every BUILT locale as a link to this SAME page. `aria-current`

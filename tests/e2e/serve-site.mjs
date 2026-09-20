@@ -19,6 +19,17 @@ await rm(join(REPO_ROOT, 'tmp', 'e2e-content'), { recursive: true, force: true }
 await mkdir(CONTENT_DIR, { recursive: true });
 await cp(join(REPO_ROOT, 'tests', 'fixtures'), CONTENT_DIR, { recursive: true });
 
+// KDV-MOBILE-05: a realistic long flag list (a single comma-joined token in the
+// feed card) reproduces the real min-content overflow the home feed must survive.
+// Values stay inside the §2.4 vocabulary so the fixture manifests stay valid.
+const LONG_CONTENT_FLAGS = [
+  'opinion',
+  'contains_code',
+  'experimental',
+  'unverified_claims',
+  'professional_advice',
+];
+
 for (let i = 1; i <= 12; i += 1) {
   const n = String(i).padStart(2, '0');
   const slug = `2026-01-01-feed-dump-${n}`;
@@ -32,7 +43,9 @@ for (let i = 1; i <= 12; i += 1) {
     domain: 'engineering',
     tags: ['fixture'],
     stakes: 'low',
-    content_flags: [],
+    // The first feed card carries the long flags; the rest stay bare so the
+    // fixture still covers the empty-flag path.
+    content_flags: i === 1 ? LONG_CONTENT_FLAGS : [],
     trust_level: 'raw',
     generated_by: 'human',
     human_review: 'none',

@@ -69,20 +69,36 @@ pre{font-family:var(--font-mono);white-space:pre-wrap;word-break:break-word;
   outline:1px solid var(--line-2);outline-offset:3px;background:var(--paper)}
 
 /* ============ 04 · MASTHEAD ============ */
-.masthead{display:flex;align-items:center;gap:var(--sp-4);flex-wrap:wrap;
+/* KDV-MOBILE-05: the masthead never wraps — the language switcher is a fixed
+   sibling on row 1 at the right. The left cluster (`.masthead-main`) is what
+   flows: its content-driven flex-wrap climbs the species chip and then the nav
+   onto the mark's row only when they fit, with no media/container breakpoints.
+   `--mark-size` is declared ONCE, component-scoped: the masthead is the common
+   ancestor of `.mark` and `.lang-switch`, so the switcher derives its centering
+   nudge from the mark's box with no second literal. (Component scope, not
+   `:root`: KDV-SURFACE-22 requires every `:root` token to be named in
+   docs/design-system.md, and this is internal masthead geometry.) */
+.masthead{--mark-size:34px;display:flex;align-items:flex-start;gap:var(--sp-4);flex-wrap:nowrap;
   padding:var(--sp-4) clamp(16px,4vw,40px);border-bottom:1px solid var(--line-2);
   position:sticky;top:0;z-index:10;background:var(--paper)}
-.mark{width:34px;height:34px;display:grid;place-items:center;flex:none;background:var(--ink);
+.masthead-main{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-4);
+  flex:1 1 auto;min-width:0}
+/* A hidden chip (no declaration) leaves no empty group and no phantom gap. */
+.masthead-main .species-declaration:has(.species-chip[hidden]){display:none}
+.mark{width:var(--mark-size);height:var(--mark-size);display:grid;place-items:center;flex:none;background:var(--ink);
   color:var(--paper);font:700 15px/1 var(--font-mono);text-decoration:none}
 .mark:hover{text-decoration:none;opacity:.88}
 .mark svg,.mark img{width:28px;height:28px;display:block}
-.nav{margin-left:auto;display:flex;gap:var(--sp-4);flex-wrap:wrap}
+/* KDV-MOBILE-05: a zero-base grow spacer between the cluster and the nav. It
+   never forces a wrap (base 0) and never changes the line break; on the wide line
+   it grows and flushes the nav against the switcher, while on a wrapped line it
+   stays on the wide line and the lone nav keeps its left alignment. NEVER a
+   `margin-left:auto` on `.nav` (that would right-align the wrapped nav too). */
+.masthead-spacer{flex:1 1 0;min-width:0}
+.nav{display:flex;gap:var(--sp-4);flex-wrap:wrap}
 .nav a{font:500 12px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:6px 2px}
 .nav a:hover{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px}
 .nav a[aria-current="page"]{text-decoration:underline;text-decoration-color:var(--ink);font-weight:700}
-/* the v1 hook lets `.nav` own the auto margin so the species group sits left of it */
-.masthead .species-declaration{margin:0}
-@media (max-width:720px){.nav{margin-left:0;width:100%}}
 
 /* ============ 05 · COLUMN & PLATES ============ */
 .sheet-inner{position:relative;max-width:46rem;margin-inline:auto;padding:clamp(28px,6vw,72px) var(--sp-5) var(--sp-8)}
@@ -147,6 +163,9 @@ th:last-child,td:last-child{border-right:0}
 
 /* ============ 07 · CARDS ============ */
 .card{position:relative;border:1px solid var(--line);background:var(--paper);padding:var(--sp-5);
+  /* KDV-MOBILE-05: a grid/flex item defaults to min-width:auto, so long
+     unbreakable content would push the card past its track; allow it to shrink. */
+  min-width:0;
   clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
   transition:border-color .15s ease,transform .15s ease}
 .card:hover{border-color:var(--ink);transform:translateY(-1px)}
@@ -156,7 +175,11 @@ th:last-child,td:last-child{border-right:0}
 .card .meta{font:400 11px/1.6 var(--font-mono);letter-spacing:.06em;color:var(--muted);margin:0 0 var(--sp-2)}
 /* the feed row's flag line (a plain <p>, not the demo <ul>) */
 .flags{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 var(--sp-3);padding:0;list-style:none;
-  font:400 10px/1.6 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  font:400 10px/1.6 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  /* KDV-MOBILE-05: the engine renders the flags as ONE comma-joined text node
+     (data-ignition-text), so it must break mid-token or it blows the card's
+     min-content width; anywhere also shrinks the min-content contribution. */
+  overflow-wrap:anywhere;word-break:break-word}
 .card .summary{font:400 .95rem/1.6 var(--font-prose);color:var(--ink-2);margin:0}
 .row{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-4);align-items:start;padding:var(--sp-4) var(--sp-5)}
 .row + .row{border-top:1px solid var(--line-2)}
@@ -317,8 +340,9 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 
 /* --- chrome: species declaration + the two footer cells ---------------- */
 
-/* §7.13: the pill carries the status text only — never a control. */
-.species-declaration{display:inline-flex;align-items:center;gap:8px;margin:0 0 0 auto;
+/* §7.13: the pill carries the status text only — never a control. The group is
+   laid out by `.masthead-main`, so it needs no auto margin. */
+.species-declaration{display:inline-flex;align-items:center;gap:8px;margin:0;
   color:var(--muted);font:400 11px/1.4 var(--font-mono)}
 .species-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;
   padding:4px 12px}
@@ -358,8 +382,11 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 #machine-panel .block-machine{margin:0 0 var(--sp-3);font-size:.9rem}
 #machine-panel .resetline{margin:0}
 
-/* the feed grid; the rows themselves are demo `.card`s (§07). */
-.dump-feed{display:grid;gap:var(--sp-5)}
+/* the feed grid; the rows themselves are demo `.card`s (§07).
+   KDV-MOBILE-05: pin the track to minmax(0,1fr) — a bare `auto` track sizes to
+   the item's min-content width, so a long unbreakable flag token widened the
+   whole card beyond the viewport. */
+.dump-feed{display:grid;gap:var(--sp-5);grid-template-columns:minmax(0,1fr)}
 
 /* the artifacts list (§6.5) — now the demo `.row`/`.filechip` roles inside a
    `.card`; the plate owns the top rule, so only the two anchors the demo has
@@ -434,9 +461,18 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
 
 /* --- language switcher + intelligent hint (§11/KDV-I18N-06) ----------- */
 
-/* The switcher is a compact mono <details> at the masthead's right; the menu is
-   a paper popover over the sticky header. It works without JS (native details). */
-.lang-switch{position:relative;flex:none;margin-left:var(--sp-2)}
+/* The switcher is a compact mono <details> at the masthead's right. It is a
+   `flex:none` sibling of `.masthead-main`, so it always shares row 1 with the
+   mark at every width; the menu is a paper popover over the sticky header. It
+   works without JS (native details). */
+/* KDV-MOBILE-05: `.masthead` is `align-items:flex-start`, so the 44px tap box
+   and the 34px mark share a TOP edge and the control's midline sags by
+   (--tap - --mark-size) / 2 = 5px. A relative `top` nudge (NOT a margin: a
+   negative margin would shrink the flex line's cross size, and the header with
+   it) lands the box's centre on the mark's centre while the tap target stays
+   44px. `top` moves the containing block too, so the `top:100%` popover still
+   anchors right under the control. */
+.lang-switch{position:relative;flex:none;top:calc((var(--mark-size) - var(--tap)) / 2)}
 .lang-switch-summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
   min-height:var(--tap);padding:6px 2px;font:500 12px/1 var(--font-mono);letter-spacing:.08em;
   text-transform:uppercase;color:inherit}
@@ -485,12 +521,6 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
   .agent-links{width:100%}
   .agent-link,
   .copy-prompt{flex:1 1 auto}
-
-  /* §7.13: below 480px the declaration group sits flush with the mark. */
-  .species-declaration{margin-left:0}
-
-  /* §11/KDV-I18N-06: the switcher keeps the masthead's right edge. */
-  .lang-switch{margin-left:auto}
 }
 
 /* ============ 17 · ACCESSIBILITY: reduced motion ============ */
