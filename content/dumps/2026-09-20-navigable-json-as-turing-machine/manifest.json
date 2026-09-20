@@ -1,0 +1,25 @@
+{
+  "slug": "2026-09-20-navigable-json-as-turing-machine",
+  "title": "Navigable JSON as a Turing Machine: two orchestration patterns with schema-guided reasoning",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-09-20",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["contains_code", "experimental"],
+  "tags": ["navigable-json", "turing-complete", "schema-guided-reasoning", "agent-orchestration", "state-machine", "hybrid-architecture", "bohm-jacopini", "live-validation"],
+  "generated_by": "hybrid",
+  "human_review": "minimal",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "Navigable JSON lets an agent skip the bodies it does not need; this case asks whether the same file can be a program - a virtual machine whose primitives are the Bohm-Jacopini trio (sequence, selection, iteration), with the agent's context as RAM. It gives both orchestration patterns as runnable JavaScript plus a live-offset demo program, and reports a real model run: exact byte navigation and no runaway, but a strong tendency to flatten loops into its own context and a reproducible off-by-one when naming a visited record.",
+  "sources": ["chat-log", "source-code"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "raw.md", "note": "the article: the Bohm-Jacopini mapping, both orchestration patterns as runnable JavaScript, a canonical linker and reader, a live-offset demo program, and a live model run" }
+  ],
+  "derived_from": null
+}
