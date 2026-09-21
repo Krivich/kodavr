@@ -351,6 +351,23 @@ describe('machine BIOS (self-describing schemas)', () => {
     expect(text).toMatch(/`license`/);
   });
 
+  it('KDV-CONTRACT-11: the BIOS is catalog-first — present the collection before fetching any body', () => {
+    // §5.2: the consumption steps must make the index a catalog you present, not a
+    // pile of bodies to pre-download; a body is fetched only for a chosen dump.
+    const { how_to_consume } = buildWellKnown({ baseUrl: BASE_URL });
+    const text = how_to_consume.steps.join(' ');
+    expect(text).toMatch(/present/i);
+    expect(text).toMatch(/before downloading|before you download/i);
+    expect(text).toMatch(/never pre-download/i);
+    // §5.1: the index schema carries the same two-phase flow on the index door.
+    const indexSchema = buildIndexSchema({ baseUrl: BASE_URL });
+    const item = indexSchema.properties.dumps.items.properties;
+    expect(indexSchema.description).toMatch(/catalog/i);
+    expect(item.body_url.description).toMatch(/only when the user/i);
+    expect(item.body_url.description).toMatch(/never pre-download/i);
+    expect(item.manifest_url.description).toMatch(/chosen/i);
+  });
+
   it('KDV-CONTRACT-10: the authored-data boundary rides every door and marks author free-text fields', () => {
     const AUTHOR_SUPPLIED = /^Author-supplied data: /;
     // One notice reaches the BIOS door and both schema root descriptions.

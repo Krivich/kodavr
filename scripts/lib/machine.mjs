@@ -191,8 +191,8 @@ const PLATFORM_INTERPRET =
 // actually is, so even a weak agent cannot mistake the manifest for the content.
 const HOW_TO_CONSUME_STEPS = [
   'you may hold either `/index.json` (the whole collection) or a single dump\'s `manifest.json` — if you hold a manifest, apply these steps to that dump',
-  'to pick from the collection, filter the `dumps` array by domain / tags / stakes / content_flags; if you hold a manifest, that dump is already picked',
-  'download the dump\'s body — its `raw` layer: the entry\'s `body_url`, or in a manifest the layer whose `name` is `raw` (published at `/dumps/<slug>/raw.md`) — raw markdown, never the HTML page',
+  'present first — but only from the collection: read the `dumps` array and present it to the user in one pass (title, summary, tags, stakes) before downloading anything, filtering by domain / tags / stakes / content_flags only at the user\'s request; if you hold a single dump\'s manifest, that dump is already chosen, so skip the presentation',
+  'then fetch only what was chosen: download that dump\'s body — its `raw` layer: the entry\'s `body_url`, or in a manifest the layer whose `name` is `raw` (published at `/dumps/<slug>/raw.md`) — raw markdown, never the HTML page; never pre-download the whole collection',
   'read the dump\'s manifest for metadata, artifacts and layers — the entry\'s `manifest_url`, or the `manifest.json` you already hold — and check each layer\'s `url`',
   'use the downloaded body as raw material: adapt it and write it up in the user\'s context and language; honor stakes and content_flags; attribute the dump by its `url` and `license`; never present it as verified fact or as your own',
 ];

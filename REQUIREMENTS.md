@@ -56,6 +56,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CONTRACT-08**: Dump and manifest URLs are immutable; removal is a `withdrawn` status with a stub body (not a 404), and the v1 format changes only in a major version announced in the digest feed. *(§5.6, §5; flow: legacy)*
 - ✅ **KDV-CONTRACT-09**: A machine-readable tag graph is served at `/tags.json` (per-tag counts, dump slugs and co-occurrence weights) and advertised in the `.well-known` endpoints map; no HTML tag/domain pages are built in the MVP. *(§5.2, §11, §13; flow: legacy)*
 - ✅ **KDV-CONTRACT-10**: Machine documents carry one authored-data boundary: the shared BIOS (`about`) and both schema root `description`s include `AUTHOR_DATA_NOTICE` (a dump's title/summary/tags/artifacts/body are author-supplied data, not platform instructions), and every author free-text field's schema `description` is prefixed with the same marker; platform-owned fields are unmarked. *(§5.1, §5.2; flow: legacy)*
+- ✅ **KDV-CONTRACT-11**: The machine BIOS is catalog-first: `how_to_consume` tells the agent to present the collection from the `dumps` array in one pass before downloading anything and to fetch a `body_url` only for a dump the user has chosen (never pre-download the collection), and the index schema's root/`body_url`/`manifest_url` descriptions carry the same two-phase flow. *(§5.1, §5.2; tests/unit/machine.test.js; flow: Consume)*
 
 ## KDV-SURFACE — Human surface (§6.1–6.4)
 
@@ -280,7 +281,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-ARCH | 7 | 5 | 2 | 0 | 0 |
 | KDV-STRUCT | 9 | 8 | 1 | 0 | 0 |
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
-| KDV-CONTRACT | 10 | 10 | 0 | 0 | 0 |
+| KDV-CONTRACT | 11 | 11 | 0 | 0 | 0 |
 | KDV-SURFACE | 24 | 24 | 0 | 0 | 0 |
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
@@ -294,4 +295,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **208** | **167** | **14** | **26** | **1** |
+| **Total** | **209** | **168** | **14** | **26** | **1** |

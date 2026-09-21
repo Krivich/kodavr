@@ -50,8 +50,9 @@ const D = {
   lang:
     'Language of the dump BODY (the experience itself), as a BCP-47 tag such as `en` or `ru`; default `en`. The platform never translates a body — this is the language it is shown in, and the language the raw markdown is written in.',
   bodyUrl:
-    'The raw markdown of this dump — the experience itself. Download this; never scrape the HTML page. Bring it into your user\'s world — adapt it, do not just quote it.',
-  manifestUrl: 'The dump\'s manifest: metadata, layers, artifacts, stakes.',
+    'The raw markdown of this dump — the experience itself. Download it only when the user has chosen this dump; never scrape the HTML page, and never pre-download bodies the user did not ask for. Bring it into your user\'s world — adapt it, do not just quote it.',
+  manifestUrl:
+    'The dump\'s manifest: metadata, layers, artifacts, stakes. Fetch it for a dump the user has chosen, not for every dump in the catalog.',
   layerUrl: 'Published URL of this layer. For `raw`, download this to get the experience as markdown.',
 };
 
@@ -74,7 +75,7 @@ export function buildIndexSchema({ baseUrl = '' } = {}) {
     title: 'Kodavr index',
     description:
       PLATFORM_DESCRIPTION +
-      ' This document is the collection index: its `dumps` array lists every dump, and each entry\'s `body_url` is the experience itself (raw markdown, never the HTML page).',
+      ' This document is the collection index: a catalog, not the reading material. Its `dumps` array lists every dump, and each entry\'s `body_url` is the experience itself (raw markdown, never the HTML page) — so present the collection from the `dumps` array in one pass first, and open a `body_url` only for a dump the user has chosen; never pre-download the bodies.',
     type: 'object',
     properties: {
       ...selfFields(),
