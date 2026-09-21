@@ -123,7 +123,12 @@ Render (Smetana layout — no GraphViz needed):
 java -jar <plantuml.jar> -tsvg -charset UTF-8 docs/workflow-arrows.puml
 ```
 
-Then confirm the `.svg` holds no `Syntax Error`.
+Then confirm the `.svg` holds no `Syntax Error`. Add the hover block (it is part of
+the render, not an extra) and commit both files:
+
+```
+npm run workflow-arrows:svg
+```
 
 - Links are relative **to `docs/`**:
   `[[../scripts/lib/build.mjs#buildProject <label>]]`. The label follows the URL
@@ -132,7 +137,9 @@ Then confirm the `.svg` holds no `Syntax Error`.
 - `====` draws a divider inside a `package` title; `--` draws one inside a
   `component` body.
 - **Add a module → add a brick** — otherwise a code drawer fails file coverage.
-- The rendered SVG carries a **native hover highlight** (`skinparam pathHoverColor`
-  → `path:hover`): a hovered arrow line recolors. It shows only in a CSS-capable
-  viewer (a browser), never in PNG or a static IDE preview.
+- `npm run workflow-arrows:svg` injects the **hover block**: the whole arrow lights up
+  (line, head, label) in the `.puml`'s `skinparam pathHoverColor` colour, and lingers
+  ~5s after the pointer leaves — so a long arrow stays lit while you scroll to its far
+  end. It shows only in a CSS-capable viewer (a browser), never in PNG or an IDE
+  preview. The committed `.svg` must carry the block (pinned by KDV-CI-21).
 - **Commit `.puml` and `.svg` together** — source and render are one artifact.

@@ -182,6 +182,10 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: DRIFT_GUIDANCE, bricks, declaredDrawers, lintDiagram, main, parseLinks, symbolDeclared
   consumes: node:fs, node:path, node:url
   invariants: — a red lint names the drift and exits 1; it is never weakened to pass
+- **scripts/workflow-arrows-svg.mjs** — post-processes the rendered docs/workflow-arrows.svg to add the hover highlight
+  exports: injectHover, parseHoverColor, main
+  consumes: node:fs, node:path, node:url
+  invariants: — injection is idempotent: the block carries a marker and is replaced, never doubled; — the hover colour has one source: skinparam pathHoverColor in the .puml
 
 <!-- MODULE-INDEX:END -->
 

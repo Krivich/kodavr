@@ -142,6 +142,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CI-18**: The mirror orchestration sends each newly published dump to `@kodavr_xyz` (overridable via `TELEGRAM_CHAT_ID`) through the Bot API `sendMessage` with `parse_mode=HTML`, retrying once on 429/5xx/network errors; a missing token/chat/text is a silent skip, and an unparseable manifest is skipped without stopping the batch — the sender and the orchestrator never throw. *(§8.3; tests/unit/telegram-mirror.test.js)*
 - ✅ **KDV-CI-19**: The `deploy` build job runs the §8.1 content gate (`node scripts/validate.mjs`) before `npm run build`, so a BLOCK finding stops publication — the gate is a prerequisite of the published artifact, not a parallel workflow. *(§8.1, §8.3)*
 - ✅ **KDV-CI-20**: The manifest card escapes angle brackets in author-supplied text (`summary.md` brief and manifest string fields), so an author string cannot inject raw HTML, close the card's `<details>`, or forge the sticky comment marker. *(§8.1, §9)*
+- ✅ **KDV-CI-21**: `npm run workflow-arrows:svg` injects a whole-arrow hover block into the rendered `docs/workflow-arrows.svg` — the entire `g.link` (line `path`, head `polygon`, label) lights up in the `.puml`'s `skinparam pathHoverColor` colour (one source) and lingers ~5s after the pointer leaves, so a long arrow stays lit while the reader scrolls to its far end; injection is idempotent and the committed `.svg` must carry the block. *(§8.1; tests/unit/workflow-arrows-svg.test.js)*
 
 ## KDV-MOD — Moderation and social layer (§9)
 
@@ -275,7 +276,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 12 | 12 | 0 | 0 | 0 |
-| KDV-CI | 20 | 18 | 2 | 0 | 0 |
+| KDV-CI | 21 | 19 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-AUDIT | 16 | 13 | 0 | 3 | 0 |
 | KDV-SCAN | 16 | 10 | 1 | 5 | 0 |
@@ -284,4 +285,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **203** | **162** | **14** | **26** | **1** |
+| **Total** | **204** | **163** | **14** | **26** | **1** |

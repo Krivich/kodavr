@@ -4,8 +4,9 @@
 ' Never edit the .svg. scripts/workflow-arrows-lint.mjs fails on any drift:
 ' drawers, file coverage of code dirs, links, symbols, stereotypes, step numbers.
 !pragma layout smetana
-' Native SVG hover: hovering an arrow path recolors it (QA-5453). Only shows in a
-' CSS-capable SVG viewer (a browser), not PlantUML's PNG or static previews.
+' Hover colour source (PlantUML native, QA-5453). The whole-arrow highlight + linger
+' is injected into the rendered .svg by `npm run workflow-arrows:svg`; visible only in a
+' browser, never in PNG/IDE preview. See AGENTS/workflow-arrows.md.
 skinparam pathHoverColor #C62828
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
@@ -100,6 +101,7 @@ package "scripts\n====\nentry points you actually run" as P_CLI {
   component "generate-og-image.mjs\n--\nrasterizes the OG card" as CLI_OG <<cli>> [[../scripts/generate-og-image.mjs]]
   component "generate-touch-icon.mjs\n--\nrasterizes the touch icon" as CLI_TI <<cli>> [[../scripts/generate-touch-icon.mjs]]
   component "workflow-arrows-lint.mjs\nlintDiagram\n--\nthis map's drift alarm" as CLI_LINT <<cli>> [[../scripts/workflow-arrows-lint.mjs#lintDiagram]]
+  component "workflow-arrows-svg.mjs\ninjectHover\n--\nadds the map's hover block" as CLI_SVGHOVER <<cli>> [[../scripts/workflow-arrows-svg.mjs#injectHover]]
   component "contract.mjs\nvalidateAll\n--\nguards the module index (contract headers)" as CLI_CONTRACT <<cli>> [[../scripts/contract.mjs#validateAll]]
   component "pr-manifest-card.mjs\n--\nposts the sticky manifest card on a PR" as CLI_CARD <<cli>> [[../scripts/pr-manifest-card.mjs]]
   component "telegram-mirror.mjs\n--\nmirrors newly published dumps to Telegram" as CLI_TGMIRROR <<cli>> [[../scripts/telegram-mirror.mjs]]

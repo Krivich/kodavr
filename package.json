@@ -15,7 +15,8 @@
     "audit:judge": "node scripts/audit-judge-local.mjs",
     "contract": "node scripts/contract.mjs",
     "state:diet": "node scripts/state-diet.mjs",
-    "workflow-arrows:lint": "node scripts/workflow-arrows-lint.mjs"
+    "workflow-arrows:lint": "node scripts/workflow-arrows-lint.mjs",
+    "workflow-arrows:svg": "node scripts/workflow-arrows-svg.mjs"
   },
   "dependencies": {
     "ignition-ssg": "file:vendor/ignition-ssg-0.0.4.tgz",
