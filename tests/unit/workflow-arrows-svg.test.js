@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { injectHover, parseHoverColor } from '../../scripts/workflow-arrows-svg.mjs';
+import { injectHover, parseHoverColor } from '../../scripts/tooling/workflow-map/workflow-arrows-svg.mjs';
 
 const svgPath = fileURLToPath(new URL('../../docs/workflow-arrows.svg', import.meta.url));
 const pumlPath = fileURLToPath(new URL('../../docs/workflow-arrows.puml', import.meta.url));

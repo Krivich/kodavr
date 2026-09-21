@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
-      - run: node scripts/validate.mjs
+      - run: node scripts/tooling/quality-gates/validate.mjs
       - run: npm test
       - run: npm run contract
       - run: npm run workflow-arrows:lint

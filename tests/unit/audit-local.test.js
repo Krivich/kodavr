@@ -1,6 +1,6 @@
 // tests/unit/audit-local.test.js — the repeatable local harness (KDV-REVIEW-24).
 // The pure module turns each dump into an addition-only single-directory PR and
-// runs the real deterministic pipeline; the CLI (scripts/audit-local.mjs) supplies
+// runs the real deterministic pipeline; the CLI (scripts/product/pr-review/local.mjs) supplies
 // the disk reads and the near-real author / content-gate signals. The real-dump
 // regression reads content/dumps/* from disk and asserts that no legitimate dump
 // can be DECLINEd — only a channel veto could do that and the structural channel
@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns } from '../../scripts/lib/audit-local.mjs';
+import { TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns } from '../../scripts/product/pr-review/audit/local.mjs';
 
 const ROOT_URL = new URL('../../', import.meta.url);
 const DUMPS_DIR = fileURLToPath(new URL('content/dumps', ROOT_URL));

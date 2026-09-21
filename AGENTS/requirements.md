@@ -21,7 +21,7 @@ targeted: `Grep` by keywords/ID → `Read` of the needed region (`offset/limit`)
 
 ## Tools
 
-- `npm run req` (`scripts/req-coverage.js`) — reconcile IDs from tests with the registry; exit 1 on
+- `npm run req` (`scripts/tooling/quality-gates/req-coverage.js`) — reconcile IDs from tests with the registry; exit 1 on
   typos/unknown IDs. **Before every commit.**
 - `Grep` over `REQUIREMENTS.md` — candidate lines (ID + status + text), without reading the file.
 - `Read` (`offset/limit`) — one region / group / line in full.

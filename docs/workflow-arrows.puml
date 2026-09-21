@@ -1,7 +1,7 @@
 @startuml
 ' workflow-arrows — the linted map of kodavr's code tree and the numbered flow.
 ' How to read / maintain / lint / render: AGENTS/workflow-arrows.md.
-' Never edit the .svg. scripts/workflow-arrows-lint.mjs fails on any drift:
+' Never edit the .svg. scripts/tooling/workflow-map/workflow-arrows-lint.mjs fails on any drift:
 ' drawers, file coverage of code dirs, links, symbols, stereotypes, step numbers.
 !pragma layout smetana
 ' Hover colour source (PlantUML native, QA-5453). The whole-arrow highlight + linger
@@ -26,6 +26,8 @@ skinparam component {
   BorderColor<<lib>> #1E88E5
   BackgroundColor<<cli>> #FFF3E0
   BorderColor<<cli>> #FB8C00
+  BackgroundColor<<audit>> #FFF8E1
+  BorderColor<<audit>> #F9A825
   BackgroundColor<<ctrl>> #E8F5E9
   BorderColor<<ctrl>> #43A047
   BackgroundColor<<view>> #EDE7F6
@@ -43,6 +45,8 @@ title kodavr — drawers, bricks and the numbered flow (number · callee method 
 actor "Author\n(opening a PR)" as AUTHOR
 actor "AI agent\n(the reader)" as AGENT
 actor "Human\n(a visitor)" as HUMAN
+actor "Maintainer\n(merging a PR)" as MAINTAINER
+actor "Developer\n(local tools)" as DEVELOPER
 component "Ignition engine\nvendor/ignition-ssg\n--\nHandlebars SSG: input/ + data → output/public" as ENGINE <<ext>>
 ' GitHub = Actions (the workflows) + Pages (the served artifact). Drawn as a
 ' rectangle, not a package: a package would read as a first-party drawer.
@@ -77,37 +81,58 @@ package "scripts/lib\n====\nthe smart controller: content, machine contracts, bu
   component "static-server.mjs\ncreateStaticServer\n--\nlocal preview server" as SSRV <<lib>> [[../scripts/lib/static-server.mjs#createStaticServer]]
   component "manifest-card.mjs\nrenderManifestCard\n--\nmanifest.json → the PR reviewer's card" as MCARD <<lib>> [[../scripts/lib/manifest-card.mjs#renderManifestCard]]
   component "telegram-mirror.mjs\nrenderMirrorPost\n--\nmanifest + brief → a Telegram mirror post" as TGMIRROR <<lib>> [[../scripts/lib/telegram-mirror.mjs#renderMirrorPost]]
-  component "audit-channel.mjs\nmakeSpan · validateChannelResult\n--\nchannel output schema + allowlist validator" as AUDIT_CH <<lib>> [[../scripts/lib/audit-channel.mjs#validateChannelResult]]
-  component "audit-detectors.mjs\nstructuralChannel\n--\nLayer-1 structural detectors (invisible, base64, homoglyph, hidden)" as AUDIT_DET <<lib>> [[../scripts/lib/audit-detectors.mjs#structuralChannel]]
-  component "audit-forensic.mjs\nbuildForensicMap\n--\nconverged top-N span map for the human" as AUDIT_FOR <<lib>> [[../scripts/lib/audit-forensic.mjs#buildForensicMap]]
-  component "audit-policy.mjs\nevaluatePolicy\n--\ndeterministic envelope + channels -> decision" as AUDIT_POL <<lib>> [[../scripts/lib/audit-policy.mjs#evaluatePolicy]]
-  component "audit-envelope.mjs\ncheckDiffShape · evaluateEnvelope\n--\nLayer-0 envelope: diff shape + author signals (no content text)" as AUDIT_ENV <<lib>> [[../scripts/lib/audit-envelope.mjs#evaluateEnvelope]]
-  component "audit-report.mjs\nrenderAuditComment\n--\nadvisory PR comment: forensic map, no scores, escaped" as AUDIT_REP <<lib>> [[../scripts/lib/audit-report.mjs#renderAuditComment]]
-  component "audit-pr.mjs\nrunAudit\n--\nPR audit orchestration: API inputs -> envelope + policy (shadow)" as AUDIT_PR <<lib>> [[../scripts/lib/audit-pr.mjs#runAudit]]
-  component "audit-local.mjs\ndumpToPr · auditDumps\n--\nlocal harness: our own dumps -> the pipeline's verdicts" as AUDIT_LOCAL <<lib>> [[../scripts/lib/audit-local.mjs#dumpToPr]]
-  component "audit-llm.mjs\nproviderFromAuth · callAuditLLM\n--\nthe LLM provider client: credentials + one strict-JSON call" as AUDIT_LLM <<lib>> [[../scripts/lib/audit-llm.mjs#callAuditLLM]]
-  component "audit-judge.mjs\nframeContent · judgeChannel\n--\nLayer-4 LLM judge: data frame, allowlist schema, ensemble" as AUDIT_JUDGE <<lib>> [[../scripts/lib/audit-judge.mjs#judgeChannel]]
-  component "audit-trace.mjs\ndetectTraceResidue · quoteMask\n--\nLayer-5 deterministic residue classifier + non-LLM quote-masker" as AUDIT_TRACE <<lib>> [[../scripts/lib/audit-trace.mjs#detectTraceResidue]]
-  component "audit-meta.mjs\nbuildMetaMessages · metaReviewChannel\n--\nLayer-5 LLM meta-reviewer over a quote-masked trace (witness channel)" as AUDIT_META <<lib>> [[../scripts/lib/audit-meta.mjs#metaReviewChannel]]
-  component "audit-llm-channels.mjs\nbuildLlmChannels\n--\ncompose the LLM channels: judge + ensemble + trace/meta, degrade visibly" as AUDIT_LLM_CH <<lib>> [[../scripts/lib/audit-llm-channels.mjs#buildLlmChannels]]
 }
 
-package "scripts\n====\nentry points you actually run" as P_CLI {
-  component "build.mjs\n--\nnpm run build → output/public" as CLI_BUILD <<cli>> [[../scripts/build.mjs]]
-  component "validate.mjs\nvalidateContent · validateManifest\n--\nKDV-CI gate over content/dumps" as CLI_VAL <<cli>> [[../scripts/validate.mjs#validateContent]]
-  component "req-coverage.js\n--\nreconcile tests ↔ REQUIREMENTS.md" as CLI_REQ <<cli>> [[../scripts/req-coverage.js]]
-  component "serve.mjs\n--\nlocal static server" as CLI_SERVE <<cli>> [[../scripts/serve.mjs]]
-  component "state-diet.mjs\n--\nSTATE.md chronicle → docs/history" as CLI_DIET <<cli>> [[../scripts/state-diet.mjs]]
-  component "generate-og-image.mjs\n--\nrasterizes the OG card" as CLI_OG <<cli>> [[../scripts/generate-og-image.mjs]]
-  component "generate-touch-icon.mjs\n--\nrasterizes the touch icon" as CLI_TI <<cli>> [[../scripts/generate-touch-icon.mjs]]
-  component "workflow-arrows-lint.mjs\nlintDiagram\n--\nthis map's drift alarm" as CLI_LINT <<cli>> [[../scripts/workflow-arrows-lint.mjs#lintDiagram]]
-  component "workflow-arrows-svg.mjs\ninjectHover\n--\nadds the map's hover block" as CLI_SVGHOVER <<cli>> [[../scripts/workflow-arrows-svg.mjs#injectHover]]
-  component "contract.mjs\nvalidateAll\n--\nguards the module index (contract headers)" as CLI_CONTRACT <<cli>> [[../scripts/contract.mjs#validateAll]]
-  component "pr-manifest-card.mjs\n--\nposts the sticky manifest card on a PR" as CLI_CARD <<cli>> [[../scripts/pr-manifest-card.mjs]]
-  component "telegram-mirror.mjs\n--\nmirrors newly published dumps to Telegram" as CLI_TGMIRROR <<cli>> [[../scripts/telegram-mirror.mjs]]
-  component "audit-pr.mjs\n--\nposts the advisory PR audit comment and status" as CLI_AUDIT <<cli>> [[../scripts/audit-pr.mjs]]
-  component "audit-local.mjs\n--\nruns the audit pipeline over our own dumps (npm run audit:local)" as CLI_AUDIT_LOCAL <<cli>> [[../scripts/audit-local.mjs]]
-  component "audit-judge-local.mjs\n--\nruns the Layer-4 judge over our own dumps (npm run audit:judge)" as CLI_AUDIT_JUDGE <<cli>> [[../scripts/audit-judge-local.mjs]]
+package "scripts/product\n====\nthe product processes: site build, PR review, telegram, brand media" as P_PRODUCT {
+  package "scripts/product/site-build\n====\nthe one build pipeline's entry point" as P_SITE {
+    component "build.mjs\n--\nnpm run build → output/public" as CLI_BUILD <<cli>> [[../scripts/product/site-build/build.mjs]]
+  }
+  package "scripts/product/pr-review\n====\nthe PR surface: the manifest card and the audit entry points" as P_PR {
+    component "pr-manifest-card.mjs\n--\nposts the sticky manifest card on a PR" as CLI_CARD <<cli>> [[../scripts/product/pr-review/pr-manifest-card.mjs]]
+    component "pr.mjs\n--\nposts the advisory PR audit comment and status" as CLI_AUDIT <<cli>> [[../scripts/product/pr-review/pr.mjs]]
+    component "local.mjs\n--\nruns the audit pipeline over our own dumps (npm run audit:local)" as CLI_AUDIT_LOCAL <<cli>> [[../scripts/product/pr-review/local.mjs]]
+    component "judge.mjs\n--\nruns the Layer-4 judge over our own dumps (npm run audit:judge)" as CLI_AUDIT_JUDGE <<cli>> [[../scripts/product/pr-review/judge.mjs]]
+  }
+  package "scripts/product/pr-review/audit\n====\nthe deterministic audit engine: envelope → detectors → policy → report" as P_AUDIT {
+    component "channel.mjs\nmakeSpan · validateChannelResult\n--\nchannel output schema + allowlist validator" as AUDIT_CH <<audit>> [[../scripts/product/pr-review/audit/channel.mjs#validateChannelResult]]
+    component "detectors.mjs\nstructuralChannel\n--\nLayer-1 structural detectors (invisible, base64, homoglyph, hidden)" as AUDIT_DET <<audit>> [[../scripts/product/pr-review/audit/detectors.mjs#structuralChannel]]
+    component "forensic.mjs\nbuildForensicMap\n--\nconverged top-N span map for the human" as AUDIT_FOR <<audit>> [[../scripts/product/pr-review/audit/forensic.mjs#buildForensicMap]]
+    component "policy.mjs\nevaluatePolicy\n--\ndeterministic envelope + channels -> decision" as AUDIT_POL <<audit>> [[../scripts/product/pr-review/audit/policy.mjs#evaluatePolicy]]
+    component "envelope.mjs\ncheckDiffShape · evaluateEnvelope\n--\nLayer-0 envelope: diff shape + author signals (no content text)" as AUDIT_ENV <<audit>> [[../scripts/product/pr-review/audit/envelope.mjs#evaluateEnvelope]]
+    component "report.mjs\nrenderAuditComment\n--\nadvisory PR comment: forensic map, no scores, escaped" as AUDIT_REP <<audit>> [[../scripts/product/pr-review/audit/report.mjs#renderAuditComment]]
+    component "pr.mjs\nrunAudit\n--\nPR audit orchestration: API inputs -> envelope + policy (shadow)" as AUDIT_PR <<audit>> [[../scripts/product/pr-review/audit/pr.mjs#runAudit]]
+    component "local.mjs\ndumpToPr · auditDumps\n--\nlocal harness: our own dumps -> the pipeline's verdicts" as AUDIT_LOCAL <<audit>> [[../scripts/product/pr-review/audit/local.mjs#dumpToPr]]
+  }
+  package "scripts/product/pr-review/audit/llm\n====\nthe LLM audit layers: judge, trace/meta, channel composition" as P_AUDIT_LLM {
+    component "llm.mjs\nproviderFromAuth · callAuditLLM\n--\nthe LLM provider client: credentials + one strict-JSON call" as AUDIT_LLM <<audit>> [[../scripts/product/pr-review/audit/llm/llm.mjs#callAuditLLM]]
+    component "judge.mjs\nframeContent · judgeChannel\n--\nLayer-4 LLM judge: data frame, allowlist schema, ensemble" as AUDIT_JUDGE <<audit>> [[../scripts/product/pr-review/audit/llm/judge.mjs#judgeChannel]]
+    component "trace.mjs\ndetectTraceResidue · quoteMask\n--\nLayer-5 deterministic residue classifier + non-LLM quote-masker" as AUDIT_TRACE <<audit>> [[../scripts/product/pr-review/audit/llm/trace.mjs#detectTraceResidue]]
+    component "meta.mjs\nbuildMetaMessages · metaReviewChannel\n--\nLayer-5 LLM meta-reviewer over a quote-masked trace (witness channel)" as AUDIT_META <<audit>> [[../scripts/product/pr-review/audit/llm/meta.mjs#metaReviewChannel]]
+    component "llm-channels.mjs\nbuildLlmChannels\n--\ncompose the LLM channels: judge + ensemble + trace/meta, degrade visibly" as AUDIT_LLM_CH <<audit>> [[../scripts/product/pr-review/audit/llm/llm-channels.mjs#buildLlmChannels]]
+  }
+  package "scripts/product/telegram\n====\nthe Telegram mirror entry point" as P_TG {
+    component "telegram-mirror.mjs\n--\nmirrors newly published dumps to Telegram" as CLI_TGMIRROR <<cli>> [[../scripts/product/telegram/telegram-mirror.mjs]]
+  }
+  package "scripts/product/brand-media\n====\nthe brand-image generators (OG card, touch icon)" as P_MEDIA {
+    component "generate-og-image.mjs\n--\nrasterizes the OG card" as CLI_OG <<cli>> [[../scripts/product/brand-media/generate-og-image.mjs]]
+    component "generate-touch-icon.mjs\n--\nrasterizes the touch icon" as CLI_TI <<cli>> [[../scripts/product/brand-media/generate-touch-icon.mjs]]
+  }
+}
+
+package "scripts/tooling\n====\nthe development tooling: quality gates, the map, dev tools" as P_TOOLING {
+  package "scripts/tooling/quality-gates\n====\nthe CI gates: content validation, requirements, contracts" as P_GATES {
+    component "validate.mjs\nvalidateContent · validateManifest\n--\nKDV-CI gate over content/dumps" as CLI_VAL <<cli>> [[../scripts/tooling/quality-gates/validate.mjs#validateContent]]
+    component "req-coverage.js\n--\nreconcile tests ↔ REQUIREMENTS.md" as CLI_REQ <<cli>> [[../scripts/tooling/quality-gates/req-coverage.js]]
+    component "contract.mjs\nvalidateAll\n--\nguards the module index (contract headers)" as CLI_CONTRACT <<cli>> [[../scripts/tooling/quality-gates/contract.mjs#validateAll]]
+  }
+  package "scripts/tooling/workflow-map\n====\nthe map itself: its drift alarm and hover injection" as P_MAP {
+    component "workflow-arrows-lint.mjs\nlintDiagram\n--\nthis map's drift alarm" as CLI_LINT <<cli>> [[../scripts/tooling/workflow-map/workflow-arrows-lint.mjs#lintDiagram]]
+    component "workflow-arrows-svg.mjs\ninjectHover\n--\nadds the map's hover block" as CLI_SVGHOVER <<cli>> [[../scripts/tooling/workflow-map/workflow-arrows-svg.mjs#injectHover]]
+  }
+  package "scripts/tooling/dev-tools\n====\nlocal developer conveniences" as P_DEV {
+    component "serve.mjs\n--\nlocal static server" as CLI_SERVE <<cli>> [[../scripts/tooling/dev-tools/serve.mjs]]
+    component "state-diet.mjs\n--\nSTATE.md chronicle → docs/history" as CLI_DIET <<cli>> [[../scripts/tooling/dev-tools/state-diet.mjs]]
+  }
 }
 
 package "input/controllers\n====\nclient controllers injected by the engine" as P_CTRL {
@@ -130,84 +155,127 @@ package "content/dumps\n====\nthe dumps themselves: manifest.json + raw.md per s
 }
 
 ' ── flow ───────────────────────────────────────────────────────────────────────
-' The publish pipeline: one controller, two entry points (local + CI).
-CLI_BUILD -[#FB8C00]-> BUILD : [[../scripts/lib/build.mjs#buildProject 1 · buildProject()]]\nthe CLI hands off to the one pipeline
-BUILD -[#1E88E5]-> DUMPS : [[../scripts/lib/dumps.mjs#readDumps 2 · readDumps()]]\nread every content/dumps/*
-BUILD -[#1E88E5]-> DUMPS : [[../scripts/lib/dumps.mjs#toDataset 3 · toDataset()]]\nmerge the manifest, turn the body into HTML
-DUMPS -[#1E88E5]-> MD : [[../scripts/lib/markdown.mjs#renderMarkdown 4 · renderMarkdown()]]\nsanitize before markdown becomes HTML
-BUILD -[#1E88E5]-> PAGES : [[../scripts/lib/pages.mjs#buildRouteDatasets 5 · buildRouteDatasets()]]\nassemble every route's dataset
-PAGES -[#1E88E5]-> COPY : [[../scripts/lib/copy.mjs 6 · copydeck slices]]\ntemplates never retype contract text
-PAGES -[#1E88E5]-> JSONLD : [[../scripts/lib/jsonld.mjs#serializeJsonLd 7 · serializeJsonLd()]]\nper-page schema.org @graph
-BUILD -[#1E88E5]-> IGN : [[../scripts/lib/ignition.mjs#runIgnition 8 · runIgnition()]]\nhand input/ + data to the engine
-IGN -[#9E9E9E]-> ENGINE : 9 · engine build\nthe SSG renders output/public
-BUILD -[#1E88E5]-> REL : [[../scripts/lib/relativize.mjs#relativizeSite 10 · relativizeSite()]]\nrewrite internal links per page depth
-BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeMachineFiles 11 · writeMachineFiles()]]\nindex.json, well-known, feeds, tags
-BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeSitemap 12 · writeSitemap()]]\nsitemap.xml over the pretty URLs
-MACHINE ..> GH_PAGES : 13 ⟵ output/public\nthe artifact GitHub Pages serves
+' One arrow colour = one business process; N = global step order 1 to 37. The five
+' processes run in dependency order (prerequisites first): PR review (teal, 1-9),
+' Publish (blue, 10-25), Notify (purple, 26-27), Consume (green, 28-30),
+' Engineering (brown, 31-37); grey #9E9E9E is structural glue, never a numbered step.
 
-' The consumption loop: machines first, humans at the reception.
-AGENT -[#43A047]-> MACHINE : [[../scripts/lib/machine.mjs 14 · GET /index.json]]\nthe agent picks dumps by field
-AGENT -[#43A047]-> DUMP1 : [[../content/dumps/2026-09-14-kodavr-manifesto/manifest.json 15 · GET manifest.json + raw]]\nfetch the contract and the body
-HUMAN -[#43A047]-> CTRL_DUMPS : [[../input/controllers/dumps.js 16 · gate → reception]]\ncheck in, or hand the dump to an agent
-AUTHOR -[#00897B]-> CLI_VAL : [[../scripts/validate.mjs#validateContent 17 · PR → validate]]\nevery dump arrives as a validated PR
-AUTHOR ..> WF_AUDIT : the same PR also triggers the audit\n(same-repo only)
+' ── rank 1 — PR review (#00897B): a dump arrives as a validated PR.
+AUTHOR -[#00897B]-> WF_VALIDATE : 1 · validate.yml\nPR opens → the validate workflow
+WF_VALIDATE -[#00897B]-> CLI_VAL : [[../scripts/tooling/quality-gates/validate.mjs#validateContent 2 · validateContent()]]\nthe content gate
+WF_VALIDATE -[#00897B]-> CLI_CONTRACT : [[../scripts/tooling/quality-gates/contract.mjs#validateAll 3 · validateAll()]]\nthe module-index gate
+WF_VALIDATE -[#00897B]-> CLI_LINT : [[../scripts/tooling/workflow-map/workflow-arrows-lint.mjs#lintDiagram 4 · lintDiagram()]]\nthe map-drift gate
+WF_VALIDATE -[#00897B]-> CLI_REQ : [[../scripts/tooling/quality-gates/req-coverage.js 5 · req-coverage]]\ntests ↔ requirements
+AUTHOR -[#00897B]-> WF_AUDIT : 6 · audit.yml\nthe same PR → the audit workflow
+WF_AUDIT -[#00897B]-> CLI_AUDIT : [[../scripts/product/pr-review/pr.mjs 7 · pr.mjs]]\nthe advisory audit
+AUTHOR -[#00897B]-> WF_MANIFEST : 8 · dump-manifest.yml\nthe same PR → the card workflow
+WF_MANIFEST -[#00897B]-> CLI_CARD : [[../scripts/product/pr-review/pr-manifest-card.mjs 9 · pr-manifest-card.mjs]]\nthe sticky manifest card
 
-' Structural edges (dashed, unnumbered): imports, assets and dev tools —
-' the glue that anchors every brick to the flow.
-BUILD ..> ASSET : publishes static/ into the artifact
-BUILD ..> ASSET_IMG : and the brand images
-IGN ..> VIEW_PAGES : the engine renders the layouts
-IGN ..> VIEW_GATE : and the consumption-contract partials
-IGN ..> CTRL_DUMPS : injects the page controller
-IGN ..> CTRL_REC : injects the reception controller
-PAGES ..> MACHINE : reads buildIndexEntry / buildWellKnown
-MACHINE ..> SCHEMA : embeds + serves the index/manifest JSON Schemas
-MACHINE ..> VERB : writes robots.txt / humans.txt verbatim
-CLI_SERVE ..> SSRV : serves output/public locally
-CLI_OG ..> PW : rasterizes the OG card
-CLI_TI ..> PW : rasterizes the touch icon
-' GitHub Actions: each workflow and the chain it runs (dashed, unnumbered).
-WF_VALIDATE ..> CLI_VAL : npm ci · validate · test on every PR / push main
-WF_VALIDATE ..> CLI_CONTRACT : guards the module index
-WF_VALIDATE ..> CLI_LINT : guards this map
-WF_DEPLOY ..> CLI_VAL : the same gate before the build
-WF_DEPLOY ..> CLI_BUILD : push main → npm run build
-WF_DEPLOY ..> GH_PAGES : uploads the pages artifact Pages serves
-WF_DEPLOY ..> WF_TG : on completion (workflow_run) → the mutual invocation
-WF_AUDIT ..> CLI_VAL : content gate (advisory, continue-on-error)
-WF_AUDIT ..> CLI_AUDIT : runs the advisory audit (LLM key = a repo secret)
-WF_MANIFEST ..> CLI_CARD : posts the sticky manifest card
-WF_TG ..> CLI_TGMIRROR : mirrors newly published dumps
-CLI_AUDIT_LOCAL ..> AUDIT_LOCAL : reads content/dumps/* locally\nand prints what the pipeline says
-CLI_AUDIT_JUDGE ..> AUDIT_JUDGE : frames our own dumps as data\nand runs the Layer-4 judge locally
-CLI_AUDIT_JUDGE ..> AUDIT_LLM : resolves the provider from env, auth or a work-flow config\n(never a hardcoded key)
-AUDIT_JUDGE ..> AUDIT_LLM : one strict-JSON chat call per judge run
-AUDIT_JUDGE ..> AUDIT_CH : normalizes the judge verdict into a channel result
-CLI_AUDIT ..> AUDIT_PR : fetches the diff + author signals via the API\nand runs the deterministic audit
-CLI_AUDIT ..> AUDIT_LLM_CH : builds the LLM channels from env\nand passes them to the pure audit
-AUDIT_LLM_CH ..> AUDIT_LLM : resolves the provider from env\nand retries transient errors
-AUDIT_LLM_CH ..> AUDIT_JUDGE : runs the judge, plus a second run for the ensemble
-AUDIT_LLM_CH ..> AUDIT_TRACE : reads the primary run's reasoning trace deterministically
-AUDIT_LLM_CH ..> AUDIT_META : and asks the meta-reviewer over the masked trace
-AUDIT_PR ..> AUDIT_ENV : builds the Layer-0 envelope from the diff shape
-AUDIT_PR ..> AUDIT_DET : scans the API patch with the Layer-1 detectors
-AUDIT_PR ..> AUDIT_POL : reduces envelope + channels to a recommendation
-AUDIT_PR ..> AUDIT_REP : renders the advisory comment (marker, no scores)
-CLI_CARD ..> MCARD : renders content/dumps/<slug>/manifest.json
-AGENT ..> CLI_DIET : keeps STATE.md compact
+' The advisory audit's internal wiring (dashed, unnumbered, same process).
+CLI_AUDIT -[#00897B]..> AUDIT_PR : fetches the diff + author signals via the API\nand runs the deterministic audit
+CLI_AUDIT -[#00897B]..> AUDIT_LLM_CH : builds the LLM channels from env\nand passes them to the pure audit
+AUDIT_PR -[#00897B]..> AUDIT_ENV : builds the Layer-0 envelope from the diff shape
+AUDIT_PR -[#00897B]..> AUDIT_DET : scans the API patch with the Layer-1 detectors
+AUDIT_PR -[#00897B]..> AUDIT_POL : reduces envelope + channels to a recommendation
+AUDIT_PR -[#00897B]..> AUDIT_REP : renders the advisory comment (marker, no scores)
+AUDIT_ENV -[#00897B]..> AUDIT_POL : the envelope feeds the decision
+AUDIT_POL -[#00897B]..> AUDIT_CH : evaluates every channel's result
+AUDIT_POL -[#00897B]..> AUDIT_FOR : requests the forensic map for the human
+AUDIT_DET -[#00897B]..> AUDIT_CH : each detector emits a channel result
+AUDIT_LLM_CH -[#00897B]..> AUDIT_LLM : resolves the provider from env\nand retries transient errors
+AUDIT_LLM_CH -[#00897B]..> AUDIT_JUDGE : runs the judge, plus a second run for the ensemble
+AUDIT_LLM_CH -[#00897B]..> AUDIT_TRACE : reads the primary run's reasoning trace deterministically
+AUDIT_LLM_CH -[#00897B]..> AUDIT_META : and asks the meta-reviewer over the masked trace
+AUDIT_JUDGE -[#00897B]..> AUDIT_LLM : one strict-JSON chat call per judge run
+AUDIT_JUDGE -[#00897B]..> AUDIT_CH : normalizes the judge verdict into a channel result
+CLI_CARD -[#00897B]..> MCARD : renders content/dumps/<slug>/manifest.json
+
+' ── rank 2 — Publish (#1E88E5): build → engine → artifact.
+MAINTAINER -[#1E88E5]-> WF_DEPLOY : 10 · deploy.yml\nmerge to main
+WF_DEPLOY -[#1E88E5]-> CLI_VAL : [[../scripts/tooling/quality-gates/validate.mjs#validateContent 11 · validateContent()]]\nthe same gate before the build
+WF_DEPLOY -[#1E88E5]-> CLI_BUILD : [[../scripts/product/site-build/build.mjs 12 · build.mjs]]\nnpm run build
+CLI_BUILD -[#1E88E5]-> BUILD : [[../scripts/lib/build.mjs#buildProject 13 · buildProject()]]\nthe one build pipeline (controller)
+BUILD -[#1E88E5]-> DUMPS : [[../scripts/lib/dumps.mjs#readDumps 14 · readDumps()]]\nread every content/dumps/*
+BUILD -[#1E88E5]-> DUMPS : [[../scripts/lib/dumps.mjs#toDataset 15 · toDataset()]]\nmerge the manifest, turn the body into HTML
+DUMPS -[#1E88E5]-> MD : [[../scripts/lib/markdown.mjs#renderMarkdown 16 · renderMarkdown()]]\nsanitize before markdown becomes HTML
+BUILD -[#1E88E5]-> PAGES : [[../scripts/lib/pages.mjs#buildRouteDatasets 17 · buildRouteDatasets()]]\nassemble every route's dataset
+PAGES -[#1E88E5]-> I18N_EN : [[../scripts/lib/i18n-en.mjs#EN 18 · EN — the English copydeck]]\nthe copydeck source: i18n-en re-exports copy.mjs
+PAGES -[#1E88E5]-> JSONLD : [[../scripts/lib/jsonld.mjs#serializeJsonLd 19 · serializeJsonLd()]]\nper-page schema.org @graph
+BUILD -[#1E88E5]-> IGN : [[../scripts/lib/ignition.mjs#runIgnition 20 · runIgnition()]]\nhand input/ + data to the engine
+IGN -[#1E88E5]-> ENGINE : 21 · engine build\nthe SSG renders output/public
+BUILD -[#1E88E5]-> REL : [[../scripts/lib/relativize.mjs#relativizeSite 22 · relativizeSite()]]\nrewrite internal links per page depth
+BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeMachineFiles 23 · writeMachineFiles()]]\nindex.json, well-known, feeds, tags
+BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeSitemap 24 · writeSitemap()]]\nsitemap.xml over the pretty URLs
+MACHINE -[#1E88E5]..> GH_PAGES : 25 ⟵ output/public\nthe artifact GitHub Pages serves
+
+' ── rank 3 — Notify (#8E24AA): mirror / card posts on completion.
+WF_DEPLOY -[#8E24AA]-> WF_TG : 26 · publish-telegram.yml\non completion (workflow_run) → mirror newly published dumps
+WF_TG -[#8E24AA]-> CLI_TGMIRROR : [[../scripts/product/telegram/telegram-mirror.mjs 27 · telegram-mirror.mjs]]\nmirror newly published dumps
+CLI_TGMIRROR -[#8E24AA]..> TGMIRROR : renders the mirror post from manifest + brief
+
+' ── rank 4 — Consume (#43A047): machine + human reads.
+AGENT -[#43A047]-> MACHINE : [[../scripts/lib/machine.mjs 28 · GET /index.json]]\nthe agent picks dumps by field
+AGENT -[#43A047]-> DUMP1 : [[../content/dumps/2026-09-14-kodavr-manifesto/manifest.json 29 · manifest.json + raw]]\nfetch the contract and the body
+HUMAN -[#43A047]-> CTRL_DUMPS : [[../input/controllers/dumps.js 30 · dumps.js]]\ncheck in, or hand the dump to an agent
+
+' ── rank 5 — Engineering (#6D4C41): local dev / tooling.
+DEVELOPER -[#6D4C41]-> CLI_SERVE : [[../scripts/tooling/dev-tools/serve.mjs 31 · serve.mjs]]\nnpm run serve
+DEVELOPER -[#6D4C41]-> CLI_DIET : [[../scripts/tooling/dev-tools/state-diet.mjs 32 · state-diet.mjs]]\nnpm run state:diet
+DEVELOPER -[#6D4C41]-> CLI_OG : [[../scripts/product/brand-media/generate-og-image.mjs 33 · generate-og-image.mjs]]\nnpm run og-image
+DEVELOPER -[#6D4C41]-> CLI_TI : [[../scripts/product/brand-media/generate-touch-icon.mjs 34 · generate-touch-icon.mjs]]\nnpm run touch-icon
+DEVELOPER -[#6D4C41]-> CLI_AUDIT_LOCAL : [[../scripts/product/pr-review/local.mjs 35 · local.mjs]]\nnpm run audit:local
+DEVELOPER -[#6D4C41]-> CLI_AUDIT_JUDGE : [[../scripts/product/pr-review/judge.mjs 36 · judge.mjs]]\nnpm run audit:judge
+DEVELOPER -[#6D4C41]-> CLI_SVGHOVER : [[../scripts/tooling/workflow-map/workflow-arrows-svg.mjs#injectHover 37 · injectHover()]]\nnpm run workflow-arrows:svg
+CLI_SERVE -[#6D4C41]..> SSRV : serves output/public locally
+CLI_OG -[#6D4C41]..> PW : rasterizes the OG card
+CLI_TI -[#6D4C41]..> PW : rasterizes the touch icon
+CLI_AUDIT_LOCAL -[#6D4C41]..> AUDIT_LOCAL : reads content/dumps/* locally\nand prints what the pipeline says
+CLI_AUDIT_JUDGE -[#6D4C41]..> AUDIT_JUDGE : frames our own dumps as data\nand runs the Layer-4 judge locally
+CLI_AUDIT_JUDGE -[#6D4C41]..> AUDIT_LLM : resolves the provider from env, auth or a work-flow config\n(never a hardcoded key)
+
+' Structural edges (dashed, unnumbered, grey #9E9E9E): imports, assets and glue —
+' the things that anchor every remaining brick to the flow (no orphans).
+BUILD -[#9E9E9E]..> ASSET : publishes static/ into the artifact
+BUILD -[#9E9E9E]..> ASSET_IMG : and the brand images
+IGN -[#9E9E9E]..> VIEW_PAGES : the engine renders the layouts
+IGN -[#9E9E9E]..> VIEW_GATE : and the consumption-contract partials
+IGN -[#9E9E9E]..> CTRL_DUMPS : injects the page controller
+IGN -[#9E9E9E]..> CTRL_REC : injects the reception controller
+PAGES -[#9E9E9E]..> MACHINE : reads buildIndexEntry / buildWellKnown
+MACHINE -[#9E9E9E]..> SCHEMA : embeds + serves the index/manifest JSON Schemas
+MACHINE -[#9E9E9E]..> VERB : writes robots.txt / humans.txt verbatim
+BUILD -[#9E9E9E]..> I18N : assembles the copydeck + locale bundles
+I18N -[#9E9E9E]..> I18N_EN : English: the source bundle
+I18N -[#9E9E9E]..> I18N_RU : Russian: a draft translation
+I18N -[#9E9E9E]..> I18N_ZH : Simplified Chinese: a draft translation
+I18N -[#9E9E9E]..> I18N_ES : Spanish: a draft translation
+I18N_EN -[#9E9E9E]..> COPY : re-exports the copydeck (the single source)
 
 legend right
   **how to read an arrow**
   line 1 (colored link):  N · callee.method()  — the API method
-  of the TARGET brick this arrow calls (the callee), N = order 1 to 17
+  of the TARGET brick this arrow calls (the callee), N = global order 1 to 37
   line 2 (plain text):    why the call happens (business intent)
   solid = call · dashed = return · dashed to an actor = a push
   click a brick → its file · click a call → the method's source
+  **colour = business process**: teal #00897B PR review (rank 1)
+  blue #1E88E5 Publish (2) · purple #8E24AA Notify (3)
+  green #43A047 Consume (4) · brown #6D4C41 Engineering (5)
+  grey #9E9E9E = structural glue (imports/assets), never a numbered step
   **drawers** = first-party code dirs; the code drawers are covered
-  file-by-file (scripts/lib, scripts, input/controllers)
+  file-by-file (scripts/lib, scripts/product/**, scripts/tooling/**, input/controllers)
   **linted idioms** (workflow-arrows-lint): a brick's stereotype =
   its drawer; every numbered call links the callee method,
-  returns carry no link; step numbers are exactly 1..N
+  returns carry no link; step numbers are exactly 1..N grouped by rank
+  steps are grouped by process in dependency order (prerequisites first);
+  every brick is reachable from an actor (no orphans)
 endlegend
+
+' ── lint suppressions ─────────────────────────────────────────────────────────
+' The ignition engine injects the client controllers by path, never by import.
+' @lint-ignore
+' [I] IGN -> CTRL_DUMPS  # by-path: the controller is spawned by path, not imported
+' [I] IGN -> CTRL_REC    # by-path: the controller is spawned by path, not imported
+' @end
 
 @enduml

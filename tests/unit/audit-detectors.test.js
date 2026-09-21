@@ -9,7 +9,7 @@ import {
   detectHomoglyphs,
   detectHiddenMarkup,
   structuralChannel,
-} from '../../scripts/lib/audit-detectors.mjs';
+} from '../../scripts/product/pr-review/audit/detectors.mjs';
 
 describe('KDV-SCAN-02: Layer-1 structural detectors', () => {
   it('KDV-SCAN-02: flags every invisible/format/bidi character at its own offset', () => {

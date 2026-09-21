@@ -28,7 +28,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-STRUCT-06**: A slug matches `YYYY-MM-DD-<short-name>`, is unique, and equals both its directory name and `manifest.slug`. *(§3)*
 - 🟧 **KDV-STRUCT-07**: Author attribution (`author.github`, `author.pr_url`, `author.merged_at`) is extracted from the merged PR and never filled in manually. *(§3, §7.7; PR-payload extraction tested — live merged-PR metadata needs a remote)*
 - ✅ **KDV-STRUCT-08**: Root carries `README.md`, `LICENSE` (MIT), `LICENSE-CONTENT.md` (CC-BY-4.0), `CONTRIBUTING.md`, `docs/SPEC.md` and `docs/decisions.md`; `static/` is published as-is. *(§3)*
-- ✅ **KDV-STRUCT-09**: New dev scripts live in a semantic subfolder of `scripts/` grouped by the business process or role they serve (`scripts/<role>/`), never flat in `scripts/`; the flat scripts are legacy pending a one-session regroup. Enforced, not asked: `contract.mjs` walks `scripts/` recursively (every module needs a CONTRACT header) and the workflow map requires each `scripts/*` subfolder to be a declared drawer. *(§3, §8.1; tests/unit/contract.test.js, tests/unit/workflow-arrows.test.js)*
+- ✅ **KDV-STRUCT-09**: New dev scripts live in a two-level semantic subfolder `scripts/<category>/<process>/` grouped by category (`product`/`tooling`) and the business process they serve, never flat in `scripts/`; the shared publishing engine stays `scripts/lib/`, and a process folder may mix loose entry-point files with subfolders. The flat scripts are already regrouped. Enforced, not asked: `contract.mjs` walks `scripts/` recursively (every module needs a CONTRACT header) and the workflow map requires EVERY directory under `scripts/` to be a declared drawer. *(§3, §8.1; tests/unit/contract.test.js, tests/unit/workflow-arrows.test.js)*
 
 ## KDV-MANIFEST — Dump manifest (§4)
 
@@ -141,9 +141,12 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CI-16**: The `@kodavr_xyz` Telegram mirror renders a published dump as a `parse_mode=HTML` post — `manifest.tags` as a leading hashtag line (hyphens become underscores) before the title, then the title, the `summary.md` brief converted to Telegram's HTML subset (tables/headings/list markers rebuilt, text escaped; the brief's leading level-1 heading is dropped because the manifest title already leads, unless the title is empty) and the dump link — falling back to an escaped `manifest.summary` when the brief is absent or contains a table, and truncating on block boundaries within the visible-text cap while always keeping the footer. *(§8.3; tests/unit/telegram-mirror.test.js)*
 - ✅ **KDV-CI-17**: After a successful `deploy` on `main`, a `workflow_run` workflow (`publish-telegram.yml`) checks out the run's `head_sha` with full history and runs the Telegram mirror; `previousDeploySha` finds the previous successful deploy's commit via the Actions runs API and only dump files ADDED since then are mirrored (no previous deploy → nothing is posted). *(§8.3; tests/unit/telegram-mirror.test.js)*
 - ✅ **KDV-CI-18**: The mirror orchestration sends each newly published dump to `@kodavr_xyz` (overridable via `TELEGRAM_CHAT_ID`) through the Bot API `sendMessage` with `parse_mode=HTML`, retrying once on 429/5xx/network errors; a missing token/chat/text is a silent skip, and an unparseable manifest is skipped without stopping the batch — the sender and the orchestrator never throw. *(§8.3; tests/unit/telegram-mirror.test.js)*
-- ✅ **KDV-CI-19**: The `deploy` build job runs the §8.1 content gate (`node scripts/validate.mjs`) before `npm run build`, so a BLOCK finding stops publication — the gate is a prerequisite of the published artifact, not a parallel workflow. *(§8.1, §8.3)*
+- ✅ **KDV-CI-19**: The `deploy` build job runs the §8.1 content gate (`node scripts/tooling/quality-gates/validate.mjs`) before `npm run build`, so a BLOCK finding stops publication — the gate is a prerequisite of the published artifact, not a parallel workflow. *(§8.1, §8.3)*
 - ✅ **KDV-CI-20**: The manifest card escapes angle brackets in author-supplied text (`summary.md` brief and manifest string fields), so an author string cannot inject raw HTML, close the card's `<details>`, or forge the sticky comment marker. *(§8.1, §9)*
 - ✅ **KDV-CI-21**: `npm run workflow-arrows:svg` injects a whole-arrow hover block into the rendered `docs/workflow-arrows.svg` — the entire `g.link` (line `path`, head `polygon`, label) lights up in the `.puml`'s `skinparam pathHoverColor` colour (one source) and lingers ~5s after the pointer leaves, so a long arrow stays lit while the reader scrolls to its far end; injection is idempotent and the committed `.svg` must carry the block. *(§8.1; tests/unit/workflow-arrows-svg.test.js)*
+- ✅ **KDV-CI-22**: The workflow map encodes business processes by arrow colour (a 5-process palette), numbers every flow globally in dependency order (steps grouped by process rank), and anchors every non-external brick to an actor (no orphans); enforced by the map linter. *(§8.1; tests/unit/workflow-arrows.test.js)*
+- ✅ **KDV-CI-23**: The workflow map carries a `.gitignore`-style `@lint-ignore` block that may suppress ONLY the cheap-validation codes (`I`, `P1`–`P3`); every mask states a reason mechanism (`by-path|dynamic|transitive|non-module`) plus free text and matches the problem key `CODE: subject` (`*`/`?` globs, `!` negation, last match wins). A mask targeting a structural check (A–H, M), a mask without a valid reason, an unused mask, or an unterminated block is itself an `M` error and is never applied; suppressed problems are reported (`suppressed N`) but never hidden. *(§8.1; tests/unit/workflow-arrows.test.js)*
+- ✅ **KDV-CI-24**: A drawn edge between two module bricks must correspond to a real import (either direction); the linter resolves the first-party import graph over `scripts/` and `input/` and the real map's only false positives (the by-path ignition controllers) are suppressed via a justified `@lint-ignore` mask. *(§8.1; tests/unit/workflow-arrows.test.js)*
 
 ## KDV-MOD — Moderation and social layer (§9)
 
@@ -277,7 +280,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 12 | 12 | 0 | 0 | 0 |
-| KDV-CI | 21 | 19 | 2 | 0 | 0 |
+| KDV-CI | 24 | 22 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-AUDIT | 16 | 13 | 0 | 3 | 0 |
 | KDV-SCAN | 16 | 10 | 1 | 5 | 0 |
@@ -286,4 +289,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **205** | **164** | **14** | **26** | **1** |
+| **Total** | **208** | **167** | **14** | **26** | **1** |

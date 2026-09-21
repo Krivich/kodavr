@@ -55,7 +55,7 @@ describe('architectural decisions (§0)', () => {
     // own origin, so only this level can catch a dev host leaking into a deploy
     // (reviewer item 9). The deploy host is already declared in static/CNAME —
     // the build entry must agree with it.
-    const domain = read('scripts/build.mjs').match(/domain:\s*'([^']+)'/)[1];
+    const domain = read('scripts/product/site-build/build.mjs').match(/domain:\s*'([^']+)'/)[1];
     const deployHost = read('static/CNAME').trim();
     expect(new URL(domain).host).toBe(deployHost);
     expect(domain).toBe(`https://${deployHost}`);
@@ -64,12 +64,12 @@ describe('architectural decisions (§0)', () => {
 
 describe('single controller (§8.2)', () => {
   it('KDV-BUILD-06: one controller is invoked both by `npm run build` and by CI', () => {
-    // Locally: npm run build -> scripts/build.mjs.
+    // Locally: npm run build -> scripts/product/site-build/build.mjs.
     const pkg = JSON.parse(read('package.json'));
-    expect(pkg.scripts.build).toBe('node scripts/build.mjs');
+    expect(pkg.scripts.build).toBe('node scripts/product/site-build/build.mjs');
     // The entrypoint delegates to the one controller module.
-    const entry = read('scripts/build.mjs');
-    expect(entry).toContain("from './lib/build.mjs'");
+    const entry = read('scripts/product/site-build/build.mjs');
+    expect(entry).toContain("from '../../lib/build.mjs'");
     expect(entry).toContain('buildProject');
     // In CI: the very same npm script, so local and CI share one code path.
     expect(read('.github/workflows/deploy.yml')).toContain('npm run build');

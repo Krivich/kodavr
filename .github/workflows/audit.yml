@@ -25,9 +25,9 @@ jobs:
       - name: content gate
         id: validate
         continue-on-error: true
-        run: node scripts/validate.mjs
+        run: node scripts/tooling/quality-gates/validate.mjs
       - name: audit
-        run: node scripts/audit-pr.mjs
+        run: node scripts/product/pr-review/pr.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUDIT_CONTENT_GATE_OK: ${{ steps.validate.outcome == 'success' && '1' || '0' }}

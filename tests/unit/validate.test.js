@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdtemp, mkdir, writeFile, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { validateContent } from '../../scripts/validate.mjs';
+import { validateContent } from '../../scripts/tooling/quality-gates/validate.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const WORKFLOW = join(ROOT, '.github', 'workflows', 'validate.yml');
@@ -72,7 +72,7 @@ describe('content validator', () => {
     expect(yml).toMatch(/actions\/checkout@/);
     expect(yml).toMatch(/actions\/setup-node@/);
     expect(yml).toContain('npm ci');
-    expect(yml).toContain('node scripts/validate.mjs');
+    expect(yml).toContain('node scripts/tooling/quality-gates/validate.mjs');
     expect(yml).toContain('npm test');
   });
 

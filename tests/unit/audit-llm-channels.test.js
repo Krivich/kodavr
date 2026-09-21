@@ -4,9 +4,9 @@
 // flag channel (THINK), never a silent merge or a crash. No real network: every
 // call goes through an injected fake fetch; no real timer: sleep is injected.
 import { describe, it, expect } from 'vitest';
-import { buildLlmChannels } from '../../scripts/lib/audit-llm-channels.mjs';
-import { validateChannelResult } from '../../scripts/lib/audit-channel.mjs';
-import { JUDGE_SYSTEM, JUDGE_SYSTEM_SKEPTICAL } from '../../scripts/lib/audit-judge.mjs';
+import { buildLlmChannels } from '../../scripts/product/pr-review/audit/llm/llm-channels.mjs';
+import { validateChannelResult } from '../../scripts/product/pr-review/audit/channel.mjs';
+import { JUDGE_SYSTEM, JUDGE_SYSTEM_SKEPTICAL } from '../../scripts/product/pr-review/audit/llm/judge.mjs';
 
 // A complete provider env with a literal test key — nothing here is a secret.
 const ENV = {

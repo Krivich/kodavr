@@ -158,7 +158,7 @@ Illegal content (CSAM, extremism, calls to violence, stolen data) is blocked
 unconditionally. Two layers:
 
 1. **Heuristic:** `config/black-zone.json` lists the categories and conservative,
-   category-anchored patterns; `scripts/validate.mjs` scans every dump's text
+   category-anchored patterns; `scripts/tooling/quality-gates/validate.mjs` scans every dump's text
    files and emits a `KDV-CI-08` BLOCK naming the file and category. The config
    is declarative (a file, not code) and detection is **best-effort**: a miss is
    not permission. A missing or malformed config fails visible — never a silent
@@ -177,7 +177,7 @@ GitHub Issues.
 ## PR security audit — shadow mode (KDV-REVIEW-12/19/22)
 
 The `audit` workflow (`.github/workflows/audit.yml`) runs the deterministic PR
-audit (`scripts/audit-pr.mjs`) on every same-repo `pull_request`. It fetches the
+audit (`scripts/product/pr-review/pr.mjs`) on every same-repo `pull_request`. It fetches the
 diff and the author signals through the GitHub REST API — **no checkout** — and
 publishes two advisory surfaces:
 
@@ -192,7 +192,7 @@ merged automatically. The workflow holds one secret — the audit-only LLM key
 other outcome is `failure`. No numeric score is printed to the comment or the
 status description (KDV-SCAN-15 stays open for the privacy phase).
 
-The content gate reuses `scripts/validate.mjs`: the sibling step runs it with
+The content gate reuses `scripts/tooling/quality-gates/validate.mjs`: the sibling step runs it with
 `continue-on-error`, and its outcome is handed to the audit as
 `AUDIT_CONTENT_GATE_OK` (`1` only on success), so a red content gate can never be
 turned green from the PR text. Without a checkout the manifest body is not read
@@ -203,7 +203,7 @@ here — `facts` stays empty and the content gate is the only content signal.
 (KDV-CI-14, KDV-AUDIT-07). A fork's token is read-only and cannot comment.
 
 Thresholds are the module defaults (`DEFAULT_MIN_ACCOUNT_AGE_DAYS`,
-`DEFAULT_MAX_PRS_PER_DAY` in `scripts/lib/audit-envelope.mjs`); the §13.2
+`DEFAULT_MAX_PRS_PER_DAY` in `scripts/product/pr-review/audit/envelope.mjs`); the §13.2
 configuration is not wired yet.
 
 ### Enabling the status as a required check (not done)
@@ -222,7 +222,7 @@ privatized (KDV-REVIEW-14, KDV-SCAN-15).
 
 ## Audit LLM key and the two-run judge ensemble (KDV-SCAN-07/08)
 
-The `audit` workflow enables the LLM layers by handing `scripts/audit-pr.mjs`
+The `audit` workflow enables the LLM layers by handing `scripts/product/pr-review/pr.mjs`
 three environment variables. The endpoint and model are **non-secret literals
 pinned in `.github/workflows/audit.yml`** (currently the neuraldeep provider,
 `https://api.neuraldeep.ru/v1/chat/completions`, model `gpt-oss-120b`); only the

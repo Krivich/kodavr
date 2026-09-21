@@ -7,8 +7,8 @@ import {
   ACTION_CLASSES,
   envelopeAllPass,
   evaluatePolicy,
-} from '../../scripts/lib/audit-policy.mjs';
-import { makeChannelResult, makeSpan } from '../../scripts/lib/audit-channel.mjs';
+} from '../../scripts/product/pr-review/audit/policy.mjs';
+import { makeChannelResult, makeSpan } from '../../scripts/product/pr-review/audit/channel.mjs';
 
 const ALL_PASS = {
   additionsOnly: true,

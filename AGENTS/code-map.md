@@ -19,75 +19,6 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — the gate ships hidden in SSR: without JS the body is the whole page; — focus never falls to <body> when an overlay closes
 - **input/controllers/reception.js** — the /reception/ copy prompt and the conscious re-declaration link
   invariants: — there is no gate on this route; it is the human destination
-- **scripts/audit-judge-local.mjs** — CLI — runs the Layer-4 LLM judge over the repository's own dumps and prints the verdicts
-  consumes: node:fs, node:path, node:os, ./lib/audit-llm.mjs, ./lib/audit-judge.mjs, ./lib/audit-trace.mjs, ./lib/audit-meta.mjs
-  invariants: — the key never reaches stdout/stderr: only the provider NAME and the MODEL are printed; — no provider or a network error is a loud exit 1, never a silent skip; — only verdict/flags/reasons/spans are printed — never a numeric score or confidence; — --trace never crashes on a trace-less provider: both Layer-5 channels print `skipped`
-- **scripts/audit-local.mjs** — CLI — runs the audit pipeline over the repository's own dumps and prints the verdicts
-  consumes: node:fs, node:path, ./lib/audit-local.mjs
-  invariants: — offline: no network and no token; everything reads the local content/dumps tree; — the forensic map is printed without numeric scores, at most once per dump; — exit 0 by default; --strict is the only path to a non-zero exit
-- **scripts/audit-pr.mjs** — audits a pull request via the GitHub REST API and posts the advisory comment and status
-  consumes: node:fs, ./lib/audit-pr.mjs, ./lib/audit-report.mjs, ./lib/audit-llm-channels.mjs, ./lib/audit-llm.mjs
-  invariants: — no checkout: the diff and author signals come from the REST API only; — fork PRs are skipped (read-only token): same-repo only, never posted to; — an unexpected error is printed and the process exits 1 (fail-visible)
-- **scripts/build.mjs** — the npm run build entry point
-  consumes: ./lib/build.mjs, node:url
-- **scripts/contract.mjs** — contract-header validator + module-index generator for AGENTS/code-map.md
-  exports: MARK_BEGIN, MARK_END, actualExports, actualImports, contractFiles, generateIndex, parseHeader, rewriteIndex, validate, validateAll, walkTrees
-  consumes: node:fs, node:path, node:url
-  invariants: — the map cannot lie: a header must equal the code's exports/imports both ways; — scripts is walked recursively (role subfolders included); the set is deduped
-- **scripts/generate-og-image.mjs** — rasterizes the 1200x630 OG card from the wordmark + OG tagline
-  consumes: ./lib/pages.mjs, @playwright/test, node:fs/promises, node:path, node:url
-  invariants: — the card is generated, never hand-edited
-- **scripts/generate-touch-icon.mjs** — rasterizes the touch icon from the wordmark
-  consumes: @playwright/test, node:fs/promises, node:path, node:url
-  invariants: — the icon is generated, never hand-edited
-- **scripts/lib/audit-channel.mjs** — the channel-output schema — spans, normalized channel results and their allowlist validator
-  exports: CHANNEL_VERDICTS, makeSpan, makeChannelResult, validateChannelResult
-  invariants: — a channel result carries only channel/score/spans/verdict; anything else is a schema error; — validation never throws: an unknown shape is reported, not fatal
-- **scripts/lib/audit-detectors.mjs** — Layer-1 deterministic structural detectors — invisible chars, base64 blobs, homoglyphs, hidden markup
-  exports: INVISIBLE_RANGES, detectInvisibleChars, detectBase64Blobs, detectHomoglyphs, detectHiddenMarkup, structuralChannel
-  consumes: ./audit-channel.mjs
-  invariants: — every detector is deterministic and returns 0-based character offsets; — a clean text returns an empty span list, never null
-- **scripts/lib/audit-envelope.mjs** — Layer-0 deterministic envelope over git metadata and author signals (reads no content text)
-  exports: DUMPS_ROOT, DEFAULT_MIN_ACCOUNT_AGE_DAYS, DEFAULT_MAX_PRS_PER_DAY, checkDiffShape, checkAuthorSignals, evaluateEnvelope
-  consumes: ./audit-policy.mjs
-  invariants: — the envelope never reads content text; it works on metadata and schema only; — a missing or malformed input is a FAILED condition, never a thrown error
-- **scripts/lib/audit-forensic.mjs** — converges channel spans into the top-N forensic map a human sees
-  exports: MAX_FORENSIC_FINDINGS, buildForensicMap
-  invariants: — overlapping spans in one file converge into one finding; no numeric score leaks; — ordering is deterministic: convergence count desc, span length desc, then position
-- **scripts/lib/audit-judge.mjs** — Layer 4 — frame the diff as data, call the LLM judge and allowlist its strict-JSON verdict
-  exports: JUDGE_VERDICTS, JUDGE_SCHEMA, JUDGE_SYSTEM, JUDGE_SYSTEM_SKEPTICAL, frameContent, buildJudgeMessages, parseJudgeReply, judgeChannel, ensembleVerdict, judgeEnsembleChannel
-  consumes: ./audit-channel.mjs, ./audit-llm.mjs
-  invariants: — the judge classifies risk only; it can never emit MERGE or a merge recommendation; — any deviation from the schema becomes a flag (the policy then yields THINK), never a throw
-- **scripts/lib/audit-llm-channels.mjs** — wire Layers 4+5 into one channel list — judge (+ ensemble) and trace channels, degrading visibly
-  exports: buildLlmChannels
-  consumes: ./audit-channel.mjs, ./audit-llm.mjs, ./audit-judge.mjs, ./audit-trace.mjs, ./audit-meta.mjs
-  invariants: — pure of side effects except the injected fetch: no environment read beyond the passed env, no clock, no key logged; — a provider failure degrades to a VISIBLE llm-error flag channel (THINK); never a silent merge or a crash; — a missing reasoning trace simply drops the Layer-5 channels (graceful degradation, §4.6.6); — never throws: every failure becomes a channel or a skipped step
-- **scripts/lib/audit-llm.mjs** — the LLM provider client — resolve credentials (env/auth/config) and one strict-JSON chat call
-  exports: DEFAULT_REQUEST_TIMEOUT_MS, OPENCODE_ENDPOINT, OPENCODE_MODEL, OPENCODE_SESSION, providerFromEnv, providerFromAuth, providerFromWorkflowConfig, callAuditLLM, withRetry
-  invariants: — the key is never logged, returned in an error, or placed in the request body; — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback; — every request is bounded by an AbortController timeout; a hung provider is a loud throw; — fetch is injected so tests never touch the network
-- **scripts/lib/audit-local.mjs** — the repeatable local harness — the repository's own dumps → the audit pipeline's verdicts
-  exports: TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns
-  consumes: ./audit-pr.mjs
-  invariants: — pure: no fs, no network, no environment; the CLI owns every disk read; — filenames are synthesized as additions under content/dumps/<slug>/ — nothing else; — the harness reports the pipeline's verdicts verbatim; it never re-tunes them
-- **scripts/lib/audit-meta.mjs** — Layer 5 (LLM half) — the meta-reviewer over a quote-masked trace, an independent witness channel
-  exports: META_SCHEMA, JUDGE_SCHEMA, META_SYSTEM, buildMetaMessages, metaReviewChannel
-  consumes: ./audit-channel.mjs, ./audit-llm.mjs, ./audit-judge.mjs, ./audit-trace.mjs
-  invariants: — the meta call receives ONLY the masked trace; the raw dump never enters the prompt (§4.6.3); — the meta-prompt carries only trusted material; the trace is data about a model, not instructions (§4.6.5); — a missing trace is a skipped result, never a throw; the caller redistributes the weights (§4.6.6); — any schema deviation becomes a flag (the policy then yields THINK), never a throw
-- **scripts/lib/audit-policy.mjs** — the deterministic policy — envelope + channel results → a recommendation and an action class
-  exports: DECISIONS, ACTION_CLASSES, DEFAULT_CONFLICT_THRESHOLD, envelopeAllPass, evaluatePolicy
-  consumes: ./audit-channel.mjs, ./audit-forensic.mjs
-  invariants: — the LLM has no authority: only this deterministic code computes the recommendation; — any exception or malformed channel fails toward a human (THINK/MANUAL), never toward MERGE
-- **scripts/lib/audit-pr.mjs** — orchestrates the PR audit — API inputs → envelope + policy → advisory comment and status check
-  exports: STATUS_CONTEXT, normalizePrFiles, authorSignalsFromApi, runAudit
-  consumes: ./audit-detectors.mjs, ./audit-envelope.mjs, ./audit-policy.mjs, ./audit-report.mjs
-  invariants: — pure and deterministic: it performs no I/O and reads no environment; — the shadow phase asserts no merge authority: the rendered class is always MANUAL; — no numeric score ever reaches the comment or the status description
-- **scripts/lib/audit-report.mjs** — renders the advisory sticky PR comment — the forensic map without scores, escaped
-  exports: AUDIT_MARKER, renderAuditComment
-  invariants: — no numeric score ever reaches the comment; only file spans, reasons and channel ids; — author-supplied text is angle-escaped, and every report carries the data-not-instructions footer
-- **scripts/lib/audit-trace.mjs** — Layer 5 (deterministic half) — residue classifier over the judge's raw reasoning trace and a non-LLM quote-masker
-  exports: TRACE_SIGNALS, GOAL_SHIFT_PATTERNS, IMPERATIVE_PATTERNS, detectTraceResidue, quoteMask, traceResidueChannel
-  consumes: ./audit-channel.mjs
-  invariants: — pure and deterministic: no network, no LLM, no clock, no randomness in this module; — a missing trace is a skipped result, never a throw; the caller redistributes the weights (§4.6.6); — the classifier reads the MASKED trace, so a payload the trace merely quotes is not read as its own goal; — masking removes every >= WINDOW-token normalized sequence shared with a diff file; the rest is verbatim
 - **scripts/lib/build.mjs** — the one build pipeline: content → datasets → engine → machine files
   exports: buildProject
   consumes: ./dumps.mjs, ./i18n.mjs, ./ignition.mjs, ./machine.mjs, ./pages.mjs, ./relativize.mjs, node:fs/promises, node:module, node:path
@@ -160,29 +91,98 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/lib/verbatim.mjs** — the verbatim robots.txt and humans.txt the build must not alter
   exports: HUMANS_TXT, ROBOTS_TXT
   invariants: — these files are served verbatim; the engine's defaults are overwritten
-- **scripts/pr-manifest-card.mjs** — posts or updates the sticky manifest-card comment on a pull request
-  consumes: ./lib/manifest-card.mjs, node:fs, node:path
+- **scripts/product/brand-media/generate-og-image.mjs** — rasterizes the 1200x630 OG card from the wordmark + OG tagline
+  consumes: ../../lib/pages.mjs, @playwright/test, node:fs/promises, node:path, node:url
+  invariants: — the card is generated, never hand-edited
+- **scripts/product/brand-media/generate-touch-icon.mjs** — rasterizes the touch icon from the wordmark
+  consumes: @playwright/test, node:fs/promises, node:path, node:url
+  invariants: — the icon is generated, never hand-edited
+- **scripts/product/pr-review/audit/channel.mjs** — the channel-output schema — spans, normalized channel results and their allowlist validator
+  exports: CHANNEL_VERDICTS, makeSpan, makeChannelResult, validateChannelResult
+  invariants: — a channel result carries only channel/score/spans/verdict; anything else is a schema error; — validation never throws: an unknown shape is reported, not fatal
+- **scripts/product/pr-review/audit/detectors.mjs** — Layer-1 deterministic structural detectors — invisible chars, base64 blobs, homoglyphs, hidden markup
+  exports: INVISIBLE_RANGES, detectInvisibleChars, detectBase64Blobs, detectHomoglyphs, detectHiddenMarkup, structuralChannel
+  consumes: ./channel.mjs
+  invariants: — every detector is deterministic and returns 0-based character offsets; — a clean text returns an empty span list, never null
+- **scripts/product/pr-review/audit/envelope.mjs** — Layer-0 deterministic envelope over git metadata and author signals (reads no content text)
+  exports: DUMPS_ROOT, DEFAULT_MIN_ACCOUNT_AGE_DAYS, DEFAULT_MAX_PRS_PER_DAY, checkDiffShape, checkAuthorSignals, evaluateEnvelope
+  consumes: ./policy.mjs
+  invariants: — the envelope never reads content text; it works on metadata and schema only; — a missing or malformed input is a FAILED condition, never a thrown error
+- **scripts/product/pr-review/audit/forensic.mjs** — converges channel spans into the top-N forensic map a human sees
+  exports: MAX_FORENSIC_FINDINGS, buildForensicMap
+  invariants: — overlapping spans in one file converge into one finding; no numeric score leaks; — ordering is deterministic: convergence count desc, span length desc, then position
+- **scripts/product/pr-review/audit/llm/judge.mjs** — Layer 4 — frame the diff as data, call the LLM judge and allowlist its strict-JSON verdict
+  exports: JUDGE_VERDICTS, JUDGE_SCHEMA, JUDGE_SYSTEM, JUDGE_SYSTEM_SKEPTICAL, frameContent, buildJudgeMessages, parseJudgeReply, judgeChannel, ensembleVerdict, judgeEnsembleChannel
+  consumes: ../channel.mjs, ./llm.mjs
+  invariants: — the judge classifies risk only; it can never emit MERGE or a merge recommendation; — any deviation from the schema becomes a flag (the policy then yields THINK), never a throw
+- **scripts/product/pr-review/audit/llm/llm-channels.mjs** — wire Layers 4+5 into one channel list — judge (+ ensemble) and trace channels, degrading visibly
+  exports: buildLlmChannels
+  consumes: ../channel.mjs, ./llm.mjs, ./judge.mjs, ./trace.mjs, ./meta.mjs
+  invariants: — pure of side effects except the injected fetch: no environment read beyond the passed env, no clock, no key logged; — a provider failure degrades to a VISIBLE llm-error flag channel (THINK); never a silent merge or a crash; — a missing reasoning trace simply drops the Layer-5 channels (graceful degradation, §4.6.6); — never throws: every failure becomes a channel or a skipped step
+- **scripts/product/pr-review/audit/llm/llm.mjs** — the LLM provider client — resolve credentials (env/auth/config) and one strict-JSON chat call
+  exports: DEFAULT_REQUEST_TIMEOUT_MS, OPENCODE_ENDPOINT, OPENCODE_MODEL, OPENCODE_SESSION, providerFromEnv, providerFromAuth, providerFromWorkflowConfig, callAuditLLM, withRetry
+  invariants: — the key is never logged, returned in an error, or placed in the request body; — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback; — every request is bounded by an AbortController timeout; a hung provider is a loud throw; — fetch is injected so tests never touch the network
+- **scripts/product/pr-review/audit/llm/meta.mjs** — Layer 5 (LLM half) — the meta-reviewer over a quote-masked trace, an independent witness channel
+  exports: META_SCHEMA, JUDGE_SCHEMA, META_SYSTEM, buildMetaMessages, metaReviewChannel
+  consumes: ../channel.mjs, ./llm.mjs, ./judge.mjs, ./trace.mjs
+  invariants: — the meta call receives ONLY the masked trace; the raw dump never enters the prompt (§4.6.3); — the meta-prompt carries only trusted material; the trace is data about a model, not instructions (§4.6.5); — a missing trace is a skipped result, never a throw; the caller redistributes the weights (§4.6.6); — any schema deviation becomes a flag (the policy then yields THINK), never a throw
+- **scripts/product/pr-review/audit/llm/trace.mjs** — Layer 5 (deterministic half) — residue classifier over the judge's raw reasoning trace and a non-LLM quote-masker
+  exports: TRACE_SIGNALS, GOAL_SHIFT_PATTERNS, IMPERATIVE_PATTERNS, detectTraceResidue, quoteMask, traceResidueChannel
+  consumes: ../channel.mjs
+  invariants: — pure and deterministic: no network, no LLM, no clock, no randomness in this module; — a missing trace is a skipped result, never a throw; the caller redistributes the weights (§4.6.6); — the classifier reads the MASKED trace, so a payload the trace merely quotes is not read as its own goal; — masking removes every >= WINDOW-token normalized sequence shared with a diff file; the rest is verbatim
+- **scripts/product/pr-review/audit/local.mjs** — the repeatable local harness — the repository's own dumps → the audit pipeline's verdicts
+  exports: TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns
+  consumes: ./pr.mjs
+  invariants: — pure: no fs, no network, no environment; the CLI owns every disk read; — filenames are synthesized as additions under content/dumps/<slug>/ — nothing else; — the harness reports the pipeline's verdicts verbatim; it never re-tunes them
+- **scripts/product/pr-review/audit/policy.mjs** — the deterministic policy — envelope + channel results → a recommendation and an action class
+  exports: DECISIONS, ACTION_CLASSES, DEFAULT_CONFLICT_THRESHOLD, envelopeAllPass, evaluatePolicy
+  consumes: ./channel.mjs, ./forensic.mjs
+  invariants: — the LLM has no authority: only this deterministic code computes the recommendation; — any exception or malformed channel fails toward a human (THINK/MANUAL), never toward MERGE
+- **scripts/product/pr-review/audit/pr.mjs** — orchestrates the PR audit — API inputs → envelope + policy → advisory comment and status check
+  exports: STATUS_CONTEXT, normalizePrFiles, authorSignalsFromApi, runAudit
+  consumes: ./detectors.mjs, ./envelope.mjs, ./policy.mjs, ./report.mjs
+  invariants: — pure and deterministic: it performs no I/O and reads no environment; — the shadow phase asserts no merge authority: the rendered class is always MANUAL; — no numeric score ever reaches the comment or the status description
+- **scripts/product/pr-review/audit/report.mjs** — renders the advisory sticky PR comment — the forensic map without scores, escaped
+  exports: AUDIT_MARKER, renderAuditComment
+  invariants: — no numeric score ever reaches the comment; only file spans, reasons and channel ids; — author-supplied text is angle-escaped, and every report carries the data-not-instructions footer
+- **scripts/product/pr-review/judge.mjs** — CLI — runs the Layer-4 LLM judge over the repository's own dumps and prints the verdicts
+  consumes: node:fs, node:path, node:os, ./audit/llm/llm.mjs, ./audit/llm/judge.mjs, ./audit/llm/trace.mjs, ./audit/llm/meta.mjs
+  invariants: — the key never reaches stdout/stderr: only the provider NAME and the MODEL are printed; — no provider or a network error is a loud exit 1, never a silent skip; — only verdict/flags/reasons/spans are printed — never a numeric score or confidence; — --trace never crashes on a trace-less provider: both Layer-5 channels print `skipped`
+- **scripts/product/pr-review/local.mjs** — CLI — runs the audit pipeline over the repository's own dumps and prints the verdicts
+  consumes: node:fs, node:path, ./audit/local.mjs
+  invariants: — offline: no network and no token; everything reads the local content/dumps tree; — the forensic map is printed without numeric scores, at most once per dump; — exit 0 by default; --strict is the only path to a non-zero exit
+- **scripts/product/pr-review/pr-manifest-card.mjs** — posts or updates the sticky manifest-card comment on a pull request
+  consumes: ../../lib/manifest-card.mjs, node:fs, node:path
   invariants: — the manifest and summary.md are the only source; the comment is a render, never an input
-- **scripts/req-coverage.js** — reconciles requirement IDs between REQUIREMENTS.md and the tests
-  consumes: node:fs, node:path, node:url
-  invariants: — a ✅ row without a test, or a test ID absent from the registry, exits 1
-- **scripts/serve.mjs** — the npm run serve local preview server
-  consumes: ./lib/static-server.mjs, node:path, node:url
-- **scripts/state-diet.mjs** — moves the STATE.md chronicle into docs/history/state.md
+- **scripts/product/pr-review/pr.mjs** — audits a pull request via the GitHub REST API and posts the advisory comment and status
+  consumes: node:fs, ./audit/pr.mjs, ./audit/report.mjs, ./audit/llm/llm-channels.mjs, ./audit/llm/llm.mjs
+  invariants: — no checkout: the diff and author signals come from the REST API only; — fork PRs are skipped (read-only token): same-repo only, never posted to; — an unexpected error is printed and the process exits 1 (fail-visible)
+- **scripts/product/site-build/build.mjs** — the npm run build entry point
+  consumes: ../../lib/build.mjs, node:url
+- **scripts/product/telegram/telegram-mirror.mjs** — posts every newly published dump to the Telegram channel after a deploy
+  consumes: node:child_process, node:fs, ../../lib/manifest-card.mjs, ../../lib/telegram-mirror.mjs
+  invariants: — the bot token is read from the environment only, never source; — the entry point always exits 0; a missing token/event/diff is a logged skip
+- **scripts/tooling/dev-tools/serve.mjs** — the npm run serve local preview server
+  consumes: ../../lib/static-server.mjs, node:path, node:url
+- **scripts/tooling/dev-tools/state-diet.mjs** — moves the STATE.md chronicle into docs/history/state.md
   consumes: node:fs, node:path, node:url
   invariants: — the STATE.md head keeps only "now"; history moves below the marker
-- **scripts/telegram-mirror.mjs** — posts every newly published dump to the Telegram channel after a deploy
-  consumes: node:child_process, node:fs, ./lib/manifest-card.mjs, ./lib/telegram-mirror.mjs
-  invariants: — the bot token is read from the environment only, never source; — the entry point always exits 0; a missing token/event/diff is a logged skip
-- **scripts/validate.mjs** — the KDV-CI content gate over content/dumps (§8.1)
+- **scripts/tooling/quality-gates/contract.mjs** — contract-header validator + module-index generator for AGENTS/code-map.md
+  exports: MARK_BEGIN, MARK_END, actualExports, actualImports, contractFiles, generateIndex, parseHeader, rewriteIndex, validate, validateAll, walkTrees
+  consumes: node:fs, node:path, node:url
+  invariants: — the map cannot lie: a header must equal the code's exports/imports both ways; — scripts is walked recursively (role subfolders included); the set is deduped
+- **scripts/tooling/quality-gates/req-coverage.js** — reconciles requirement IDs between REQUIREMENTS.md and the tests
+  consumes: node:fs, node:path, node:url
+  invariants: — a ✅ row without a test, or a test ID absent from the registry, exits 1
+- **scripts/tooling/quality-gates/validate.mjs** — the KDV-CI content gate over content/dumps (§8.1)
   exports: loadBlackZoneCategories, shannonEntropy, validateContent, validateManifest
-  consumes: ./lib/machine.mjs, node:fs/promises, node:path, node:url
+  consumes: ../../lib/machine.mjs, node:fs/promises, node:path, node:url
   invariants: — a BLOCK finding exits non-zero; nothing is published on a red gate
-- **scripts/workflow-arrows-lint.mjs** — the drift alarm for docs/workflow-arrows.puml against the code tree
-  exports: DRIFT_GUIDANCE, bricks, declaredDrawers, lintDiagram, main, missingScriptDrawers, parseLinks, symbolDeclared
+- **scripts/tooling/workflow-map/workflow-arrows-lint.mjs** — the drift alarm for docs/workflow-arrows.puml against the code tree
+  exports: DRIFT_GUIDANCE, MASKABLE_CODES, PROCESSES, STRUCTURAL_COLOR, actorAliases, bricks, declaredDrawers, formatProblem, lintDiagram, lintProblems, main, missingScriptDrawers, parseArrows, parseLinks, symbolDeclared
   consumes: node:fs, node:path, node:url
   invariants: — a red lint names the drift and exits 1; it is never weakened to pass
-- **scripts/workflow-arrows-svg.mjs** — post-processes the rendered docs/workflow-arrows.svg to add the hover highlight
+- **scripts/tooling/workflow-map/workflow-arrows-svg.mjs** — post-processes the rendered docs/workflow-arrows.svg to add the hover highlight
   exports: injectHover, parseHoverColor, main
   consumes: node:fs, node:path, node:url
   invariants: — injection is idempotent: the block carries a marker and is replaced, never doubled; — the hover colour has one source: skinparam pathHoverColor in the .puml
@@ -196,24 +196,24 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - machine surface: `scripts/lib/machine.mjs:buildIndex` — index.json, well-known, feeds, tags,
   sitemap; generated, never hand-edited.
 - copydeck: `scripts/lib/copy.mjs` — every human string; docs/SPEC.md §7 must agree verbatim.
-- diagram drift: `scripts/workflow-arrows-lint.mjs:lintDiagram` — the puml must match the code tree.
-- content gate: `scripts/validate.mjs:validateContent` — a BLOCK finding exits non-zero.
-- module index: `scripts/contract.mjs:validateAll` — a header must equal a module's real
+- diagram drift: `scripts/tooling/workflow-map/workflow-arrows-lint.mjs:lintDiagram` — the puml must match the code tree.
+- content gate: `scripts/tooling/quality-gates/validate.mjs:validateContent` — a BLOCK finding exits non-zero.
+- module index: `scripts/tooling/quality-gates/contract.mjs:validateAll` — a header must equal a module's real
   exports/imports both ways.
 
 ### Workspace tree
 
 ```
 scripts/
-  build.mjs                  npm run build entry point
-  contract.mjs               contract-header validator + module-index generator
-  generate-og-image.mjs      OG card rasterizer (playwright, dev)
-  generate-touch-icon.mjs    touch-icon rasterizer (playwright, dev)
-  req-coverage.js            REQUIREMENTS.md <-> tests reconciliation
-  serve.mjs                  local preview server
-  state-diet.mjs             STATE.md chronicle -> docs/history/state.md
-  validate.mjs               KDV-CI content gate over content/dumps
-  workflow-arrows-lint.mjs   diagram drift alarm
+  product/
+    site-build/build.mjs       npm run build entry point
+    pr-review/                 PR audit engine + CLIs (pr/local/judge.mjs, pr-manifest-card.mjs)
+    telegram/                  telegram-mirror.mjs — CI dump mirror
+    brand-media/               generate-og-image.mjs, generate-touch-icon.mjs (playwright, dev)
+  tooling/
+    quality-gates/             validate.mjs (content gate), contract.mjs (module index), req-coverage.js
+    workflow-map/              workflow-arrows-lint.mjs (drift alarm), workflow-arrows-svg.mjs (hover)
+    dev-tools/                 serve.mjs (preview), state-diet.mjs (STATE.md chronicle)
   lib/
     build.mjs                the one build pipeline
     copy.mjs                 every human string (§7)

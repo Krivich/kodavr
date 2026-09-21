@@ -11,7 +11,7 @@ import {
   CONSUMPTION_CONTRACT_SEE,
   CONTENT_FLAGS_VOCABULARY,
 } from '../../scripts/lib/machine.mjs';
-import { validateManifest } from '../../scripts/validate.mjs';
+import { validateManifest } from '../../scripts/tooling/quality-gates/validate.mjs';
 import { HIGH_STAKES_DISCLAIMER } from '../../scripts/lib/copy.mjs';
 
 const EXAMPLES = fileURLToPath(new URL('../manifest-examples', import.meta.url));

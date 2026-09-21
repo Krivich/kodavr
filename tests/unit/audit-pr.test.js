@@ -8,8 +8,8 @@ import {
   normalizePrFiles,
   authorSignalsFromApi,
   runAudit,
-} from '../../scripts/lib/audit-pr.mjs';
-import { AUDIT_MARKER } from '../../scripts/lib/audit-report.mjs';
+} from '../../scripts/product/pr-review/audit/pr.mjs';
+import { AUDIT_MARKER } from '../../scripts/product/pr-review/audit/report.mjs';
 
 const CLEAN_FILES = [
   { filename: 'content/dumps/demo/raw.md', status: 'added' },

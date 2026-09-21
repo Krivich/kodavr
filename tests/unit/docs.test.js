@@ -61,7 +61,7 @@ describe('project-facing docs', () => {
     for (const phrase of CONTRIBUTING_RULES) {
       expect(contributing, `CONTRIBUTING rule phrase: ${phrase}`).toContain(phrase);
     }
-    expect(contributing).toContain('node scripts/validate.mjs');
+    expect(contributing).toContain('node scripts/tooling/quality-gates/validate.mjs');
 
     const template = read('.github/PULL_REQUEST_TEMPLATE.md').replace(/\n$/, '');
     expect(template).toBe(blockFor('7.8'));

@@ -7,7 +7,7 @@ what it can, review covers the rest. Meaning is mandatory, style is free.
    unrelated dumps or drive-by edits into a dump PR.
 2. **`manifest.json` is mandatory and valid per the §4 schema.** CI checks it
    before merge. Run the same check locally before opening the PR:
-   `node scripts/validate.mjs`.
+   `node scripts/tooling/quality-gates/validate.mjs`.
 3. **Secrets are forbidden** — tokens, keys, passwords, personal data. The CI
    secret-scan blocks the merge.
 4. **Data examples are synthetic only.** Real financial or personal data is

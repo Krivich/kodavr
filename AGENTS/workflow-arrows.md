@@ -10,7 +10,7 @@ Two files, one artifact:
 
 The map starts empty and grows with the code: add a drawer when a first-party code
 directory appears, a brick when a module appears, a numbered arrow when a
-cross-cutting flow appears. The linter (`scripts/workflow-arrows-lint.mjs`) keeps it
+cross-cutting flow appears. The linter (`scripts/tooling/workflow-map/workflow-arrows-lint.mjs`) keeps it
 from rotting, locally and in CI.
 
 ## Why a trustworthy map
@@ -40,8 +40,26 @@ across it is the bug.
   `N · callee.method()` — the API method **of the target brick** (the callee).
   Label line 2 (plain text) is **why** the call happens.
 - **Solid** `-->` = a call; **dashed** `..>` = a return or a push.
+- **Colour** = the business process (P1/P2 below): every arrow carries
+  `-[#RRGGBB]->` from the palette, and the numbered flow is grouped by process
+  rank, so all rank-1 steps come before rank-2, and so on. Grey `#9E9E9E` is
+  structural glue (imports, assets), never a process and never a numbered step.
+- **No orphans**: every non-exempt brick must be reachable from an actor by
+  following the drawn arrows (dashed included).
 - **Click targets**: a brick opens its file, a call label opens the callee method
   (in the `.svg` + the IntelliJ PlantUML plugin).
+
+## Process palette
+
+| # | Process | Colour | Covers |
+|---|---|---|---|
+| 1 | PR review | `#00897B` teal | a dump arrives as a validated PR |
+| 2 | Publish | `#1E88E5` blue | build → engine → artifact |
+| 3 | Notify | `#8E24AA` purple | mirroring / card posts |
+| 4 | Consume | `#43A047` green | machine + human reads |
+| 5 | Engineering | `#6D4C41` brown | local dev / tooling |
+
+The table lives in `PROCESSES` (plus `STRUCTURAL_COLOR`) at the top of the linter.
 
 ## The drawers (kodavr)
 
@@ -52,15 +70,28 @@ their bricks are illustrative.
 
 | Drawer | Stereotype | Coverage |
 |---|---|---|
-| `scripts/lib` | `<<lib>>` | files `.mjs` — the smart controller |
-| `scripts` | `<<cli>>` | files `.mjs`, `.js` — the entry points |
+| `scripts/lib` | `<<lib>>` | files `.mjs` — the shared publishing engine |
+| `scripts/product` | `<<pack>>` | dir — the product processes |
+| `scripts/product/site-build` | `<<cli>>` | files `.mjs` — the site build entry point |
+| `scripts/product/pr-review` | `<<cli>>` | files `.mjs` — the PR surface: card + audit entry points |
+| `scripts/product/pr-review/audit` | `<<audit>>` | files `.mjs` — the deterministic audit engine |
+| `scripts/product/pr-review/audit/llm` | `<<audit>>` | files `.mjs` — the LLM audit layers |
+| `scripts/product/telegram` | `<<cli>>` | files `.mjs` — the Telegram mirror entry point |
+| `scripts/product/brand-media` | `<<cli>>` | files `.mjs` — the brand-image generators |
+| `scripts/tooling` | `<<pack>>` | dir — the development tooling |
+| `scripts/tooling/quality-gates` | `<<cli>>` | files `.mjs`, `.js` — the CI gates |
+| `scripts/tooling/workflow-map` | `<<cli>>` | files `.mjs` — the map's drift alarm + hover injection |
+| `scripts/tooling/dev-tools` | `<<cli>>` | files `.mjs` — local dev conveniences |
 | `input/controllers` | `<<ctrl>>` | files `.js` — engine-injected client controllers |
 | `input/templates` | `<<view>>` | dir — Handlebars layouts + partials |
 | `static/assets` | `<<asset>>` | dir — stylesheet, client JS, brand images |
 | `content/dumps` | `<<content>>` | dir — the dumps themselves |
 
-The set lives in `DRAWERS` at the top of the linter. Add a directory there when a
-new first-party tree appears, and draw its block.
+The set lives in `DRAWERS` at the top of the linter. The `scripts/` tree is
+two-level — `scripts/<category>/<process>/` with categories `product` and
+`tooling` around the shared `lib/` engine; a category and a process folder are
+both drawers. Add a directory there when a new first-party tree appears, and draw
+its block.
 
 ## Linted idioms (T1–T6)
 
@@ -76,7 +107,7 @@ The linter pins these; every new brick or arrow must obey them.
 
 ## The linter
 
-`scripts/workflow-arrows-lint.mjs`, pure `lintDiagram({ text, pumlDir, repoRoot })`.
+`scripts/tooling/workflow-map/workflow-arrows-lint.mjs`, pure `lintDiagram({ text, pumlDir, repoRoot })`.
 Run it from the project root (silent, exit 0 when clean):
 
 ```
@@ -97,6 +128,58 @@ Checks:
 - **(F)** a brick's stereotype equals its drawer's (T1).
 - **(G)** a numbered **call** to a module brick carries a `[[file#symbol]]` link;
   a numbered **return** carries none (T3).
+- **(I)** a drawn edge between two **module** bricks is a real import in one
+  direction (KDV-CI-24): the linter builds the first-party import graph over
+  `scripts/` + `input/` (static `from`, side-effect `import`, dynamic `import(...)`;
+  relative specifiers resolved to `.mjs`/`.js`), and an edge whose two `.mjs`/`.js`
+  bricks never import each other is drift. A **by-path** spawn (the engine injects
+  `input/controllers/*` by path) or a **dynamic** call is a legitimate false
+  positive — mask it with `@lint-ignore`. Non-modules (`.css`/`.svg`/`.png`/`.hbs`/
+  `.json`) and unresolved links are other checks' business.
+- **(P1)** every arrow carries a process colour from the palette, or the
+  structural grey (no colour, or an unknown colour, is drift).
+- **(P2)** a numbered step carries a process colour (never the structural grey)
+  and the process rank is non-decreasing in draw order — steps grouped by process.
+- **(P3)** every non-exempt brick is reachable from an actor by the drawn arrows
+  (dashed included) — no orphan bricks.
+- **(M)** the `@lint-ignore` block is well-formed (see below) — a bad mask is
+  itself drift.
+
+P1–P3 are pinned independently of the hand-drawn map by synthetic diagrams in
+`tests/unit/workflow-arrows.test.js` (KDV-CI-22).
+
+### Suppressing a false positive (`@lint-ignore`)
+
+Some drawn edges are legitimately not imports: a `by-path` controller is spawned
+by path, a call is dynamic, a transitive chain is elided, an artifact is no
+module. A mask suppresses ONLY such a **cheap-validation** problem — the codes
+`I`, `P1`, `P2`, `P3` — and never a structural one (A–H, or the block's own `M`).
+**A mask is proof of a false positive, never a way to hide a structural gap.**
+
+Embed the mask block in the `.puml` itself:
+
+```
+' @lint-ignore
+' [I] IGN -> CTRL_DUMPS  # by-path: spawned by path, not imported
+' [P1] arrow *  # transitive: the glue arrow elides the chain
+' @end
+```
+
+- Only lines between `@lint-ignore` and `@end` are read; a `'`-line with no
+  `[CODE]` is a plain comment.
+- The glob matches the problem key `CODE: subject` gitignore-style: `*` any run,
+  `?` one char, `!` un-ignores a key matched earlier (last match wins).
+- Every rule MUST carry `# <mechanism>: <reason>`; the mechanism is one of
+  `by-path`, `dynamic`, `transitive`, `non-module` — the closed vocabulary that
+  makes a mask assert *why* it is a false positive.
+- The guards are themselves `M` problems, never suppressible: a mask targeting a
+  structural code, a mask with no reason, an unknown mechanism, an unused mask,
+  or an `@lint-ignore` without `@end`.
+- Suppressed problems are reported, not hidden: the CLI prints
+  `suppressed N (see @lint-ignore)` and exits 0 only when nothing unsuppressed
+  remains. After a real code fix, remove the mask so it does not go unused.
+- Maskable codes are pinned as `MASKABLE_CODES` in the linter (`I, P1, P2, P3`;
+  `I` is the module-edge check of KDV-CI-24).
 
 ## When lint fails
 

@@ -1,6 +1,6 @@
 // tests/unit/struct.test.js — repository-structure rules (§3), KDV-STRUCT-01..07.
 //
-// The rules themselves live in scripts/validate.mjs (enforced in CI under the
+// The rules themselves live in scripts/tooling/quality-gates/validate.mjs (enforced in CI under the
 // KDV-CI-* IDs); this file pins each STRUCT requirement to its own assertion so
 // the registry can close the rows without duplicating the implementation.
 import { describe, it, expect, afterEach } from 'vitest';
@@ -8,7 +8,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { validateContent } from '../../scripts/validate.mjs';
+import { validateContent } from '../../scripts/tooling/quality-gates/validate.mjs';
 import { readDumps, buildLayers } from '../../scripts/lib/dumps.mjs';
 import { resolveAuthorMeta, injectBuildMeta } from '../../scripts/lib/machine.mjs';
 

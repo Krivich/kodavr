@@ -14,7 +14,7 @@ import {
   judgeChannel,
   ensembleVerdict,
   judgeEnsembleChannel,
-} from '../../scripts/lib/audit-judge.mjs';
+} from '../../scripts/product/pr-review/audit/llm/judge.mjs';
 import {
   DEFAULT_REQUEST_TIMEOUT_MS,
   OPENCODE_ENDPOINT,
@@ -25,9 +25,9 @@ import {
   providerFromWorkflowConfig,
   callAuditLLM,
   withRetry,
-} from '../../scripts/lib/audit-llm.mjs';
-import { makeChannelResult, validateChannelResult } from '../../scripts/lib/audit-channel.mjs';
-import { evaluatePolicy } from '../../scripts/lib/audit-policy.mjs';
+} from '../../scripts/product/pr-review/audit/llm/llm.mjs';
+import { makeChannelResult, validateChannelResult } from '../../scripts/product/pr-review/audit/channel.mjs';
+import { evaluatePolicy } from '../../scripts/product/pr-review/audit/policy.mjs';
 
 // A fake provider config: endpoint/model are placeholders, the key is a literal
 // test string. Nothing here is a real secret.

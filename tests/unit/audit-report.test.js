@@ -3,7 +3,7 @@
 // forensic map without numeric scores, renders a DECLINE draft reply in its own
 // escaped section, and always closes with the data-not-instructions footer.
 import { describe, it, expect } from 'vitest';
-import { AUDIT_MARKER, renderAuditComment } from '../../scripts/lib/audit-report.mjs';
+import { AUDIT_MARKER, renderAuditComment } from '../../scripts/product/pr-review/audit/report.mjs';
 
 const FINDING = {
   file: 'raw.md',

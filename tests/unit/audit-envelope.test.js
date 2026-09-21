@@ -9,7 +9,7 @@ import {
   checkDiffShape,
   checkAuthorSignals,
   evaluateEnvelope,
-} from '../../scripts/lib/audit-envelope.mjs';
+} from '../../scripts/product/pr-review/audit/envelope.mjs';
 
 const added = (filename) => ({ filename, status: 'added' });
 

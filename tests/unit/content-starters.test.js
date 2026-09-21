@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { validateManifest } from '../../scripts/validate.mjs';
+import { validateManifest } from '../../scripts/tooling/quality-gates/validate.mjs';
 
 const ROOT_URL = new URL('../../', import.meta.url);
 const ROOT = fileURLToPath(ROOT_URL);

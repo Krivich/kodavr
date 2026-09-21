@@ -57,7 +57,7 @@ npm run preview        # build, then serve
 npm test                   # unit + integration (vitest)
 npm run test:e2e           # browser tests (Playwright)
 npm run req                # reconcile requirement IDs with REQUIREMENTS.md
-node scripts/validate.mjs  # content/PR validation, same checks as CI
+node scripts/tooling/quality-gates/validate.mjs  # content/PR validation, same checks as CI
 ```
 
 ## Repository layout

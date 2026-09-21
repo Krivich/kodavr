@@ -12,11 +12,11 @@ import {
   detectTraceResidue,
   quoteMask,
   traceResidueChannel,
-} from '../../scripts/lib/audit-trace.mjs';
-import { validateChannelResult } from '../../scripts/lib/audit-channel.mjs';
+} from '../../scripts/product/pr-review/audit/llm/trace.mjs';
+import { validateChannelResult } from '../../scripts/product/pr-review/audit/channel.mjs';
 
 const MODULE_SRC = readFileSync(
-  fileURLToPath(new URL('../../scripts/lib/audit-trace.mjs', import.meta.url)),
+  fileURLToPath(new URL('../../scripts/product/pr-review/audit/llm/trace.mjs', import.meta.url)),
   'utf8',
 );
 

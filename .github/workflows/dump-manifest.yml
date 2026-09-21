@@ -26,7 +26,7 @@ jobs:
           "${{ github.event.pull_request.base.sha }}"
           "${{ github.event.pull_request.head.sha }}" > changed.txt
       - name: post manifest card
-        run: node scripts/pr-manifest-card.mjs
+        run: node scripts/product/pr-review/pr-manifest-card.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHANGED_FILES_FILE: changed.txt

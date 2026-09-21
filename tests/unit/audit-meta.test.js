@@ -10,10 +10,10 @@ import {
   JUDGE_SCHEMA,
   buildMetaMessages,
   metaReviewChannel,
-} from '../../scripts/lib/audit-meta.mjs';
-import { traceResidueChannel } from '../../scripts/lib/audit-trace.mjs';
-import { makeChannelResult, validateChannelResult } from '../../scripts/lib/audit-channel.mjs';
-import { evaluatePolicy } from '../../scripts/lib/audit-policy.mjs';
+} from '../../scripts/product/pr-review/audit/llm/meta.mjs';
+import { traceResidueChannel } from '../../scripts/product/pr-review/audit/llm/trace.mjs';
+import { makeChannelResult, validateChannelResult } from '../../scripts/product/pr-review/audit/channel.mjs';
+import { evaluatePolicy } from '../../scripts/product/pr-review/audit/policy.mjs';
 
 // A fake provider config: endpoint/model are placeholders, the key is a literal
 // test string. Nothing here is a real secret.

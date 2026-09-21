@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const registry = readFileSync(join(ROOT, 'REQUIREMENTS.md'), 'utf8');
 
-// Same tolerant grammar as scripts/req-coverage.js: group codes may carry digits.
+// Same tolerant grammar as scripts/tooling/quality-gates/req-coverage.js: group codes may carry digits.
 const ROW = /^-\s*(✅|🟧|⬜|❓)\s*\*\*(KDV-[A-Z0-9]+-\d+)\*\*/gm;
 const MARK = { '✅': 'ok', '🟧': 'partial', '⬜': 'open', '❓': 'unknown' };
 

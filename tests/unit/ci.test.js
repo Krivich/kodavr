@@ -53,7 +53,7 @@ describe('deploy pipeline (§8.3–8.5)', () => {
   it('KDV-CI-19: the deploy build job runs the content gate before npm run build, so a BLOCK stops publication', async () => {
     const yml = await readFile(DEPLOY, 'utf8');
     // Order, not mere presence: the §8.1 gate is a prerequisite of the artifact.
-    const gate = yml.indexOf('node scripts/validate.mjs');
+    const gate = yml.indexOf('node scripts/tooling/quality-gates/validate.mjs');
     const build = yml.indexOf('npm run build');
     expect(gate, 'the content gate must run in the deploy build job').toBeGreaterThan(-1);
     expect(build).toBeGreaterThan(-1);

@@ -7,7 +7,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { validateContent } from '../../scripts/validate.mjs';
+import { validateContent } from '../../scripts/tooling/quality-gates/validate.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 

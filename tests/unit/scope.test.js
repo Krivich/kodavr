@@ -93,7 +93,7 @@ describe('MVP non-goals (§11)', () => {
       expect(deps, banned).not.toHaveProperty(banned);
     }
     // No access-control/private-visibility concept enters the manifest schema.
-    const validator = read('scripts/validate.mjs');
+    const validator = read('scripts/tooling/quality-gates/validate.mjs');
     expect(validator).not.toContain("'private'");
     expect(validator).not.toContain('"private"');
     // There is no separate private content root — every dump is public.

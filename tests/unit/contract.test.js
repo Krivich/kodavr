@@ -16,7 +16,7 @@ import {
   validate,
   validateAll,
   walkTrees,
-} from '../../scripts/contract.mjs';
+} from '../../scripts/tooling/quality-gates/contract.mjs';
 
 const buildSrc = readFileSync(
   fileURLToPath(new URL('../../scripts/lib/build.mjs', import.meta.url)),

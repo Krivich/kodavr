@@ -8,8 +8,8 @@ import {
   makeSpan,
   makeChannelResult,
   validateChannelResult,
-} from '../../scripts/lib/audit-channel.mjs';
-import { buildForensicMap, MAX_FORENSIC_FINDINGS } from '../../scripts/lib/audit-forensic.mjs';
+} from '../../scripts/product/pr-review/audit/channel.mjs';
+import { buildForensicMap, MAX_FORENSIC_FINDINGS } from '../../scripts/product/pr-review/audit/forensic.mjs';
 
 const span = (start, end, reason, rule = 'test') =>
   makeSpan({ file: 'raw.md', start, end, rule, reason });
