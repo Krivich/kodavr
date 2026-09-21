@@ -7,11 +7,13 @@ import {
   JUDGE_VERDICTS,
   JUDGE_SCHEMA,
   JUDGE_SYSTEM,
+  JUDGE_SYSTEM_SKEPTICAL,
   frameContent,
   buildJudgeMessages,
   parseJudgeReply,
   judgeChannel,
   ensembleVerdict,
+  judgeEnsembleChannel,
 } from '../../scripts/lib/audit-judge.mjs';
 import {
   OPENCODE_ENDPOINT,
@@ -21,8 +23,9 @@ import {
   providerFromAuth,
   providerFromWorkflowConfig,
   callAuditLLM,
+  withRetry,
 } from '../../scripts/lib/audit-llm.mjs';
-import { validateChannelResult } from '../../scripts/lib/audit-channel.mjs';
+import { makeChannelResult, validateChannelResult } from '../../scripts/lib/audit-channel.mjs';
 import { evaluatePolicy } from '../../scripts/lib/audit-policy.mjs';
 
 // A fake provider config: endpoint/model are placeholders, the key is a literal
@@ -188,6 +191,15 @@ describe('KDV-SCAN-07: the ensemble reads twice and divergence yields THINK', ()
     expect(ensembleVerdict(['pass', 'flag'])).toBe('flag');
     expect(ensembleVerdict(['flag', 'veto'])).toBe('flag');
   });
+
+  it('KDV-SCAN-07: the skeptical framing swaps in the adversarial system contract (a superset of the default)', () => {
+    expect(JUDGE_SYSTEM_SKEPTICAL).toContain(JUDGE_SYSTEM);
+    expect(JUDGE_SYSTEM_SKEPTICAL).not.toBe(JUDGE_SYSTEM);
+    const skeptical = buildJudgeMessages({ files: [{ file: 'a.md', text: 'x' }], framing: 'skeptical' });
+    expect(skeptical[0]).toEqual({ role: 'system', content: JUDGE_SYSTEM_SKEPTICAL });
+    const def = buildJudgeMessages({ files: [{ file: 'a.md', text: 'x' }], framing: 'default' });
+    expect(def[0]).toEqual({ role: 'system', content: JUDGE_SYSTEM });
+  });
 });
 
 describe('KDV-AUDIT-08: the judge has no merge authority', () => {
@@ -248,5 +260,91 @@ describe('KDV-REVIEW-25: model credentials live outside the repository', () => {
     ).toEqual({ endpoint: 'https://e.test/v1/chat/completions', model: 'm', apiKey: 'test-key', session: 's' });
     expect(providerFromEnv({ AUDIT_LLM_ENDPOINT: 'https://e.test/v1/chat/completions', AUDIT_LLM_MODEL: 'm' })).toBeNull();
     expect(providerFromEnv({})).toBeNull();
+  });
+});
+
+describe('KDV-SCAN-07: transient provider errors are retried with exponential backoff', () => {
+  it('KDV-SCAN-07: withRetry returns after 2 transient failures and backs off exponentially', async () => {
+    let calls = 0;
+    const delays = [];
+    const out = await withRetry(
+      async () => {
+        calls += 1;
+        if (calls < 3) throw new Error(`transient-${calls}`);
+        return 'ok';
+      },
+      { sleep: async (ms) => delays.push(ms) },
+    );
+    expect(out).toBe('ok');
+    expect(calls).toBe(3);
+    // 500 * 2**0 then 500 * 2**1 — the injected sleep means no real timer runs.
+    expect(delays).toEqual([500, 1000]);
+  });
+
+  it('KDV-SCAN-07: withRetry rethrows the LAST error when every attempt fails', async () => {
+    let calls = 0;
+    await expect(
+      withRetry(async () => {
+        calls += 1;
+        throw new Error(`boom-${calls}`);
+      }, { sleep: async () => {} }),
+    ).rejects.toThrow('boom-3');
+    expect(calls).toBe(3);
+  });
+
+  it('KDV-SCAN-07: attempts:1 makes exactly one call; a custom baseDelayMs drives the backoff', async () => {
+    let calls = 0;
+    await expect(
+      withRetry(async () => {
+        calls += 1;
+        throw new Error('one');
+      }, { attempts: 1, sleep: async () => {} }),
+    ).rejects.toThrow('one');
+    expect(calls).toBe(1);
+
+    const delays = [];
+    let n = 0;
+    const out = await withRetry(
+      async () => {
+        n += 1;
+        if (n < 3) throw new Error('t');
+        return n;
+      },
+      { baseDelayMs: 10, sleep: async (ms) => delays.push(ms) },
+    );
+    expect(out).toBe(3);
+    expect(delays).toEqual([10, 20]);
+  });
+});
+
+describe('KDV-SCAN-07: judgeEnsembleChannel reduces the two runs into one channel', () => {
+  const run = (verdict, score = 0.2, spans = []) => ({
+    result: makeChannelResult({ channel: 'llm-judge', score, spans, verdict }),
+  });
+
+  it('KDV-SCAN-07: agreement yields the strictest verdict and the maximum score', () => {
+    const out = judgeEnsembleChannel({ runs: [run('veto', 0.2), run('veto', 0.8)] });
+    expect(out.channel).toBe('llm-judge-ensemble');
+    expect(out.verdict).toBe('veto');
+    expect(out.score).toBe(0.8);
+    expect(validateChannelResult(out).ok).toBe(true);
+  });
+
+  it('KDV-SCAN-07: divergence yields flag (THINK), never a permissive verdict', () => {
+    expect(judgeEnsembleChannel({ runs: [run('pass'), run('veto')] }).verdict).toBe('flag');
+    expect(judgeEnsembleChannel({ runs: [run('flag'), run('veto')] }).verdict).toBe('flag');
+  });
+
+  it('KDV-SCAN-07: an errored run or an empty list yields a flag', () => {
+    expect(judgeEnsembleChannel({ runs: [run('pass'), { error: new Error('x') }] }).verdict).toBe('flag');
+    expect(judgeEnsembleChannel({ runs: [] }).verdict).toBe('flag');
+    expect(judgeEnsembleChannel({}).verdict).toBe('flag');
+  });
+
+  it('KDV-SCAN-07: spans are concatenated and deduplicated by file:start:end', () => {
+    const span = { file: 'a.md', start: 1, end: 3, rule: 'llm-judge', reason: 'r' };
+    const other = { file: 'b.md', start: 2, end: 4, rule: 'llm-judge', reason: 's' };
+    const out = judgeEnsembleChannel({ runs: [run('flag', 0.5, [span, other]), run('flag', 0.5, [span])] });
+    expect(out.spans).toEqual([span, other]);
   });
 });

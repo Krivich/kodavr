@@ -143,3 +143,23 @@ describe('KDV-REVIEW-01: review runs on the forensic map', () => {
     expect(res.comment).not.toContain('safe prose');
   });
 });
+
+describe('KDV-REVIEW-26: runAudit merges extra LLM channels into the policy', () => {
+  it('KDV-REVIEW-26: a veto extraChannel yields DECLINE; an empty default keeps the MERGE result', () => {
+    const base = {
+      prFiles: CLEAN_FILES,
+      scanFiles: [{ file: 'content/dumps/demo/raw.md', text: 'safe prose' }],
+      authorSignals: SIGNALS,
+      contentGate: GATE,
+    };
+    const plain = runAudit(base);
+    expect(plain.policy.decision).toBe('MERGE');
+
+    const veto = runAudit({
+      ...base,
+      extraChannels: [{ channel: 'llm-judge', score: 0.9, spans: [], verdict: 'veto' }],
+    });
+    expect(veto.policy.decision).toBe('DECLINE');
+    expect(veto.status.state).toBe('failure');
+  });
+});

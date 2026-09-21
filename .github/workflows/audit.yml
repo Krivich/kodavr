@@ -31,3 +31,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUDIT_CONTENT_GATE_OK: ${{ steps.validate.outcome == 'success' && '1' || '0' }}
+          # Non-secret LLM config pinned here; the key alone is a repository secret
+          # (Settings → Secrets and variables → Actions), referenced only here.
+          AUDIT_LLM_ENDPOINT: https://api.neuraldeep.ru/v1/chat/completions
+          AUDIT_LLM_MODEL: gpt-oss-120b
+          AUDIT_LLM_API_KEY: ${{ secrets.AUDIT_LLM_API_KEY }}

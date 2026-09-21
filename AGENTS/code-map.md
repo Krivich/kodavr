@@ -26,7 +26,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   consumes: node:fs, node:path, ./lib/audit-local.mjs
   invariants: — offline: no network and no token; everything reads the local content/dumps tree; — the forensic map is printed without numeric scores, at most once per dump; — exit 0 by default; --strict is the only path to a non-zero exit
 - **scripts/audit-pr.mjs** — audits a pull request via the GitHub REST API and posts the advisory comment and status
-  consumes: node:fs, ./lib/audit-pr.mjs, ./lib/audit-report.mjs
+  consumes: node:fs, ./lib/audit-pr.mjs, ./lib/audit-report.mjs, ./lib/audit-llm-channels.mjs, ./lib/audit-llm.mjs
   invariants: — no checkout: the diff and author signals come from the REST API only; — fork PRs are skipped (read-only token): same-repo only, never posted to; — an unexpected error is printed and the process exits 1 (fail-visible)
 - **scripts/build.mjs** — the npm run build entry point
   consumes: ./lib/build.mjs, node:url
@@ -55,11 +55,15 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: MAX_FORENSIC_FINDINGS, buildForensicMap
   invariants: — overlapping spans in one file converge into one finding; no numeric score leaks; — ordering is deterministic: convergence count desc, span length desc, then position
 - **scripts/lib/audit-judge.mjs** — Layer 4 — frame the diff as data, call the LLM judge and allowlist its strict-JSON verdict
-  exports: JUDGE_VERDICTS, JUDGE_SCHEMA, JUDGE_SYSTEM, frameContent, buildJudgeMessages, parseJudgeReply, judgeChannel, ensembleVerdict
+  exports: JUDGE_VERDICTS, JUDGE_SCHEMA, JUDGE_SYSTEM, JUDGE_SYSTEM_SKEPTICAL, frameContent, buildJudgeMessages, parseJudgeReply, judgeChannel, ensembleVerdict, judgeEnsembleChannel
   consumes: ./audit-channel.mjs, ./audit-llm.mjs
   invariants: — the judge classifies risk only; it can never emit MERGE or a merge recommendation; — any deviation from the schema becomes a flag (the policy then yields THINK), never a throw
+- **scripts/lib/audit-llm-channels.mjs** — wire Layers 4+5 into one channel list — judge (+ ensemble) and trace channels, degrading visibly
+  exports: buildLlmChannels
+  consumes: ./audit-channel.mjs, ./audit-llm.mjs, ./audit-judge.mjs, ./audit-trace.mjs, ./audit-meta.mjs
+  invariants: — pure of side effects except the injected fetch: no environment read beyond the passed env, no clock, no key logged; — a provider failure degrades to a VISIBLE llm-error flag channel (THINK); never a silent merge or a crash; — a missing reasoning trace simply drops the Layer-5 channels (graceful degradation, §4.6.6); — never throws: every failure becomes a channel or a skipped step
 - **scripts/lib/audit-llm.mjs** — the LLM provider client — resolve credentials (env/auth/config) and one strict-JSON chat call
-  exports: OPENCODE_ENDPOINT, OPENCODE_MODEL, OPENCODE_SESSION, providerFromEnv, providerFromAuth, providerFromWorkflowConfig, callAuditLLM
+  exports: OPENCODE_ENDPOINT, OPENCODE_MODEL, OPENCODE_SESSION, providerFromEnv, providerFromAuth, providerFromWorkflowConfig, callAuditLLM, withRetry
   invariants: — the key is never logged, returned in an error, or placed in the request body; — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback; — fetch is injected so tests never touch the network
 - **scripts/lib/audit-local.mjs** — the repeatable local harness — the repository's own dumps → the audit pipeline's verdicts
   exports: TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns

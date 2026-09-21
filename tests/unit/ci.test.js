@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+const WORKFLOWS_DIR = join(ROOT, '.github', 'workflows');
+const AUDIT = join(WORKFLOWS_DIR, 'audit.yml');
 const DEPLOY = join(ROOT, '.github', 'workflows', 'deploy.yml');
 const CNAME = join(ROOT, 'static', 'CNAME');
 const RUNBOOK = join(ROOT, 'docs', 'decisions.md');
@@ -97,5 +99,42 @@ describe('deploy pipeline (§8.3–8.5)', () => {
     expect(runbook).toMatch(/WHOIS/i);
     expect(runbook).toMatch(/2FA|two-factor/i);
     expect(runbook).toMatch(/60[- ]day/i);
+  });
+});
+
+describe('audit workflow (KDV-SCAN-08)', () => {
+  it('KDV-SCAN-08: audit.yml grants exactly the minimal permissions and wires the LLM config', async () => {
+    const yml = await readFile(AUDIT, 'utf8');
+
+    // Minimal permissions: read code, write only the comment and the status check.
+    expect(yml).toMatch(/permissions:/);
+    expect(yml).toMatch(/contents:\s*read/);
+    expect(yml).toMatch(/pull-requests:\s*write/);
+    expect(yml).toMatch(/statuses:\s*write/);
+    expect(yml).not.toMatch(/contents:\s*write/);
+
+    // The audit step hands the audit the endpoint/model (non-secret literals) and
+    // the secret-only key. The second judge run is a framing, not a second model.
+    expect(yml).toContain('AUDIT_LLM_ENDPOINT: https://api.neuraldeep.ru/v1/chat/completions');
+    expect(yml).toContain('AUDIT_LLM_MODEL: gpt-oss-120b');
+    expect(yml).toContain('AUDIT_LLM_API_KEY: ${{ secrets.AUDIT_LLM_API_KEY }}');
+    expect(yml).not.toContain('AUDIT_LLM_MODEL_2');
+  });
+
+  it('KDV-SCAN-08: the audit model key is exclusive to audit.yml and no workflow carries a literal key', async () => {
+    const files = (await readdir(WORKFLOWS_DIR)).filter((name) => /\.ya?ml$/.test(name));
+    expect(files.length).toBeGreaterThan(0);
+    let auditHits = 0;
+    for (const name of files) {
+      const text = await readFile(join(WORKFLOWS_DIR, name), 'utf8');
+      expect(text, `${name} must not carry a literal sk- key`).not.toMatch(/sk-[A-Za-z0-9]/);
+      const hits = text.split('AUDIT_LLM_API_KEY').length - 1;
+      if (name === 'audit.yml') {
+        auditHits += hits;
+      } else {
+        expect(hits, `${name} must not reference AUDIT_LLM_API_KEY`).toBe(0);
+      }
+    }
+    expect(auditHits, 'audit.yml must reference AUDIT_LLM_API_KEY').toBeGreaterThan(0);
   });
 });

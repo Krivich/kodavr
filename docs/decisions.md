@@ -185,8 +185,9 @@ publishes two advisory surfaces:
 - a **status check** with the context `pr-audit`.
 
 **Phase 0 is advisory by design.** `runAudit` forces the rendered action class to
-`MANUAL` even when the policy recommends `MERGE`: a human decides, nothing is
-merged automatically, and this workflow carries no model key. The status is
+`MANUAL` even when the policy recommends `MERGE`: a human decides and nothing is
+merged automatically. The workflow holds one secret — the audit-only LLM key
+(below) — and no merge token. The status is
 `success` only when the envelope passes *and* the policy recommends `MERGE`; any
 other outcome is `failure`. No numeric score is printed to the comment or the
 status description (KDV-SCAN-15 stays open for the privacy phase).
@@ -218,3 +219,37 @@ current required check.
 When Phase 1 opens the first auto-class (KDV-REVIEW-13): the status becomes a
 required check, the action class may leave `MANUAL`, and numeric scores must be
 privatized (KDV-REVIEW-14, KDV-SCAN-15).
+
+## Audit LLM key and the two-run judge ensemble (KDV-SCAN-07/08)
+
+The `audit` workflow enables the LLM layers by handing `scripts/audit-pr.mjs`
+three environment variables. The endpoint and model are **non-secret literals
+pinned in `.github/workflows/audit.yml`** (currently the neuraldeep provider,
+`https://api.neuraldeep.ru/v1/chat/completions`, model `gpt-oss-120b`); only the
+API key is a secret.
+
+**Creating the secret.** Repository → **Settings → Secrets and variables →
+Actions → New repository secret**, name `AUDIT_LLM_API_KEY`, value = the
+neuraldeep API key. The workflow references it as
+`${{ secrets.AUDIT_LLM_API_KEY }}` **only** in `.github/workflows/audit.yml`; no
+other workflow reads it (pinned by `tests/unit/ci.test.js`). Never commit the
+key.
+
+**Without the secret** `providerFromEnv` returns null, so `buildLlmChannels`
+yields no LLM channels: the deterministic audit (envelope + structural detectors
++ policy) still runs and posts its advisory comment and status. A secret that is
+present but whose provider call fails degrades to a single visible `llm-error`
+flag channel (THINK), never a silent merge.
+
+**The ensemble always runs twice** (pr-audit §4.5.6). The primary judge runs
+under the default framing; the second run uses a different **prompt framing** —
+the same model under `JUDGE_SYSTEM_SKEPTICAL` (adversarial posture), not a second
+model. The two readings are reduced into one `llm-judge-ensemble` channel;
+agreement keeps the strictest verdict, divergence yields THINK. A prod model that
+does not satisfy the strict JSON shape cannot be relied on as a second judge,
+which is why the framing, not a second model, is the default second run.
+
+**Optional second model.** Setting `AUDIT_LLM_MODEL_2` in the workflow env
+overrides the second run: it then calls that model under the default framing
+instead of the same model under the skeptical framing. It is not set in
+`audit.yml` today.

@@ -6,6 +6,8 @@
  *   node:fs — read the GitHub event payload
  *   ./lib/audit-pr.mjs — STATUS_CONTEXT, normalizePrFiles, authorSignalsFromApi, runAudit
  *   ./lib/audit-report.mjs — AUDIT_MARKER (the sticky-comment marker)
+ *   ./lib/audit-llm-channels.mjs — buildLlmChannels (the LLM channels, or [] when unconfigured)
+ *   ./lib/audit-llm.mjs — providerFromEnv (log the model name only, never the key)
  * INVARIANTS:
  *   — no checkout: the diff and author signals come from the REST API only
  *   — fork PRs are skipped (read-only token): same-repo only, never posted to
@@ -21,6 +23,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { STATUS_CONTEXT, normalizePrFiles, authorSignalsFromApi, runAudit } from './lib/audit-pr.mjs';
 import { AUDIT_MARKER } from './lib/audit-report.mjs';
+import { buildLlmChannels } from './lib/audit-llm-channels.mjs';
+import { providerFromEnv } from './lib/audit-llm.mjs';
 
 const API = 'https://api.github.com';
 
@@ -94,13 +98,27 @@ async function main() {
     text: f && typeof f.patch === 'string' ? f.patch : '',
   }));
 
+  // The LLM channels (Layers 4+5) are built here from env and handed to the pure
+  // runAudit. A missing provider is fine ([] — deterministic-only); a configured
+  // but failing one becomes a visible `llm-error` flag channel (THINK), never a
+  // crash. Only the model name(s) are logged — the key never is.
+  const files = scanFiles.filter((f) => f.file && f.text);
+  const llmChannels = await buildLlmChannels({ files });
+  const provider = providerFromEnv(process.env);
+  if (provider) {
+    const models = [provider.model, process.env.AUDIT_LLM_MODEL_2].filter(Boolean).join(', ');
+    log(`llm channels: ${llmChannels.length} (model: ${models})`);
+  } else {
+    log('llm disabled (no provider) — deterministic channels only');
+  }
+
   const user = login ? await github(`/users/${login}`, token) : null;
   const pulls = await github(`/repos/${repo}/pulls?state=all&per_page=100`, token);
   const authorSignals = authorSignalsFromApi({ user, pulls, isFork: false, currentNumber: number });
 
   // No checkout: the manifest content is unavailable, so facts stay empty and
   // the content gate is the only content signal (from the sibling CI job).
-  const result = runAudit({ prFiles, scanFiles, authorSignals, contentGate: contentGate(), facts: {} });
+  const result = runAudit({ prFiles, scanFiles, authorSignals, contentGate: contentGate(), facts: {}, extraChannels: llmChannels });
 
   const issue = `/repos/${repo}/issues/${number}/comments`;
   const existing = (await github(`${issue}?per_page=100`, token)).find((c) =>

@@ -76,6 +76,7 @@ package "scripts/lib\n====\nthe smart controller: content, machine contracts, bu
   component "audit-judge.mjs\nframeContent · judgeChannel\n--\nLayer-4 LLM judge: data frame, allowlist schema, ensemble" as AUDIT_JUDGE <<lib>> [[../scripts/lib/audit-judge.mjs#judgeChannel]]
   component "audit-trace.mjs\ndetectTraceResidue · quoteMask\n--\nLayer-5 deterministic residue classifier + non-LLM quote-masker" as AUDIT_TRACE <<lib>> [[../scripts/lib/audit-trace.mjs#detectTraceResidue]]
   component "audit-meta.mjs\nbuildMetaMessages · metaReviewChannel\n--\nLayer-5 LLM meta-reviewer over a quote-masked trace (witness channel)" as AUDIT_META <<lib>> [[../scripts/lib/audit-meta.mjs#metaReviewChannel]]
+  component "audit-llm-channels.mjs\nbuildLlmChannels\n--\ncompose the LLM channels: judge + ensemble + trace/meta, degrade visibly" as AUDIT_LLM_CH <<lib>> [[../scripts/lib/audit-llm-channels.mjs#buildLlmChannels]]
 }
 
 package "scripts\n====\nentry points you actually run" as P_CLI {
@@ -162,6 +163,11 @@ CLI_AUDIT_JUDGE ..> AUDIT_LLM : resolves the provider from env, auth or a work-f
 AUDIT_JUDGE ..> AUDIT_LLM : one strict-JSON chat call per judge run
 AUDIT_JUDGE ..> AUDIT_CH : normalizes the judge verdict into a channel result
 CLI_AUDIT ..> AUDIT_PR : fetches the diff + author signals via the API\nand runs the deterministic audit
+CLI_AUDIT ..> AUDIT_LLM_CH : builds the LLM channels from env\nand passes them to the pure audit
+AUDIT_LLM_CH ..> AUDIT_LLM : resolves the provider from env\nand retries transient errors
+AUDIT_LLM_CH ..> AUDIT_JUDGE : runs the judge, plus a second run for the ensemble
+AUDIT_LLM_CH ..> AUDIT_TRACE : reads the primary run's reasoning trace deterministically
+AUDIT_LLM_CH ..> AUDIT_META : and asks the meta-reviewer over the masked trace
 AUDIT_PR ..> AUDIT_ENV : builds the Layer-0 envelope from the diff shape
 AUDIT_PR ..> AUDIT_DET : scans the API patch with the Layer-1 detectors
 AUDIT_PR ..> AUDIT_POL : reduces envelope + channels to a recommendation

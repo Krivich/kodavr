@@ -69,11 +69,13 @@ export function authorSignalsFromApi(
   };
 }
 
-// runAudit({prFiles,scanFiles,authorSignals,contentGate,facts,policyConfig}) →
+// runAudit({prFiles,scanFiles,authorSignals,contentGate,facts,policyConfig,extraChannels}) →
 // {diffShape,channel,envelope,policy,comment,status}. The deterministic pipeline
 // in one call: diff shape + Layer-1 structure → the §4.1 envelope → the policy
-// → the advisory comment and the status check. Shadow phase: a MERGE decision is
-// still rendered as MANUAL and a human decides.
+// → the advisory comment and the status check. `extraChannels` are pre-built
+// channel results (e.g. the LLM channels) appended to the Layer-1 channel; this
+// module never builds them itself (it stays I/O- and env-free). Shadow phase: a
+// MERGE decision is still rendered as MANUAL and a human decides.
 export function runAudit({
   prFiles = [],
   scanFiles = [],
@@ -81,6 +83,7 @@ export function runAudit({
   contentGate = {},
   facts = {},
   policyConfig = {},
+  extraChannels = [],
 } = {}) {
   const diffShape = checkDiffShape(prFiles);
   const channel = structuralChannel(scanFiles);
@@ -94,7 +97,7 @@ export function runAudit({
 
   const policy = evaluatePolicy({
     envelope: envelope.conditions,
-    channels: [channel],
+    channels: [channel, ...extraChannels],
     author: { class: 'MANUAL' },
     facts,
     config: policyConfig,

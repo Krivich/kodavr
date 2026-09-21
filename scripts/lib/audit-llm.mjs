@@ -9,6 +9,7 @@
  *   providerFromAuth — a parsed opencode auth.json → the opencode-go provider, or null without a key
  *   providerFromWorkflowConfig — a work-flow config.json → {endpoint,model,apiKey} or null when incomplete
  *   callAuditLLM — POST one chat completion → {content,reasoning,finish}; throws when the call is broken
+ *   withRetry — await fn() with exponential-backoff retries; rethrows the last error when exhausted
  * INVARIANTS:
  *   — the key is never logged, returned in an error, or placed in the request body
  *   — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback
@@ -157,4 +158,27 @@ export async function callAuditLLM({
     reasoning: choice.message.reasoning_content ?? null,
     finish: choice.finish_reason ?? null,
   };
+}
+
+// The default backoff timer: a real promise so production actually waits between
+// attempts. Tests inject `sleep` and never touch a timer.
+const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// withRetry(fn,{attempts,baseDelayMs,sleep}) → await fn() with exponential
+// backoff. Transient provider errors are retried up to attempts-1 more times,
+// waiting baseDelayMs * 2**(i-1) before attempt i+1 (500, 1000, 2000 ...). The
+// LAST error is rethrown when the attempts are exhausted. `sleep` is injectable
+// so tests never wait. attempts < 1 degenerates to a single call.
+export async function withRetry(fn, { attempts = 3, baseDelayMs = 500, sleep = defaultSleep } = {}) {
+  const total = Number.isInteger(attempts) && attempts > 0 ? attempts : 1;
+  let lastError;
+  for (let i = 1; i <= total; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (i < total) await sleep(baseDelayMs * 2 ** (i - 1));
+    }
+  }
+  throw lastError;
 }
