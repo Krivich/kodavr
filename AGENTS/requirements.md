@@ -22,9 +22,33 @@ targeted: `Grep` by keywords/ID → `Read` of the needed region (`offset/limit`)
 ## Tools
 
 - `npm run req` (`scripts/tooling/quality-gates/req-coverage.js`) — reconcile IDs from tests with the registry; exit 1 on
-  typos/unknown IDs. **Before every commit.**
+  typos/unknown IDs, on a row without a valid `flow:` field, and on a drift of the frozen `flow: legacy` set (see below). **Before every commit.**
 - `Grep` over `REQUIREMENTS.md` — candidate lines (ID + status + text), without reading the file.
 - `Read` (`offset/limit`) — one region / group / line in full.
+
+## Flow impact — every requirement names its process
+
+Every row carries a `flow:` field naming the business process(es) it extends or
+touches, so the designer consults the workflow map (`docs/workflow-arrows.puml`)
+BEFORE writing code. The value is one of:
+
+- `none` — the requirement touches no business process;
+- a comma-separated list of palette process names — `PR review`, `Publish`,
+  `Notify`, `Consume`, `Engineering` (the palette is exported by the map linter:
+  one truth per entity);
+- `legacy` — the frozen pre-hook exemption (see below). Never write it on a new row.
+
+`npm run req` enforces it: a row without a valid `flow:` fails, and any row whose
+`flow:` value is unknown fails.
+
+**The exemption set is frozen in code.** Rows that predate the hook (208 of them)
+carry `flow: legacy`; `req-coverage.js` exports `LEGACY = { count, sha256 }` — the
+anchor of that exact set (count + sha256 of the sorted IDs). `npm run req` recomputes
+the actual legacy set and fails if it differs, so a new requirement cannot dodge the
+hook by writing `legacy`: that grows the set and trips the anchor. Changing the set
+is a deliberate, reviewable act — edit `LEGACY` in `scripts/tooling/quality-gates/req-coverage.js`
+only when the change is intentional. The rule for new work: a new requirement names
+the process it extends, so its designer reads the workflow map first.
 
 ## Recipes
 

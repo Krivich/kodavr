@@ -171,9 +171,10 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   exports: MARK_BEGIN, MARK_END, actualExports, actualImports, contractFiles, generateIndex, parseHeader, rewriteIndex, validate, validateAll, walkTrees
   consumes: node:fs, node:path, node:url
   invariants: — the map cannot lie: a header must equal the code's exports/imports both ways; — scripts is walked recursively (role subfolders included); the set is deduped
-- **scripts/tooling/quality-gates/req-coverage.js** — reconciles requirement IDs between REQUIREMENTS.md and the tests
-  consumes: node:fs, node:path, node:url
-  invariants: — a ✅ row without a test, or a test ID absent from the registry, exits 1
+- **scripts/tooling/quality-gates/req-coverage.js** — reconciles requirement IDs between REQUIREMENTS.md and the tests, and enforces the flow-impact hook on every row
+  exports: checkFlow, LEGACY
+  consumes: ../workflow-map/workflow-arrows-lint.mjs, node:crypto, node:fs, node:path, node:url
+  invariants: — a ✅ row without a test, or a test ID absent from the registry, exits 1; — every row carries a valid flow: (`<process>[,…]` | none | legacy); — the `flow: legacy` set must match LEGACY exactly, so it cannot silently grow
 - **scripts/tooling/quality-gates/validate.mjs** — the KDV-CI content gate over content/dumps (§8.1)
   exports: loadBlackZoneCategories, shannonEntropy, validateContent, validateManifest
   consumes: ../../lib/machine.mjs, node:fs/promises, node:path, node:url
