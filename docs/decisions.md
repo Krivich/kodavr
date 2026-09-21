@@ -241,6 +241,11 @@ yields no LLM channels: the deterministic audit (envelope + structural detectors
 present but whose provider call fails degrades to a single visible `llm-error`
 flag channel (THINK), never a silent merge.
 
+**Every provider call is bounded.** `callAuditLLM` aborts a request that outlives
+`DEFAULT_REQUEST_TIMEOUT_MS` (60s) via an `AbortController`, so a hung provider
+cannot stall the audit job; the abort surfaces as the same visible `llm-error`
+flag channel (THINK), just like any other provider failure.
+
 **The ensemble always runs twice** (pr-audit §4.5.6). The primary judge runs
 under the default framing; the second run uses a different **prompt framing** —
 the same model under `JUDGE_SYSTEM_SKEPTICAL` (adversarial posture), not a second

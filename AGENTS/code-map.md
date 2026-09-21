@@ -63,8 +63,8 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   consumes: ./audit-channel.mjs, ./audit-llm.mjs, ./audit-judge.mjs, ./audit-trace.mjs, ./audit-meta.mjs
   invariants: — pure of side effects except the injected fetch: no environment read beyond the passed env, no clock, no key logged; — a provider failure degrades to a VISIBLE llm-error flag channel (THINK); never a silent merge or a crash; — a missing reasoning trace simply drops the Layer-5 channels (graceful degradation, §4.6.6); — never throws: every failure becomes a channel or a skipped step
 - **scripts/lib/audit-llm.mjs** — the LLM provider client — resolve credentials (env/auth/config) and one strict-JSON chat call
-  exports: OPENCODE_ENDPOINT, OPENCODE_MODEL, OPENCODE_SESSION, providerFromEnv, providerFromAuth, providerFromWorkflowConfig, callAuditLLM, withRetry
-  invariants: — the key is never logged, returned in an error, or placed in the request body; — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback; — fetch is injected so tests never touch the network
+  exports: DEFAULT_REQUEST_TIMEOUT_MS, OPENCODE_ENDPOINT, OPENCODE_MODEL, OPENCODE_SESSION, providerFromEnv, providerFromAuth, providerFromWorkflowConfig, callAuditLLM, withRetry
+  invariants: — the key is never logged, returned in an error, or placed in the request body; — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback; — every request is bounded by an AbortController timeout; a hung provider is a loud throw; — fetch is injected so tests never touch the network
 - **scripts/lib/audit-local.mjs** — the repeatable local harness — the repository's own dumps → the audit pipeline's verdicts
   exports: TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns
   consumes: ./audit-pr.mjs

@@ -2,19 +2,24 @@
  * CONTRACT: scripts/lib/audit-llm.mjs
  * ROLE: the LLM provider client — resolve credentials (env/auth/config) and one strict-JSON chat call
  * EXPORTS:
+ *   DEFAULT_REQUEST_TIMEOUT_MS — the per-request abort timeout in milliseconds
  *   OPENCODE_ENDPOINT — the opencode-go chat-completions endpoint
  *   OPENCODE_MODEL — the default opencode-go judge model
  *   OPENCODE_SESSION — the routing/caching session id the opencode-go endpoint requires
  *   providerFromEnv — AUDIT_LLM_* env → {endpoint,model,apiKey[,session]} or null when incomplete
  *   providerFromAuth — a parsed opencode auth.json → the opencode-go provider, or null without a key
  *   providerFromWorkflowConfig — a work-flow config.json → {endpoint,model,apiKey} or null when incomplete
- *   callAuditLLM — POST one chat completion → {content,reasoning,finish}; throws when the call is broken
+ *   callAuditLLM — POST one chat completion → {content,reasoning,finish}; throws when broken or timed out
  *   withRetry — await fn() with exponential-backoff retries; rethrows the last error when exhausted
  * INVARIANTS:
  *   — the key is never logged, returned in an error, or placed in the request body
  *   — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback
+ *   — every request is bounded by an AbortController timeout; a hung provider is a loud throw
  *   — fetch is injected so tests never touch the network
  */
+
+// A hung provider must not stall the audit job, so each request is bounded.
+export const DEFAULT_REQUEST_TIMEOUT_MS = 60000;
 
 export const OPENCODE_ENDPOINT = 'https://opencode.ai/zen/go/v1/chat/completions';
 export const OPENCODE_MODEL = 'deepseek-v4-flash';
@@ -84,15 +89,17 @@ async function readErrorDetail(response) {
   }
 }
 
-// callAuditLLM({messages,responseSchema,maxTokens,config,fetchImpl}) →
+// callAuditLLM({messages,responseSchema,maxTokens,config,timeoutMs,fetchImpl}) →
 // {content,reasoning,finish}. POSTs one chat completion; the provider config must
-// be complete. A non-2xx response or a `finish_reason === 'length'` reply throws.
+// be complete. A non-2xx response, a `finish_reason === 'length'` reply, or a
+// request that outlives timeoutMs (aborted via AbortController) throws.
 export async function callAuditLLM({
   messages,
   responseSchema = null,
   responseFormat = null,
   maxTokens = 2048,
   config,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch,
 } = {}) {
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -137,7 +144,29 @@ export async function callAuditLLM({
         : {}),
   };
 
-  const response = await fetchImpl(endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
+  // Bound the call: a provider that never answers must not hang the audit. The
+  // timer is unref'd so it never keeps a process alive on its own.
+  const ms = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 0;
+  const controller = ms && typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = controller
+    ? setTimeout(() => controller.abort(new Error(`audit-llm: request timed out after ${ms}ms`)), ms)
+    : null;
+  if (timer && typeof timer.unref === 'function') timer.unref();
+
+  let response;
+  try {
+    response = await fetchImpl(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+  } catch (error) {
+    if (controller && controller.signal.aborted) throw new Error(`audit-llm: request timed out after ${ms}ms`);
+    throw error;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
   if (!response || response.ok !== true) {
     const status = response && response.status !== undefined ? response.status : 'unknown';
     const detail = await readErrorDetail(response);

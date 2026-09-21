@@ -16,6 +16,7 @@ import {
   judgeEnsembleChannel,
 } from '../../scripts/lib/audit-judge.mjs';
 import {
+  DEFAULT_REQUEST_TIMEOUT_MS,
   OPENCODE_ENDPOINT,
   OPENCODE_MODEL,
   OPENCODE_SESSION,
@@ -260,6 +261,30 @@ describe('KDV-REVIEW-25: model credentials live outside the repository', () => {
     ).toEqual({ endpoint: 'https://e.test/v1/chat/completions', model: 'm', apiKey: 'test-key', session: 's' });
     expect(providerFromEnv({ AUDIT_LLM_ENDPOINT: 'https://e.test/v1/chat/completions', AUDIT_LLM_MODEL: 'm' })).toBeNull();
     expect(providerFromEnv({})).toBeNull();
+  });
+});
+
+describe('KDV-REVIEW-26: a hung provider call is bounded by a timeout, never left hanging', () => {
+  // hangFetch rejects only when the request signal aborts — a provider that never replies.
+  const hangFetch = (_url, init = {}) =>
+    new Promise((_resolve, reject) => {
+      if (init.signal) init.signal.addEventListener('abort', () => reject(new Error('aborted')));
+    });
+
+  it('KDV-REVIEW-26: callAuditLLM aborts a fetch that never resolves and throws a timeout error', async () => {
+    await expect(
+      callAuditLLM({ messages: [{ role: 'user', content: 'x' }], config: CONFIG, timeoutMs: 10, fetchImpl: hangFetch }),
+    ).rejects.toThrow(/timed out after 10ms/);
+  });
+
+  it('KDV-REVIEW-26: the default timeout is a finite safety net', () => {
+    expect(DEFAULT_REQUEST_TIMEOUT_MS).toBe(60000);
+  });
+
+  it('KDV-REVIEW-26: an ordinary call still hands an abort signal to fetch', async () => {
+    const { impl, calls } = fakeFetch(validJudge());
+    await callAuditLLM({ messages: [{ role: 'user', content: 'x' }], config: CONFIG, fetchImpl: impl });
+    expect(calls[0].init.signal).toBeInstanceOf(AbortSignal);
   });
 });
 
