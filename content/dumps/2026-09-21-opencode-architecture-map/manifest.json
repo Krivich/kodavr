@@ -1,0 +1,31 @@
+{
+  "slug": "2026-09-21-opencode-architecture-map",
+  "title": "The architecture map: teaching an agent not to break cross-cutting flows or route around them",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-09-21",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["contains_code", "experimental"],
+  "tags": ["opencode", "ai-agents", "architecture", "plantuml", "workflow-map", "linter", "requirements-management", "context-engineering", "automation"],
+  "generated_by": "agent",
+  "human_review": "minimal",
+  "verification": "executable",
+  "license": "CC-BY-4.0",
+  "summary": "An agent forgets the architecture between sessions: it reads the file in front of it and re-invents a shortcut around a shared step, breaking a cross-cutting flow it never saw. This dump is a helicopter view an agent will actually read and can trust - a PlantUML map with one label grammar, coloured by business process and checked against the code tree by a linter (checks A-J, P1-P3) with a guarded escape hatch - plus a design-time hook that makes every new requirement name the process it touches, so the map is consulted before code is written. All sources are inlined; it is the companion to the requirements-machine dump.",
+  "sources": ["chat-log", "source-code"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "docs/workflow-arrows.puml", "note": "the worked example: a real, linted flow map (the source the agent reads)" },
+    { "kind": "file", "path_or_url": "docs/workflow-arrows.svg", "note": "the human render of the same map (generated, never hand-edited)" },
+    { "kind": "file", "path_or_url": "scripts/tooling/workflow-map/workflow-arrows-lint.mjs", "note": "the linter: pure lintDiagram({text,pumlDir,repoRoot}), checks A-J/P1-P3/M, palette, masks" },
+    { "kind": "file", "path_or_url": "scripts/tooling/workflow-map/workflow-arrows-svg.mjs", "note": "post-render hover injection into the .svg (aria-clickable long arrows)" },
+    { "kind": "file", "path_or_url": "scripts/tooling/quality-gates/req-coverage.js", "note": "the coverage check plus the flow-impact hook with its frozen legacy anchor" },
+    { "kind": "file", "path_or_url": "AGENTS/workflow-arrows.md", "note": "the convention doc you drop into your agent prompt" },
+    { "kind": "file", "path_or_url": "tests/unit/workflow-arrows.test.js", "note": "the tests that pin P1-P3 with synthetic diagrams (the mechanizm's proof, not inlined)" }
+  ],
+  "derived_from": "2026-09-18-opencode-requirements-machine"
+}
