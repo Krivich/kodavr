@@ -167,6 +167,10 @@ describe('KDV-CI-17: the publish trigger and the previous-deploy lookup', () => 
     expect(yml).toMatch(/fetch-depth:\s*0/);
     expect(yml).toMatch(/ref:\s*\$\{\{\s*github\.event\.workflow_run\.head_sha\s*\}\}/);
     expect(yml).toContain('node scripts/product/telegram/telegram-mirror.mjs');
+    expect(yml).toContain('npm ci');
+    expect(yml.indexOf('npm ci')).toBeLessThan(
+      yml.indexOf('node scripts/product/telegram/telegram-mirror.mjs'),
+    );
     expect(yml).toContain('secrets.TELEGRAM_BOT_TOKEN');
   });
 
