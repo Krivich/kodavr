@@ -12,6 +12,7 @@
     "og-image": "node scripts/generate-og-image.mjs",
     "req": "node scripts/req-coverage.js",
     "audit:local": "node scripts/audit-local.mjs",
+    "audit:judge": "node scripts/audit-judge-local.mjs",
     "contract": "node scripts/contract.mjs",
     "state:diet": "node scripts/state-diet.mjs",
     "workflow-arrows:lint": "node scripts/workflow-arrows-lint.mjs"

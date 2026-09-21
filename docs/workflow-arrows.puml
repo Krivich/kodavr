@@ -72,6 +72,10 @@ package "scripts/lib\n====\nthe smart controller: content, machine contracts, bu
   component "audit-report.mjs\nrenderAuditComment\n--\nadvisory PR comment: forensic map, no scores, escaped" as AUDIT_REP <<lib>> [[../scripts/lib/audit-report.mjs#renderAuditComment]]
   component "audit-pr.mjs\nrunAudit\n--\nPR audit orchestration: API inputs -> envelope + policy (shadow)" as AUDIT_PR <<lib>> [[../scripts/lib/audit-pr.mjs#runAudit]]
   component "audit-local.mjs\ndumpToPr · auditDumps\n--\nlocal harness: our own dumps -> the pipeline's verdicts" as AUDIT_LOCAL <<lib>> [[../scripts/lib/audit-local.mjs#dumpToPr]]
+  component "audit-llm.mjs\nproviderFromAuth · callAuditLLM\n--\nthe LLM provider client: credentials + one strict-JSON call" as AUDIT_LLM <<lib>> [[../scripts/lib/audit-llm.mjs#callAuditLLM]]
+  component "audit-judge.mjs\nframeContent · judgeChannel\n--\nLayer-4 LLM judge: data frame, allowlist schema, ensemble" as AUDIT_JUDGE <<lib>> [[../scripts/lib/audit-judge.mjs#judgeChannel]]
+  component "audit-trace.mjs\ndetectTraceResidue · quoteMask\n--\nLayer-5 deterministic residue classifier + non-LLM quote-masker" as AUDIT_TRACE <<lib>> [[../scripts/lib/audit-trace.mjs#detectTraceResidue]]
+  component "audit-meta.mjs\nbuildMetaMessages · metaReviewChannel\n--\nLayer-5 LLM meta-reviewer over a quote-masked trace (witness channel)" as AUDIT_META <<lib>> [[../scripts/lib/audit-meta.mjs#metaReviewChannel]]
 }
 
 package "scripts\n====\nentry points you actually run" as P_CLI {
@@ -88,6 +92,7 @@ package "scripts\n====\nentry points you actually run" as P_CLI {
   component "telegram-mirror.mjs\n--\nmirrors newly published dumps to Telegram" as CLI_TGMIRROR <<cli>> [[../scripts/telegram-mirror.mjs]]
   component "audit-pr.mjs\n--\nposts the advisory PR audit comment and status" as CLI_AUDIT <<cli>> [[../scripts/audit-pr.mjs]]
   component "audit-local.mjs\n--\nruns the audit pipeline over our own dumps (npm run audit:local)" as CLI_AUDIT_LOCAL <<cli>> [[../scripts/audit-local.mjs]]
+  component "audit-judge-local.mjs\n--\nruns the Layer-4 judge over our own dumps (npm run audit:judge)" as CLI_AUDIT_JUDGE <<cli>> [[../scripts/audit-judge-local.mjs]]
 }
 
 package "input/controllers\n====\nclient controllers injected by the engine" as P_CTRL {
@@ -152,6 +157,10 @@ GH ..> CLI_CARD : runs the manifest card on a PR\nso the reviewer sees the field
 GH ..> CLI_TGMIRROR : runs the dump mirror after a successful deploy
 GH ..> CLI_AUDIT : runs the PR audit in shadow mode\nadvisory comment + status, no merge
 CLI_AUDIT_LOCAL ..> AUDIT_LOCAL : reads content/dumps/* locally\nand prints what the pipeline says
+CLI_AUDIT_JUDGE ..> AUDIT_JUDGE : frames our own dumps as data\nand runs the Layer-4 judge locally
+CLI_AUDIT_JUDGE ..> AUDIT_LLM : resolves the provider from env, auth or a work-flow config\n(never a hardcoded key)
+AUDIT_JUDGE ..> AUDIT_LLM : one strict-JSON chat call per judge run
+AUDIT_JUDGE ..> AUDIT_CH : normalizes the judge verdict into a channel result
 CLI_AUDIT ..> AUDIT_PR : fetches the diff + author signals via the API\nand runs the deterministic audit
 AUDIT_PR ..> AUDIT_ENV : builds the Layer-0 envelope from the diff shape
 AUDIT_PR ..> AUDIT_DET : scans the API patch with the Layer-1 detectors

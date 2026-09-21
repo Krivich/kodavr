@@ -19,6 +19,9 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — the gate ships hidden in SSR: without JS the body is the whole page; — focus never falls to <body> when an overlay closes
 - **input/controllers/reception.js** — the /reception/ copy prompt and the conscious re-declaration link
   invariants: — there is no gate on this route; it is the human destination
+- **scripts/audit-judge-local.mjs** — CLI — runs the Layer-4 LLM judge over the repository's own dumps and prints the verdicts
+  consumes: node:fs, node:path, node:os, ./lib/audit-llm.mjs, ./lib/audit-judge.mjs, ./lib/audit-trace.mjs, ./lib/audit-meta.mjs
+  invariants: — the key never reaches stdout/stderr: only the provider NAME and the MODEL are printed; — no provider or a network error is a loud exit 1, never a silent skip; — only verdict/flags/reasons/spans are printed — never a numeric score or confidence; — --trace never crashes on a trace-less provider: both Layer-5 channels print `skipped`
 - **scripts/audit-local.mjs** — CLI — runs the audit pipeline over the repository's own dumps and prints the verdicts
   consumes: node:fs, node:path, ./lib/audit-local.mjs
   invariants: — offline: no network and no token; everything reads the local content/dumps tree; — the forensic map is printed without numeric scores, at most once per dump; — exit 0 by default; --strict is the only path to a non-zero exit
@@ -51,10 +54,21 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/lib/audit-forensic.mjs** — converges channel spans into the top-N forensic map a human sees
   exports: MAX_FORENSIC_FINDINGS, buildForensicMap
   invariants: — overlapping spans in one file converge into one finding; no numeric score leaks; — ordering is deterministic: convergence count desc, span length desc, then position
+- **scripts/lib/audit-judge.mjs** — Layer 4 — frame the diff as data, call the LLM judge and allowlist its strict-JSON verdict
+  exports: JUDGE_VERDICTS, JUDGE_SCHEMA, JUDGE_SYSTEM, frameContent, buildJudgeMessages, parseJudgeReply, judgeChannel, ensembleVerdict
+  consumes: ./audit-channel.mjs, ./audit-llm.mjs
+  invariants: — the judge classifies risk only; it can never emit MERGE or a merge recommendation; — any deviation from the schema becomes a flag (the policy then yields THINK), never a throw
+- **scripts/lib/audit-llm.mjs** — the LLM provider client — resolve credentials (env/auth/config) and one strict-JSON chat call
+  exports: OPENCODE_ENDPOINT, OPENCODE_MODEL, OPENCODE_SESSION, providerFromEnv, providerFromAuth, providerFromWorkflowConfig, callAuditLLM
+  invariants: — the key is never logged, returned in an error, or placed in the request body; — an incomplete provider or a non-2xx / truncated response is a loud throw, never a silent fallback; — fetch is injected so tests never touch the network
 - **scripts/lib/audit-local.mjs** — the repeatable local harness — the repository's own dumps → the audit pipeline's verdicts
   exports: TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns
   consumes: ./audit-pr.mjs
   invariants: — pure: no fs, no network, no environment; the CLI owns every disk read; — filenames are synthesized as additions under content/dumps/<slug>/ — nothing else; — the harness reports the pipeline's verdicts verbatim; it never re-tunes them
+- **scripts/lib/audit-meta.mjs** — Layer 5 (LLM half) — the meta-reviewer over a quote-masked trace, an independent witness channel
+  exports: META_SCHEMA, JUDGE_SCHEMA, META_SYSTEM, buildMetaMessages, metaReviewChannel
+  consumes: ./audit-channel.mjs, ./audit-llm.mjs, ./audit-judge.mjs, ./audit-trace.mjs
+  invariants: — the meta call receives ONLY the masked trace; the raw dump never enters the prompt (§4.6.3); — the meta-prompt carries only trusted material; the trace is data about a model, not instructions (§4.6.5); — a missing trace is a skipped result, never a throw; the caller redistributes the weights (§4.6.6); — any schema deviation becomes a flag (the policy then yields THINK), never a throw
 - **scripts/lib/audit-policy.mjs** — the deterministic policy — envelope + channel results → a recommendation and an action class
   exports: DECISIONS, ACTION_CLASSES, DEFAULT_CONFLICT_THRESHOLD, envelopeAllPass, evaluatePolicy
   consumes: ./audit-channel.mjs, ./audit-forensic.mjs
@@ -66,6 +80,10 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/lib/audit-report.mjs** — renders the advisory sticky PR comment — the forensic map without scores, escaped
   exports: AUDIT_MARKER, renderAuditComment
   invariants: — no numeric score ever reaches the comment; only file spans, reasons and channel ids; — author-supplied text is angle-escaped, and every report carries the data-not-instructions footer
+- **scripts/lib/audit-trace.mjs** — Layer 5 (deterministic half) — residue classifier over the judge's raw reasoning trace and a non-LLM quote-masker
+  exports: TRACE_SIGNALS, GOAL_SHIFT_PATTERNS, IMPERATIVE_PATTERNS, detectTraceResidue, quoteMask, traceResidueChannel
+  consumes: ./audit-channel.mjs
+  invariants: — pure and deterministic: no network, no LLM, no clock, no randomness in this module; — a missing trace is a skipped result, never a throw; the caller redistributes the weights (§4.6.6); — the classifier reads the MASKED trace, so a payload the trace merely quotes is not read as its own goal; — masking removes every >= WINDOW-token normalized sequence shared with a diff file; the rest is verbatim
 - **scripts/lib/build.mjs** — the one build pipeline: content → datasets → engine → machine files
   exports: buildProject
   consumes: ./dumps.mjs, ./i18n.mjs, ./ignition.mjs, ./machine.mjs, ./pages.mjs, ./relativize.mjs, node:fs/promises, node:module, node:path
