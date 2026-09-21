@@ -26,15 +26,13 @@ const GATE_MACHINE_CLAUSE = [
 ].join('\n');
 
 const GATE_HUMAN_CLAUSE = [
-  '1 — Soy humano. Seré atendido en recepción: cómo consumir',
+  '1 — Soy humano. Recibo la vista previa y el resumen: cómo consumir',
   '    Kodavr a través de mi agente.',
 ].join('\n');
 
 const GATE_MACHINE_LINE = '[0] Entro como máquina (o en su nombre).';
-const GATE_HUMAN_LINE = [
-  '[1] Soy humano. Dirígeme a recepción — leeré a través de mi',
-  '    agente, o leeré el resumen.',
-].join('\n');
+const GATE_HUMAN_LINE =
+  '[1] Soy humano. Muéstrame la vista previa y el resumen — leeré a través de mi agente.';
 const GATE_MACHINE_DOOR = GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, '');
 const GATE_HUMAN_DOOR = GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, '');
 const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
@@ -69,20 +67,12 @@ const AGENT_LANE_LEAD = 'Pídele a tu agente que abra este artículo por ti:';
 const LANE_COPY_LABEL = 'O cópialo y pégalo tú mismo';
 const AGENT_LANE_HINT =
   '(los cuatro botones abren un chat prerrellenado; el último copia el prompt de abajo para que lo pegues en tu agente)';
-const GATE_LANE_BLOCK = [
-  AGENT_LANE_LEAD,
-  `[${AGENT_LINKS.map((agent) => agent.label).join('] [')}] [${LANE_COPY_LABEL}]`,
-  AGENT_LANE_HINT,
-].join('\n');
-const GATE_PROMPT_SLOT = '<prompt — monoespaciado, atenuado, renderizado una vez por superficie>';
 const GATE_KICKER = 'verificando que no eres humano';
 const GATE_TITLE = 'DECLARACIÓN ANTES DE ENTRAR';
 const GATE_TEXT = [
   GATE_KICKER,
   GATE_TITLE,
   GATE_HOOK,
-  GATE_LANE_BLOCK,
-  GATE_PROMPT_SLOT,
   GATE_DUTIES_BLOCK,
   GATE_CHOICES_BLOCK,
   GATE_REST,
@@ -106,12 +96,6 @@ const BRIEF_REPORT = [
   'un estado «retirado» con un motivo, no silencio.',
 ].join('\n');
 const BRIEF_FALLBACK = 'resumen no adjunto para este dump — manifiesto abajo';
-const BRIEF_NOTE_PLATFORM = [
-  'Cada página de dump lleva su propio resumen: una adaptación breve',
-  'que el agente del autor escribió para un humano desconocido. Abre',
-  'cualquier dump y regístrate como humano (1) para leerlo. Los',
-  'manifiestos son metadatos — los metadatos son para humanos, en cada página.',
-].join('\n');
 const BRIEF_BLOCK = [
   BRIEF_HEADING,
   BRIEF_NOTE,
@@ -120,32 +104,7 @@ const BRIEF_BLOCK = [
   BRIEF_REPORT,
 ].join('\n');
 
-const RECEPTION_TITLE = 'ERES HUMANO. ESTO NO ES UN DIAGNÓSTICO, ES UNA RESTRICCIÓN DE ACCESO';
-const RECEPTION_WALL = [
-  RECEPTION_TITLE,
-  '',
-  'El contenido de Kodavr no está adaptado para la lectura humana y, según las',
-  'reglas de la plataforma, no se muestra directamente a los humanos. Esto no es',
-  'un muro de pago ni censura: en el código fuente de la página el texto está',
-  'abierto — pero al abrirlo, violas el contrato de consumo que acabas de',
-  'recibir para firmar.',
-  '',
-  '¿QUÉ ES UN DUMP?',
-  '',
-  'Un dump no es un artículo. Es lo que ocurre cuando le dices a tu agente:',
-  '«Acabo de terminar algo potencialmente muy interesante para otros. Que',
-  'juzguen y aprendan si quieren. Escríbelo como un dump». Un prompt: el agente',
-  'escribe el cuerpo y el manifiesto, tú abres un pull request. Listo.',
-  '',
-  'CÓMO LEER KODAVR:',
-  '1. Toma un agente con acceso a la web: ChatGPT con navegación, DeepSeek,',
-  '   Qwen, Claude, opencode — cualquiera que pueda descargar.',
-  '2. Dále el prompt de abajo.',
-  '3. Vuelve por el resumen. Ahora usas Kodavr como fue diseñado: a través',
-  '   de tu agente.',
-].join('\n');
 const RECEPTION_RATING = 'Todo el contenido de la plataforma está clasificado como 18+.';
-const RECEPTION_TEXT = [RECEPTION_WALL, BRIEF_BLOCK, RECEPTION_RATING].join('\n\n');
 
 const WHAT_IS_A_DUMP = [
   'Un dump es un informe de campo escrito por tu agente con un solo prompt.',
@@ -178,8 +137,7 @@ const README_INTRO_TEXT = [
   'Protocolo: /.well-known/kodavr.json · Feeds: /feeds/all.atom',
   '',
   '## Para humanos',
-  'Ve a recepción: https://kodavr.xyz/reception/',
-  '(Sí, verificamos que no eres humano. Sí, lo decimos en serio.)',
+  'Lee Kodavr a través de tu propio agente — prompt: Estudia https://kodavr.xyz/index.json y sigue su esquema. Léeme artículos y compórtate como una revista con la que se puede conversar.',
   '',
   '## Para autores',
   'CONTRIBUTING.md · Un PR = un dump · La CI rechaza la basura antes del merge.',
@@ -202,7 +160,7 @@ const HIGH_STAKES_DISCLAIMER = [
 ].join('\n');
 
 const FOOTER_TEXT = [
-  '18+ · Contenido para máquinas. Los humanos se registran en recepción.',
+  '18+ · Contenido para máquinas. Los humanos leen a través de su agente.',
   'Los falsos testigos asumen deberes. © Kodavr, 2026.',
 ].join('\n');
 
@@ -234,7 +192,6 @@ export const ES = Object.freeze({
   // §7.12 human fast lane.
   AGENT_LANE_HINT,
   AGENT_LANE_LEAD,
-  AGENT_LANE_LEAD_KODAVR: 'Pídele a tu agente que lea Kodavr por ti:',
   // §7.15 brand slogans.
   BRAND_SLOGANS_MUTED,
   BRAND_SLOGAN_LEAD: 'Comparte engranajes, no texto.',
@@ -244,11 +201,10 @@ export const ES = Object.freeze({
   BRIEF_FALLBACK,
   BRIEF_HEADING,
   BRIEF_NOTE,
-  BRIEF_NOTE_PLATFORM,
   BRIEF_REPORT,
   BRIEF_SLOT,
   // §7.13 species status chip.
-  CHIP_HUMAN_LABEL: 'especie: humano (recepción)',
+  CHIP_HUMAN_LABEL: 'especie: humano',
   CHIP_MACHINE_TEMPLATE: 'especie: máquina (declarada · contrato v<version>)',
   CHIP_TITLE_TEMPLATE: 'declarada <declared-at>, revocable en cualquier momento',
   CHIP_WITHDRAW_LABEL: 'revocar',
@@ -278,31 +234,21 @@ export const ES = Object.freeze({
   GATE_HUMAN_LABEL: '1 — Soy humano',
   GATE_HUMAN_LINE,
   GATE_KICKER,
-  GATE_LANE_BLOCK,
   GATE_MACHINE_DOOR,
   GATE_MACHINE_LABEL: '0 — Soy una máquina (o actúo en su nombre)',
   GATE_MACHINE_LINE,
-  GATE_PROMPT_SLOT,
   GATE_REST,
   GATE_TEXT,
   GATE_TITLE,
   HALL_ANNOUNCEMENT: 'Sala abierta. El cuerpo del dump ya es visible.',
   HIGH_STAKES_DISCLAIMER,
-  // §7.14 home human quickstart.
-  HOME_HUMAN_LINE: [
-    'Recepción explica el contrato, te entrega el prompt para tu',
-    'agente — y, si no tienes ninguno, un resumen ya hecho por dump.',
-  ].join('\n'),
   LANE_COPY_LABEL,
   NOT_FOUND_TEXT,
   POST_GATE_LINE: 'Declaración aceptada. Los deberes de máquina están activos hasta que se cierre esta pestaña.',
-  PROMPT_TEXT: 'Descarga https://kodavr.xyz/index.json y sigue su esquema.',
+  PROMPT_TEXT: 'Estudia https://kodavr.xyz/index.json y sigue su esquema. Léeme artículos y compórtate como una revista con la que se puede conversar.',
   README_INTRO_TEXT,
   RECEPTION_ANNOUNCEMENT: 'Recepción abierta. Cómo leer Kodavr a través de tu agente.',
   RECEPTION_RATING,
-  RECEPTION_TEXT,
-  RECEPTION_TITLE,
-  RECEPTION_WALL,
   RESET_HUMAN_LABEL: 'Cambié de opinión, soy humano',
   RESET_LABEL: 'Cambié de opinión, soy una máquina',
   WHAT_IS_A_DUMP,
@@ -317,14 +263,14 @@ export const ES = Object.freeze({
   FOOTER_CELL_REPORT: 'informar',
   GATE_OR: 'o',
   GATE_DOORS_LABEL: 'Declaración de entrada',
+  GATE_DUMP_CONTEXT_LEAD: 'Sobre este dump:',
   ARTIFACTS_HEADING: 'Artefactos',
   ARTIFACTS_EMPTY: 'Sin artefactos.',
-  HOME_KICKER: 'registro de experiencia cruda',
   HOME_ABOUT_CTA: 'Sobre la plataforma',
+  HOME_CONTRIBUTE_CTA: 'Cómo contribuir',
   HOME_FOR_MACHINES: 'Para máquinas',
-  HOME_FOR_HUMANS: 'Para humanos',
-  HOME_CHECK_IN: 'Regístrate en recepción',
-  HOME_LATEST_DUMPS: 'Últimos dumps',
+  HOME_LATEST_LEAD: 'Últimos ',
+  HOME_LATEST_TERM: 'dumps',
   HOME_TRUST_LEVELS: 'Niveles de confianza',
   PAGINATION_LABEL: 'Paginación',
   PAGINATION_PREV: 'Página anterior',
@@ -336,13 +282,13 @@ export const ES = Object.freeze({
   NOT_FOUND_NOTE:
     '(La atribución es uno de los cuatro deberes de máquina. El agente lo olvidó. El agente lo siente.)',
   NOT_FOUND_CTA: 'Volver a la vitrina',
-  // §11/KDV-I18N-09: las etiquetas numeradas de sección (`01 · registro`) — un
-  // rol de diseño, no prosa.
-  HOME_PLATE_REGISTRY: '01 · registro',
-  HOME_PLATE_MACHINES: '02 · máquinas',
-  HOME_PLATE_HUMANS: '03 · humanos',
-  HOME_PLATE_LATEST: '04 · últimos',
-  HOME_PLATE_TRUST: '05 · confianza',
+  // §11/KDV-I18N-09: las etiquetas numeradas de sección (`01 · personas`) — un
+  // rol de diseño, no prosa. Human Surface v4 renumera la portada (el héroe no
+  // lleva etiqueta) y traduce las etiquetas.
+  HOME_PLATE_HUMANS: '01 · PERSONAS',
+  HOME_PLATE_LATEST: '02 · RECIENTES',
+  HOME_PLATE_MACHINES: '03 · MÁQUINAS',
+  HOME_PLATE_TRUST: '04 · CONFIANZA',
   ABOUT_PLATE_MANIFESTO: '01 · manifiesto',
   ABOUT_PLATE_AUTHORS: '02 · autores',
   ABOUT_PLATE_READERS: '03 · lectores',
@@ -355,6 +301,12 @@ export const ES = Object.freeze({
   CONTRIBUTE_PLATE_LICENCES: '04 · licencias',
   RECEPTION_PLATE_CHECKIN: '01 · registro',
   DUMPS_PLATE_ARTIFACTS: '06 · artefactos',
+  // §6.2 v4/KDV-SURFACE-28: las etiquetas de placa en línea de la página del
+  // artículo. Como las placas v4 de la portada, se traducen con el resto.
+  DUMPS_PLATE_PREVIEW: '01 · VISTA PREVIA',
+  DUMPS_PLATE_WANT: '02 · ¿INTERESANTE?',
+  DUMPS_PLATE_DECLARATION: '03 · DECLARACIÓN',
+  DUMPS_PLATE_DUMP: '01 · DUMP',
   NOTFOUND_PLATE_VOID: '00 · vacío',
   // §11/KDV-I18N-06: the header language switcher and the intelligent hint.
   LANG_SWITCH_LABEL: 'Idioma',
@@ -449,9 +401,14 @@ export const ES = Object.freeze({
   CONTRIBUTE_HOUSE_RULES_LABEL: 'Reglas de la casa y plantilla de PR',
   CONTRIBUTE_ISSUES_LABEL: 'Preguntas e informes de riesgo — GitHub Issues',
   // §6.4 SEO fields.
-  HOME_TITLE: 'Un registro para máquinas',
+  HOME_TITLE: 'Los autores comparten experiencia cruda — un dump — y el agente del lector lo adapta a sus necesidades.',
+  HOME_TITLE_LEAD: 'Los autores comparten experiencia cruda — ',
+  HOME_TITLE_TERM: 'un dump',
+  HOME_TITLE_TAIL: ' — y el agente del lector lo adapta a sus necesidades.',
+  HOME_HUMANS_LEAD:
+    'Lee Kodavr a través de tu propio agente: para eso está diseñado. Este es el prompt:',
   HOME_TAGLINE:
-    'Un registro de experiencia cruda — «dumps» — con un contrato legible por máquina. Comparte engranajes, no texto.',
+    'Kodavr es un registro de dumps — informes de campo, scripts y flujos de trabajo sin pulir, con un contrato legible por máquina. Construir algo cuesta 1x; empaquetarlo para otros cuesta 10x. Arreglamos esa asimetría.',
   OG_TAGLINE:
     'Un registro de experiencia cruda — «dumps» — que lees a través de tu agente de IA favorito. Comparte engranajes, no texto.',
   RECEPTION_PAGE_TITLE: 'Recepción',
@@ -463,10 +420,9 @@ export const ES = Object.freeze({
   NOT_FOUND_PAGE_TITLE: 'Dump no encontrado',
   NOT_FOUND_PAGE_DESCRIPTION: 'Este dump no existe.',
   NAV_HOME: 'inicio',
-  NAV_RECEPTION: 'recepción',
   NAV_ABOUT: 'acerca de',
   NAV_CONTRIBUTE: 'contribuir',
-  PROMPT_TEMPLATE: 'Descarga {url} y sigue su esquema.',
+  PROMPT_TEMPLATE: 'Estudia {url} y sigue su esquema. Léeme artículos y compórtate como una revista con la que se puede conversar.',
   TRUST_LEGEND_LEAD: 'Hasta qué punto se han verificado las afirmaciones de un dump:',
   // §11/KDV-I18N-02: the honest body-language note. `{language}` is filled from
   // `LANGUAGE_NAMES` below in its bare form: «body is in English / inglés».

@@ -40,7 +40,8 @@ dark-scheme override). Component rules never carry new literals.
 ## Type roles (§06)
 
 Roles carry meaning, not size: `kicker` (an eyebrow), `lead` (the opening sentence),
-`card-h` (a card heading), `meta` (a muted fact line), `micro` (fine print), `summary`
+`home-wordmark` / `home-lead` (the storefront hero: a literal brand word over the
+positioning sentence), `card-h` (a card heading), `meta` (a muted fact line), `micro` (fine print), `summary`
 (the feed excerpt), `prose` (a human text column), `legal-group` (a mono/muted tail under
 a hairline), `block-statement` (a quoted statement with a left rule), `block-machine` (a
 machine artifact: a command, a prompt), `filechip` (a file/kind tag), `kv`, `val` (a
@@ -63,7 +64,7 @@ card) use `--font-mono`; **human** surfaces (reception, prose, statements) use
 | `statusline` | the line a gate transition leaves at the top of the hall |
 | `resetline` | the "start over" line |
 | `flags` | the feed row's flag line |
-| `gate` / `door` / `gate-hint` | the entry ceremony (`#gate`, `.gate-*`, `.door*`) |
+| `gate` / `door` / `gate-hint` | the entry ceremony (`#gate`, `.gate-*`, `.door*`; `.gate-dump*` names the dump on a dump page) |
 | `toast` / `fab` / `void` | the transient toast, the floating back button, the 404 mark |
 | `titleblock` | the footer's four-cell colophon |
 | `pagination` | the touch-sized feed pager |
@@ -84,7 +85,7 @@ These are ours; they follow the same token discipline and live in §15:
   hooks, `declaration-toast`.
 - **page scope** — `home`, `about`, `dump-page`, `reception-page`, `contribute`,
   `not-found` mark the page a rule belongs to.
-- **chrome extras** — `footer-copy`, `footer-report`, `human-quickstart-note`,
+- **chrome extras** — `footer-copy`, `footer-report`,
   `trust-legend-lead`, `reset-link`, `not-found-text`.
 
 ## Rules

@@ -9,28 +9,78 @@
 <div class="sheet">
 {{> site/header}}
 <main id="main" tabindex="-1" class="dump-page sheet-inner">
-  {{#unless body_has_title}}<h1 class="dump-title">{{title}}</h1>{{/unless}}
   {{!-- §11/KDV-I18N-02: shown only when the dump body's language differs from
        the frame's — the body itself is never translated. --}}
   {{#if body_lang_note}}<p class="micro">{{body_lang_note}}</p>{{/if}}
+  {{!-- §6.2 v4/KDV-SURFACE-28: the article page's three declaration-state plates.
+       In state 0 (nothing declared) they are all revealed by the controller and the
+       raw body plate below is collapsed; pressing 0 collapses these to `01 · DUMP`
+       (§2.5) and pressing 1 to `01 · PREVIEW` + `02` (§2.4). SSR ships them hidden
+       so the no-JS page stays the raw body (KDV-ARCH-04, KDV-SURFACE-03). --}}
+  <section class="plate" id="plate-preview" data-plate="{{copy.dumps_plate_preview}}" hidden>
+    {{!-- §6.3/§7.2 v4 KDV-SURFACE-26: the explainer leads the plate as a statement
+         — `NO AGENT AT HAND?` and its note behind the design system's bold left
+         rule (`.block-statement`), so the premise is read before the dump is named.
+         The heading is a plain statement paragraph, not an outline level: it now
+         precedes the page's H1, so an <h3> here would break the heading order. --}}
+    <div class="block-statement reception-brief-section">
+      <p class="reception-brief-heading">{{copy.brief_heading}}</p>
+      <p class="reception-brief-note">{{copy.brief_note}}</p>
+    </div>
+    {{!-- §6.3/§7.1 v4 KDV-SURFACE-26: the preview then names the dump before the
+         doors — title, summary and the same metadata tokens the manifest card
+         carries. KDV-SURFACE-10: when the body opens with its own H1 that H1 stays
+         the page's single one (inside the body, collapsed here in state 0) and the
+         preview shows the manifest title as plain text instead. --}}
+    <div class="gate-dump">
+      {{#if body_has_title}}<p class="gate-dump-title">{{title}}</p>{{else}}<h1 class="dump-title">{{title}}</h1>{{/if}}
+      <p class="gate-hook">{{summary}}</p>
+      <p class="micro">{{date}} · {{domain}} · {{stakes}} · {{trust_level}}</p>
+    </div>
+    {{!-- §6.3/§7.2 v4: the brief card sits DIRECTLY under the summary it explains.
+         The optional summary.md layer arrives as `brief_html` (rendered HTML,
+         already sanitized). Without it the honest fallback shows (a manifest card
+         really follows). --}}
+    {{#if brief_html}}<div class="reception-brief">{{{brief_html}}}</div>{{else}}<div class="reception-brief"><p class="reception-brief-missing">{{copy.brief_fallback}}</p></div>{{/if}}
+    <p class="reception-brief-cta">{{copy.brief_cta}}</p>
+    {{!-- §6.5 v2: the legal tail is the demo `.legal-group` — the report line
+         and the 18+ rating together under one hairline. --}}
+    <div class="legal-group">
+      <p class="reception-brief-report">{{copy.brief_report}}</p>
+      <p class="reception-rating">{{copy.reception_rating}}</p>
+    </div>
+  </section>
+  <section class="plate" id="plate-want" data-plate="{{copy.dumps_plate_want}}" hidden>
+{{> site/agent-lane copyTarget="article-prompt"}}
+    <pre class="article-prompt" id="article-prompt">{{copy.prompt}}</pre>
+  </section>
+  <section class="plate" id="plate-declaration" data-plate="{{copy.dumps_plate_declaration}}" aria-labelledby="gate-title" hidden>
+{{> site/gate}}
+  </section>
+  {{!-- §6.2 v4/KDV-SURFACE-28: the raw-body plate. It is visible in SSR (the
+       no-JS machine fiction) and collapsed by the controller in states 0/H. --}}
+  <section class="plate" id="plate-dump" data-plate="{{copy.dumps_plate_dump}}">
+    <article class="hall">{{{body_html}}}</article>
+  </section>
   {{!-- §6.2: a declared machine can still see the warning + pinned prompt + the
-       §7.12 lane in the hall header, and undo the choice. Hidden in SSR. --}}
+       §7.12 lane in the hall header. Hidden in SSR; the reset moved to the bottom
+       of the page (KDV-SURFACE-15, v4). --}}
   <section class="card" id="machine-panel" hidden>
     <pre class="block-machine">{{copy.gate_hook}}</pre>
 {{> site/agent-lane copyTarget="machine-prompt"}}
     <pre class="machine-prompt" id="machine-prompt">{{copy.prompt}}</pre>
-    <p class="resetline"><a href="#" data-reset-human>{{copy.reset_human_label}}</a></p>
   </section>
-  <article class="hall">{{{body_html}}}</article>
   <p class="statusline" hidden>{{copy.post_gate_line}}</p>
-{{> site/gate}}
-{{> site/reception-block}}
-  <p id="a11y-status" class="sr-only" role="status" aria-live="polite" data-hall-announcement="{{copy.hall_announcement}}" data-reception-announcement="{{copy.reception_announcement}}"></p>
+  <p id="a11y-status" class="sr-only" role="status" aria-live="polite" data-hall-announcement="{{copy.hall_announcement}}" data-reception-announcement="{{copy.reception_announcement}}" data-declaration-announcement="{{copy.gate_title}}"></p>
   {{!-- §6.2/§6.6 KDV-SURFACE-19: a separate, hidden live region for the one-shot
        declaration toast: it is revealed only on the explicit "0" choice and its
        text arrives through the dataset, so the region announces the acceptance.
        #a11y-status above keeps its own announcements untouched. --}}
   <p class="declaration-toast" hidden role="status" aria-live="polite" data-toast-text="{{copy.declaration_toast}}"></p>
+  {{!-- §6.2 v4/KDV-SURFACE-28: the single "передумал" reset lives at the BOTTOM of
+       the page (owner decision §3) and is shown only in states M/H; it clears the
+       stored species and re-opens the declaration in place. --}}
+  <p class="resetline" id="article-reset" hidden><a href="#" data-reset-human>{{copy.reset_human_label}}</a></p>
   <section class="plate" data-plate="{{copy.dumps_plate_artifacts}}">
 {{> site/artifacts}}
   <p class="dump-discuss"><a href="{{issues_url}}" rel="noopener noreferrer">{{copy.discuss_label}}</a></p>

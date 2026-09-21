@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
   GATE_TITLE,
   GATE_KICKER,
-  RECEPTION_TITLE,
+  CHIP_HUMAN_LABEL,
   FOOTER_TEXT,
   PROMPT_TEXT,
   DUMP_DEFINITION,
@@ -16,7 +16,7 @@ describe('i18n copydeck core (§11)', () => {
     const sampled = [
       ['GATE_TITLE', GATE_TITLE],
       ['GATE_KICKER', GATE_KICKER],
-      ['RECEPTION_TITLE', RECEPTION_TITLE],
+      ['CHIP_HUMAN_LABEL', CHIP_HUMAN_LABEL],
       ['FOOTER_TEXT', FOOTER_TEXT],
       ['PROMPT_TEXT', PROMPT_TEXT],
       ['DUMP_DEFINITION', DUMP_DEFINITION],

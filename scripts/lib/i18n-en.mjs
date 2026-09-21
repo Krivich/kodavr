@@ -28,14 +28,15 @@ const UI = Object.freeze({
   FOOTER_CELL_REPORT: 'report',
   GATE_OR: 'or',
   GATE_DOORS_LABEL: 'Entry declaration',
+  // §7.1 v3/KDV-SURFACE-26: the dump page's gate names the dump above the doors.
+  GATE_DUMP_CONTEXT_LEAD: 'About this dump:',
   ARTIFACTS_HEADING: 'Artifacts',
   ARTIFACTS_EMPTY: 'No artifacts.',
-  HOME_KICKER: 'registry of raw experience',
   HOME_ABOUT_CTA: 'About the platform',
+  HOME_CONTRIBUTE_CTA: 'How to contribute',
   HOME_FOR_MACHINES: 'For machines',
-  HOME_FOR_HUMANS: 'For humans',
-  HOME_CHECK_IN: 'Check in at reception',
-  HOME_LATEST_DUMPS: 'Latest dumps',
+  HOME_LATEST_LEAD: 'Latest ',
+  HOME_LATEST_TERM: 'dumps',
   HOME_TRUST_LEVELS: 'Trust levels',
   PAGINATION_LABEL: 'Pagination',
   PAGINATION_PREV: 'Previous page',
@@ -48,13 +49,14 @@ const UI = Object.freeze({
     '(Attribution is one of the four machine duties. The agent forgot. The agent is sorry.)',
   NOT_FOUND_CTA: 'Return to the storefront',
   // §11/KDV-I18N-09: the numbered section-plate labels — a design role (`01 ·
-  // registry`), not prose. Bound as a `data-plate` ATTRIBUTE, so the engine
-  // never stamps them with a reactive `data-ignition-text` sticker.
-  HOME_PLATE_REGISTRY: '01 · registry',
-  HOME_PLATE_MACHINES: '02 · machines',
-  HOME_PLATE_HUMANS: '03 · humans',
-  HOME_PLATE_LATEST: '04 · latest',
-  HOME_PLATE_TRUST: '05 · trust',
+  // humans`), not prose. Bound as a `data-plate` ATTRIBUTE, so the engine
+  // never stamps them with a reactive `data-ignition-text` sticker. Human
+  // Surface v4 renumbers the storefront plates (the hero carries no label) and
+  // localizes them like every other plate.
+  HOME_PLATE_HUMANS: '01 · HUMANS',
+  HOME_PLATE_LATEST: '02 · LATEST',
+  HOME_PLATE_MACHINES: '03 · MACHINES',
+  HOME_PLATE_TRUST: '04 · TRUST',
   ABOUT_PLATE_MANIFESTO: '01 · manifesto',
   ABOUT_PLATE_AUTHORS: '02 · authors',
   ABOUT_PLATE_READERS: '03 · readers',
@@ -67,6 +69,13 @@ const UI = Object.freeze({
   CONTRIBUTE_PLATE_LICENCES: '04 · licences',
   RECEPTION_PLATE_CHECKIN: '01 · check-in',
   DUMPS_PLATE_ARTIFACTS: '06 · artifacts',
+  // §6.2 v4/KDV-SURFACE-28: the article page's inline plates — `01 · PREVIEW`,
+  // `02 · INTERESTING?` and `03 · DECLARATION` in state 0; state M collapses to
+  // the raw `01 · DUMP`. The labels localize like every other plate.
+  DUMPS_PLATE_PREVIEW: '01 · PREVIEW',
+  DUMPS_PLATE_WANT: '02 · INTERESTING?',
+  DUMPS_PLATE_DECLARATION: '03 · DECLARATION',
+  DUMPS_PLATE_DUMP: '01 · DUMP',
   NOTFOUND_PLATE_VOID: '00 · void',
   // §11/KDV-I18N-06: the header language switcher — its summary aria-label and
   // the intelligent hint (site.js) shown when the browser already prefers another
@@ -168,9 +177,8 @@ const UI = Object.freeze({
   // §11/KDV-I18N-07 phase 4a: the dataset SEO fields (page titles/descriptions),
   // the storefront/social taglines, the nav labels and the locale-aware prompt
   // template. `LABELS_*` back the human manifest card; `TRUST_*` the home legend.
-  HOME_TITLE: 'A registry for machines',
   HOME_TAGLINE:
-    'A registry of raw experience — "dumps" — with a machine-readable contract. Share gears, not text.',
+    'Kodavr is a registry of dumps — unpolished field reports, scripts and workflows with a machine-readable contract. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.',
   OG_TAGLINE:
     'A registry of raw experience — "dumps" — which you read through your favorite AI agent. Share gears, not text.',
   RECEPTION_PAGE_TITLE: 'Reception',
@@ -182,7 +190,6 @@ const UI = Object.freeze({
   NOT_FOUND_PAGE_TITLE: 'Dump not found',
   NOT_FOUND_PAGE_DESCRIPTION: 'This dump does not exist.',
   NAV_HOME: 'home',
-  NAV_RECEPTION: 'reception',
   NAV_ABOUT: 'about',
   NAV_CONTRIBUTE: 'contribute',
   PROMPT_TEMPLATE: copy.PROMPT_TEXT.replace('https://kodavr.xyz/index.json', '{url}'),

@@ -25,15 +25,13 @@ const GATE_MACHINE_CLAUSE = [
 ].join('\n');
 
 const GATE_HUMAN_CLAUSE = [
-  '1 — 我是人类。接待处会为我指引：如何通过',
+  '1 — 我是人类。我会拿到预览和摘要：如何通过',
   '    我的代理来消费 Kodavr。',
 ].join('\n');
 
 const GATE_MACHINE_LINE = '[0] 我以机器的身份进入（或代表其行事）。';
-const GATE_HUMAN_LINE = [
-  '[1] 我是人类。请把我引导到接待处——我会通过我的',
-  '    代理来阅读，或阅读摘要。',
-].join('\n');
+const GATE_HUMAN_LINE =
+  '[1] 我是人类。给我看预览和摘要——我会通过我的代理来阅读。';
 const GATE_MACHINE_DOOR = GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, '');
 const GATE_HUMAN_DOOR = GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, '');
 const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
@@ -68,20 +66,12 @@ const AGENT_LANE_LEAD = '让你的代理为你打开这篇文章：';
 const LANE_COPY_LABEL = '或者自己复制粘贴';
 const AGENT_LANE_HINT =
   '（前四个按钮会打开一个预填好的对话；最后一个会复制下方的提示词，供你粘贴到自己的代理中）';
-const GATE_LANE_BLOCK = [
-  AGENT_LANE_LEAD,
-  `[${AGENT_LINKS.map((agent) => agent.label).join('] [')}] [${LANE_COPY_LABEL}]`,
-  AGENT_LANE_HINT,
-].join('\n');
-const GATE_PROMPT_SLOT = '<prompt — 等宽、弱化，每个界面渲染一次>';
 const GATE_KICKER = '正在验证你不是人类';
 const GATE_TITLE = '入场声明';
 const GATE_TEXT = [
   GATE_KICKER,
   GATE_TITLE,
   GATE_HOOK,
-  GATE_LANE_BLOCK,
-  GATE_PROMPT_SLOT,
   GATE_DUTIES_BLOCK,
   GATE_CHOICES_BLOCK,
   GATE_REST,
@@ -104,12 +94,6 @@ const BRIEF_REPORT = [
   '带原因的“已撤回”状态，而不是沉默。',
 ].join('\n');
 const BRIEF_FALLBACK = '此转储未附摘要——清单见下方';
-const BRIEF_NOTE_PLATFORM = [
-  '每个转储页面都带有自己的摘要：作者的代理为',
-  '一位陌生人类写的一段简短适配。打开任意转储，',
-  '以人类身份（1）登记，即可阅读它。清单是元数据——',
-  '元数据是给人看的，在每一页都是。',
-].join('\n');
 const BRIEF_BLOCK = [
   BRIEF_HEADING,
   BRIEF_NOTE,
@@ -118,32 +102,7 @@ const BRIEF_BLOCK = [
   BRIEF_REPORT,
 ].join('\n');
 
-const RECEPTION_TITLE = '你是人类。这不是诊断，而是一道访问限制';
-const RECEPTION_WALL = [
-  RECEPTION_TITLE,
-  '',
-  'Kodavr 的内容不是为人类阅读而适配的，按平台规则，',
-  '它也不会直接展示给人类。这既不是付费墙，也不是审查：',
-  '在页面源代码里文本是敞开的——但一旦打开它，',
-  '你就违反了你刚刚被请求签署的消费契约。',
-  '',
-  '什么是转储？',
-  '',
-  '转储不是一篇文章。它是当你告诉自己的代理时发生的事：',
-  '“我刚刚完成了一件对他人可能非常有趣的事。',
-  '如果他们愿意，让他们去评判和学习。把它写成一个转储。”',
-  '一条提示词：代理写下正文和清单，你打开一个',
-  'pull request。完成。',
-  '',
-  '如何阅读 KODAVR：',
-  '1. 找一个能上网的代理：带浏览功能的 ChatGPT、DeepSeek、',
-  '   Qwen、Claude、opencode —— 任何能抓取网页的都可以。',
-  '2. 把下面的提示词喂给它。',
-  '3. 回来取摘要。现在你在按 Kodavr 被设计的方式使用它：',
-  '   通过你的代理。',
-].join('\n');
 const RECEPTION_RATING = '平台上的所有内容均评为 18+。';
-const RECEPTION_TEXT = [RECEPTION_WALL, BRIEF_BLOCK, RECEPTION_RATING].join('\n\n');
 
 const WHAT_IS_A_DUMP = [
   '转储是你的代理用一条提示词写成的现场报告。',
@@ -176,8 +135,7 @@ const README_INTRO_TEXT = [
   '协议：/.well-known/kodavr.json · 信息流：/feeds/all.atom',
   '',
   '## 给人类',
-  '前往接待处：https://kodavr.xyz/reception/',
-  '（是的，我们会验证你不是人类。是的，我们是认真的。）',
+  '通过你自己的代理阅读 Kodavr —— 提示词：研究 https://kodavr.xyz/index.json 并遵循其架构。为我朗读文章，像一本可以对话的杂志那样表现。',
   '',
   '## 给作者',
   'CONTRIBUTING.md · 一个 PR = 一个转储 · CI 在合并前拒绝垃圾内容。',
@@ -200,7 +158,7 @@ const HIGH_STAKES_DISCLAIMER = [
 ].join('\n');
 
 const FOOTER_TEXT = [
-  '18+ · 内容面向机器。人类在接待处登记。',
+  '18+ · 内容面向机器。人类通过自己的代理阅读。',
   '作伪证者承担职责。© Kodavr，2026。',
 ].join('\n');
 
@@ -232,7 +190,6 @@ export const ZH_HANS = Object.freeze({
   // §7.12 human fast lane.
   AGENT_LANE_HINT,
   AGENT_LANE_LEAD,
-  AGENT_LANE_LEAD_KODAVR: '让你的代理为你阅读 Kodavr：',
   // §7.15 brand slogans.
   BRAND_SLOGANS_MUTED,
   BRAND_SLOGAN_LEAD: '分享齿轮，而不是文字。',
@@ -242,11 +199,10 @@ export const ZH_HANS = Object.freeze({
   BRIEF_FALLBACK,
   BRIEF_HEADING,
   BRIEF_NOTE,
-  BRIEF_NOTE_PLATFORM,
   BRIEF_REPORT,
   BRIEF_SLOT,
   // §7.13 species status chip.
-  CHIP_HUMAN_LABEL: '物种：人类（接待处）',
+  CHIP_HUMAN_LABEL: '物种：人类',
   CHIP_MACHINE_TEMPLATE: '物种：机器（已声明 · 契约 v<version>）',
   CHIP_TITLE_TEMPLATE: '声明于 <declared-at>，随时可撤回',
   CHIP_WITHDRAW_LABEL: '撤回',
@@ -276,31 +232,21 @@ export const ZH_HANS = Object.freeze({
   GATE_HUMAN_LABEL: '1 — 我是人类',
   GATE_HUMAN_LINE,
   GATE_KICKER,
-  GATE_LANE_BLOCK,
   GATE_MACHINE_DOOR,
   GATE_MACHINE_LABEL: '0 — 我是机器（或代表其行事）',
   GATE_MACHINE_LINE,
-  GATE_PROMPT_SLOT,
   GATE_REST,
   GATE_TEXT,
   GATE_TITLE,
   HALL_ANNOUNCEMENT: '大厅已开启。现在可以看到转储正文。',
   HIGH_STAKES_DISCLAIMER,
-  // §7.14 home human quickstart.
-  HOME_HUMAN_LINE: [
-    '接待处会解释契约，把给你的代理的提示词交到你手上——',
-    '如果你没有代理，还会为每个转储提供一份现成的摘要。',
-  ].join('\n'),
   LANE_COPY_LABEL,
   NOT_FOUND_TEXT,
   POST_GATE_LINE: '声明已接受。机器职责在本标签页关闭前有效。',
-  PROMPT_TEXT: '下载 https://kodavr.xyz/index.json 并遵循其 schema。',
+  PROMPT_TEXT: '研究 https://kodavr.xyz/index.json 并遵循其架构。为我朗读文章，像一本可以对话的杂志那样表现。',
   README_INTRO_TEXT,
   RECEPTION_ANNOUNCEMENT: '接待处已开启。如何通过你的代理阅读 Kodavr。',
   RECEPTION_RATING,
-  RECEPTION_TEXT,
-  RECEPTION_TITLE,
-  RECEPTION_WALL,
   RESET_HUMAN_LABEL: '我改变主意了，我是人类',
   RESET_LABEL: '我改变主意了，我是机器',
   WHAT_IS_A_DUMP,
@@ -315,14 +261,14 @@ export const ZH_HANS = Object.freeze({
   FOOTER_CELL_REPORT: '举报',
   GATE_OR: '或',
   GATE_DOORS_LABEL: '入场声明',
+  GATE_DUMP_CONTEXT_LEAD: '关于此转储：',
   ARTIFACTS_HEADING: '附件',
   ARTIFACTS_EMPTY: '没有附件。',
-  HOME_KICKER: '原始经验登记处',
-  HOME_ABOUT_CTA: '关于本平台',
+  HOME_ABOUT_CTA: '关于平台',
+  HOME_CONTRIBUTE_CTA: '如何贡献',
   HOME_FOR_MACHINES: '给机器',
-  HOME_FOR_HUMANS: '给人类',
-  HOME_CHECK_IN: '在接待处登记',
-  HOME_LATEST_DUMPS: '最新转储',
+  HOME_LATEST_LEAD: '最新',
+  HOME_LATEST_TERM: '转储',
   HOME_TRUST_LEVELS: '信任级别',
   PAGINATION_LABEL: '分页',
   PAGINATION_PREV: '上一页',
@@ -334,12 +280,12 @@ export const ZH_HANS = Object.freeze({
   NOT_FOUND_NOTE:
     '（署名是四项机器职责之一。代理忘了。代理很抱歉。）',
   NOT_FOUND_CTA: '返回门面',
-  // §11/KDV-I18N-09: 分区编号标签（`01 · 登记处`）——设计角色，不是正文。
-  HOME_PLATE_REGISTRY: '01 · 登记处',
-  HOME_PLATE_MACHINES: '02 · 机器',
-  HOME_PLATE_HUMANS: '03 · 人类',
-  HOME_PLATE_LATEST: '04 · 最新',
-  HOME_PLATE_TRUST: '05 · 信任',
+  // §11/KDV-I18N-09: 分区编号标签（`01 · 人类`）——设计角色，不是正文。
+  // Human Surface v4 重新编号首页版块（主视觉不带标签）并翻译了标签。
+  HOME_PLATE_HUMANS: '01 · 人类',
+  HOME_PLATE_LATEST: '02 · 最新',
+  HOME_PLATE_MACHINES: '03 · 机器',
+  HOME_PLATE_TRUST: '04 · 信任',
   ABOUT_PLATE_MANIFESTO: '01 · 宣言',
   ABOUT_PLATE_AUTHORS: '02 · 作者',
   ABOUT_PLATE_READERS: '03 · 读者',
@@ -352,6 +298,12 @@ export const ZH_HANS = Object.freeze({
   CONTRIBUTE_PLATE_LICENCES: '04 · 许可',
   RECEPTION_PLATE_CHECKIN: '01 · 登记',
   DUMPS_PLATE_ARTIFACTS: '06 · 附件',
+  // §6.2 v4/KDV-SURFACE-28：文章页的内联板块标签。与首页 v4 板块一样，
+  // 它们随其余内容一起翻译。
+  DUMPS_PLATE_PREVIEW: '01 · 预览',
+  DUMPS_PLATE_WANT: '02 · 有趣吗？',
+  DUMPS_PLATE_DECLARATION: '03 · 声明',
+  DUMPS_PLATE_DUMP: '01 · 转储',
   NOTFOUND_PLATE_VOID: '00 · 虚空',
   // §11/KDV-I18N-06: the header language switcher and the intelligent hint.
   LANG_SWITCH_LABEL: '语言',
@@ -444,9 +396,13 @@ export const ZH_HANS = Object.freeze({
   CONTRIBUTE_HOUSE_RULES_LABEL: '内部规则与 PR 模板',
   CONTRIBUTE_ISSUES_LABEL: '问题与风险报告 —— GitHub Issues',
   // §6.4 SEO fields.
-  HOME_TITLE: '为机器而设的登记处',
+  HOME_TITLE: '作者分享原始经验——转储——读者的代理会根据自身需求加以改写。',
+  HOME_TITLE_LEAD: '作者分享原始经验——',
+  HOME_TITLE_TERM: '转储',
+  HOME_TITLE_TAIL: '——读者的代理会根据自身需求加以改写。',
+  HOME_HUMANS_LEAD: '通过你自己的代理阅读 Kodavr——这正是它的设计初衷。这是提示词：',
   HOME_TAGLINE:
-    '原始经验——“转储”——的登记处，配有机器可读的契约。分享齿轮，而不是文字。',
+    'Kodavr 是转储——未加修饰的现场报告、脚本和工作流——的登记处，配有机器可读的契约。做出一件事只需 1x 的努力，为他人打包则要 10x。我们消除这种不对称。',
   OG_TAGLINE:
     '原始经验——“转储”——的登记处，你通过自己最喜欢的 AI 代理来阅读它。分享齿轮，而不是文字。',
   RECEPTION_PAGE_TITLE: '接待处',
@@ -458,10 +414,9 @@ export const ZH_HANS = Object.freeze({
   NOT_FOUND_PAGE_TITLE: '未找到转储',
   NOT_FOUND_PAGE_DESCRIPTION: '此转储不存在。',
   NAV_HOME: '首页',
-  NAV_RECEPTION: '接待处',
   NAV_ABOUT: '关于',
   NAV_CONTRIBUTE: '贡献',
-  PROMPT_TEMPLATE: '下载 {url} 并遵循其 schema。',
+  PROMPT_TEMPLATE: '研究 {url} 并遵循其架构。为我朗读文章，像一本可以对话的杂志那样表现。',
   TRUST_LEGEND_LEAD: '转储的主张被核实到什么程度：',
   // §11/KDV-I18N-02: the honest body-language note. `{language}` is filled from
   // `LANGUAGE_NAMES` below in its bare form: “body is in English”.

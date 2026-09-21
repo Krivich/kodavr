@@ -15,14 +15,33 @@ const template = (name) => readFileSync(join(ROOT, 'input/templates', name), 'ut
 
 // Phase 3a/3b: every route kicker comes from the dataset (`copy.<field>`,
 // catalog value asserted below); the template source carries the binding.
+// §6.1 v4/KDV-SURFACE-23: the home storefront has no kicker and no numbered
+// plate label — its hero is the literal `KODAVR` wordmark over a lead — so only
+// /about/ and /contribute/ carry the kicker → H1 → lead opening block.
 const ROUTES = [
-  ['home.hbs', '{{copy.home_kicker}}', 'HOME_KICKER', 'registry of raw experience'],
-  ['reception.hbs', '{{copy.reception_kicker}}', 'RECEPTION_KICKER', 'human surface · check-in'],
   ['about.hbs', '{{copy.about_kicker}}', 'ABOUT_KICKER', 'about the platform'],
   ['contribute.hbs', '{{copy.contribute_kicker}}', 'CONTRIBUTE_KICKER', 'for authors'],
 ];
 
 describe('page header: kicker + H1 + lead (KDV-SURFACE-23)', () => {
+  it('KDV-SURFACE-23: the home storefront opens with the KODAVR wordmark and a lead, no kicker, no plate label', () => {
+    const tpl = template('home.hbs');
+    const start = tpl.indexOf('<main');
+    const header = tpl.slice(start, tpl.indexOf('</section>', start));
+
+    // The hero is the literal brand wordmark over the positioning lead; the
+    // storefront carries no numbered plate label (Human Surface v4).
+    expect(header).not.toContain('data-plate=');
+    expect(header).toMatch(/<h1 class="home-wordmark">KODAVR<\/h1>/);
+    expect(header).toMatch(
+      /<p class="home-lead">\{\{home_title\.lead\}\}<strong>\{\{home_title\.term\}\}<\/strong>\{\{home_title\.tail\}\}<\/p>/,
+    );
+    expect(header).not.toContain('class="kicker"');
+    expect(header).not.toContain('class="lead"');
+    // exactly one H1 per page (KDV-SURFACE-10 owns the dump exception)
+    expect(tpl.match(/<h1\b/g) ?? []).toHaveLength(1);
+  });
+
   for (const [file, kicker, catalogKey, english] of ROUTES) {
     it(`KDV-SURFACE-23: ${file} opens with kicker, one H1 and a lead, in that order`, () => {
       const tpl = template(file);

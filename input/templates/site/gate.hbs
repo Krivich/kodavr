@@ -1,26 +1,26 @@
-{{!-- Call this partial at column 0: partial indentation shifts the continuation
-     lines of the multi-line §7.1 copy inside <pre> and breaks "verbatim".
-     First screen: kicker → H1 → hook → lane (controls) → prompt → the duties
-     line → the two labelled doors. The long machine-duty declaration
-     (.gate-rest) scrolls below the fold. --}}
-<dialog id="gate" hidden aria-labelledby="gate-title" aria-describedby="gate-hook">
-  <p class="gate-kicker" id="gate-kicker">{{copy.gate_kicker}}</p>
-  <h2 id="gate-title" class="gate-title">{{copy.gate_title}}</h2>
-  <p class="gate-hook" id="gate-hook">{{copy.gate_hook}}</p>
-{{> site/agent-lane copyTarget="gate-prompt"}}
-  <pre class="gate-prompt" id="gate-prompt">{{copy.prompt}}</pre>
-  <p class="gate-duties" id="gate-duties">{{copy.gate_duties_lead}}
+{{!-- Call at column 0: partial indentation shifts the continuation lines of the
+     multi-line §7.1 copy inside <pre> and breaks "verbatim".
+     Human Surface v4/KDV-SURFACE-28: the declaration is INLINE, not a modal — the
+     article page renders this partial inside its `03 · DECLARATION` plate, below
+     `01 · PREVIEW` and `02 · INTERESTING?` (dumps.hbs). States M/H
+     collapse the plate away; the section wrapper carries the accessible name via
+     aria-labelledby="gate-title" (KDV-A11Y-02, amended to the inline shape).
+     First screen: kicker → H2 → hook → the duties line → the two labelled doors.
+     The long machine-duty declaration (.gate-rest) scrolls below the fold. --}}
+<p class="gate-kicker" id="gate-kicker">{{copy.gate_kicker}}</p>
+<h2 id="gate-title" class="gate-title">{{copy.gate_title}}</h2>
+<p class="gate-hook" id="gate-hook">{{copy.gate_hook}}</p>
+<p class="gate-duties" id="gate-duties">{{copy.gate_duties_lead}}
 {{copy.gate_duties}}</p>
-  {{!-- §6.5 P0-1: the two doors carry their own visible labels. The §7.1 digit
-       stays a separate aria-hidden badge (.door-digit) and the descriptive
-       label (.door-label) is the button's accessible name — a bare digit is
-       never the name (KDV-A11Y-02, WCAG 2.5.3 Label in Name). The copydeck
-       keeps the [0]/[1] enumeration, so the label derives from the choice line
-       with the marker stripped: nothing is retyped and nothing prints twice. --}}
-  <div class="gate-doors" role="group" aria-label="{{copy.gate_doors_label}}">
-    <button type="button" class="door" data-gate-choice="machine"><span class="door-digit" aria-hidden="true">0</span><span class="door-label">{{copy.gate_machine_door}}</span></button>
-    <span class="gate-or" aria-hidden="true">{{copy.gate_or}}</span>
-    <button type="button" class="door" data-gate-choice="human"><span class="door-digit" aria-hidden="true">1</span><span class="door-label">{{copy.gate_human_door}}</span></button>
-  </div>
-  <pre class="gate-rest">{{copy.gate_rest}}</pre>
-</dialog>
+{{!-- §6.5 P0-1: the two doors carry their own visible labels. The §7.1 digit
+     stays a separate aria-hidden badge (.door-digit) and the descriptive
+     label (.door-label) is the button's accessible name — a bare digit is
+     never the name (KDV-A11Y-02, WCAG 2.5.3 Label in Name). The copydeck
+     keeps the [0]/[1] enumeration, so the label derives from the choice line
+     with the marker stripped: nothing is retyped and nothing prints twice. --}}
+<div class="gate-doors" role="group" aria-label="{{copy.gate_doors_label}}">
+  <button type="button" class="door" data-gate-choice="machine"><span class="door-digit" aria-hidden="true">0</span><span class="door-label">{{copy.gate_machine_door}}</span></button>
+  <span class="gate-or" aria-hidden="true">{{copy.gate_or}}</span>
+  <button type="button" class="door" data-gate-choice="human"><span class="door-digit" aria-hidden="true">1</span><span class="door-label">{{copy.gate_human_door}}</span></button>
+</div>
+<pre class="gate-rest">{{copy.gate_rest}}</pre>

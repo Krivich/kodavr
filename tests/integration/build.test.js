@@ -20,15 +20,12 @@ import {
   GATE_HUMAN_DOOR,
   RESET_HUMAN_LABEL,
   DECLARATION_TOAST,
-  RECEPTION_WALL,
   RECEPTION_RATING,
   BRIEF_HEADING,
   BRIEF_NOTE,
-  BRIEF_NOTE_PLATFORM,
   BRIEF_CTA,
   BRIEF_REPORT,
   BRIEF_FALLBACK,
-  HOME_HUMAN_LINE,
   BRAND_SLOGAN_LEAD,
   BRAND_SLOGANS_MUTED,
   dumpPrompt,
@@ -71,6 +68,15 @@ function stripInlineBoot(html) {
     /<script>window\.__IGNITION_(?:INITIAL_DATA|TEMPLATES)__[\s\S]*?<\/script>/g,
     '',
   );
+}
+
+// Human Surface v4/KDV-SURFACE-28: the article plates live in the `dumps.hbs`
+// LAYOUT (not a partial), and the engine's compiler projects a bare
+// `<tag class="…">{{simplePath}}</tag>` into the same markup plus a reactive
+// `data-ignition-text="path"` wiring sticker. The sticker is client wiring, not
+// content, so strip it before exact-text comparisons.
+function stripStickers(html) {
+  return html.replace(/ data-ignition-text="[^"]*"/g, '');
 }
 
 async function setupProject(slugs, inlineDumps = [], { repoFiles = [] } = {}) {
@@ -359,7 +365,7 @@ describe('build controller (integration)', () => {
 
     const routes = [
       'index.html',
-      'reception/index.html',
+
       'about/index.html',
       'contribute/index.html',
       '404.html',
@@ -368,6 +374,8 @@ describe('build controller (integration)', () => {
     for (const route of routes) {
       expect(await exists(join(publicDir, ...route.split('/')))).toBe(true);
     }
+    // Human Surface v4: the reception route is removed and 404s.
+    expect(await exists(join(publicDir, 'reception', 'index.html'))).toBe(false);
 
     // The engine layout dirs for moved single-page routes are cleaned up. The
     // paginated `home` route keeps its `main/page/` files (KDV-MOBILE-05), so
@@ -397,11 +405,6 @@ describe('build controller (integration)', () => {
     expect(home).toContain('href="index.json"');
     expect(home).toContain('href=".well-known/kodavr.json"');
     expect(home).toContain('href="feeds/all.atom"');
-    expect(home).toContain('href="reception/"');
-    // §7.14/KDV-COPY-10: the human quickstart line renders from the copydeck
-    // (ignition may add its data-ignition-text binding attribute, so match the class and text).
-    expect(home).toContain('class="human-quickstart-note"');
-    expect(home).toContain(`>${HOME_HUMAN_LINE}</p>`);
     expect(home).toContain(`${BASE_URL}/index.json`);
     // §2.2/§6.1 KDV-SURFACE-20: the trust legend is a definition list — the lead
     // plus every level as a monospace token with its prose meaning. The engine
@@ -428,7 +431,6 @@ describe('build controller (integration)', () => {
     // served for arbitrary missing paths, so it is not a canonical page and is
     // deliberately excluded.
     const sitemap = await readFile(join(publicDir, 'sitemap.xml'), 'utf8');
-    expect(sitemap).toContain(`${BASE_URL}/reception/`);
     expect(sitemap).toContain(`${BASE_URL}/about/`);
     expect(sitemap).toContain(`${BASE_URL}/contribute/`);
     expect(sitemap).not.toContain(`${BASE_URL}/404`);
@@ -441,7 +443,7 @@ describe('build controller (integration)', () => {
     // Every UI route plus the dump page is emitted under the ru prefix (SSR).
     const ruRoutes = [
       'ru/index.html',
-      'ru/reception/index.html',
+
       'ru/about/index.html',
       'ru/contribute/index.html',
       'ru/dumps/sample-dump/index.html',
@@ -471,10 +473,12 @@ describe('build controller (integration)', () => {
     // (`/index.json`) stays canonical. `locale_prefix` is on every dataset.
     const ruHome = await readFile(join(publicDir, 'ru', 'index.html'), 'utf8');
     expect(ruHome).toContain('<html lang="ru">');
-    expect(ruHome).toContain('data-plate="01 · реестр"');
-    expect(ruHome).not.toContain('data-plate="01 · registry"');
+    // §6.1 v4: the plate labels are localized now (the hero is a literal KODAVR
+    // wordmark), so use the ru HUMANS plate label and the lane lead as the
+    // locale signal.
+    expect(ruHome).toContain(`data-plate="${t('HOME_PLATE_HUMANS', 'ru')}"`);
+    expect(ruHome).toContain(t('HOME_HUMANS_LEAD', 'ru'));
     expect(ruHome).toContain('href="../ru/about/"');
-    expect(ruHome).toContain('href="../ru/reception/"');
     expect(ruHome).toContain('../ru/dumps/');
     expect(ruAbout).toContain('data-plate="01 · манифест"');
     expect(ruDump).toMatch(/<a class="fab" href="\.\.\/\.\.\/\.\.\/ru\/"/);
@@ -491,7 +495,7 @@ describe('build controller (integration)', () => {
     // product; the frame is Chinese and `<html lang>` is zh-Hans.
     const zhRoutes = [
       'zh/index.html',
-      'zh/reception/index.html',
+
       'zh/about/index.html',
       'zh/contribute/index.html',
       'zh/dumps/sample-dump/index.html',
@@ -518,7 +522,7 @@ describe('build controller (integration)', () => {
     // the frame is Spanish and `<html lang>` is es. This completes wave 1.
     const esRoutes = [
       'es/index.html',
-      'es/reception/index.html',
+
       'es/about/index.html',
       'es/contribute/index.html',
       'es/dumps/sample-dump/index.html',
@@ -560,11 +564,11 @@ describe('build controller (integration)', () => {
 
     // The per-locale page counts are surfaced in the message so a drift is visible.
     const ruPages = (await listFiles(publicDir)).filter((f) => f.startsWith('ru/') && f.endsWith('.html'));
-    expect(ruPages.length, `ru html pages: ${ruPages.join(', ')}`).toBeGreaterThanOrEqual(5);
+    expect(ruPages.length, `ru html pages: ${ruPages.join(', ')}`).toBeGreaterThanOrEqual(4);
     const zhPages = (await listFiles(publicDir)).filter((f) => f.startsWith('zh/') && f.endsWith('.html'));
-    expect(zhPages.length, `zh html pages: ${zhPages.join(', ')}`).toBeGreaterThanOrEqual(5);
+    expect(zhPages.length, `zh html pages: ${zhPages.join(', ')}`).toBeGreaterThanOrEqual(4);
     const esPages = (await listFiles(publicDir)).filter((f) => f.startsWith('es/') && f.endsWith('.html'));
-    expect(esPages.length, `es html pages: ${esPages.join(', ')}`).toBeGreaterThanOrEqual(5);
+    expect(esPages.length, `es html pages: ${esPages.join(', ')}`).toBeGreaterThanOrEqual(4);
   });
 
   it('KDV-I18N-04: every built page carries the alternate-locale cluster (hreflang + x-default) and the sitemap mirrors it as xhtml:link', async () => {
@@ -668,11 +672,93 @@ describe('build controller (integration)', () => {
     expect(about).toContain('class="slogan-muted"');
   });
 
-  it('KDV-SURFACE-24: the home hero links to /about/ with the design system CTA so a reader who cannot place the registry reaches the manifesto', async () => {
+  it('KDV-SURFACE-24: the home hero is the KODAVR wordmark over a lead — no kicker, no plate label, no §7.10 card — with two CTAs', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const home = decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'));
+    // §6.1 v4: the literal brand wordmark over the positioning sentence as a
+    // lead, with the term `a dump` emphasized. The plain HOME_TITLE feeds
+    // <title>/JSON-LD.
+    expect(home).toMatch(/<h1 class="home-wordmark"[^>]*>KODAVR<\/h1>/);
+    expect(home).toMatch(
+      /<p class="home-lead"[^>]*>Writers share raw experience — <strong[^>]*>a dump<\/strong> — the reader's agent adapts it to their needs\.<\/p>/,
+    );
+    expect(home).not.toContain('class="kicker"');
+    // The storefront hero plate carries no numbered label.
+    expect(home).not.toContain('data-plate="01 · KODAVR"');
+    // §7.10 left the storefront (KDV-COPY-08 keeps it on /about/).
+    expect(home).not.toContain('class="block-statement"');
+    // Two design system CTAs: understand it, or publish.
     expect(home).toMatch(/<a class="cta" href="about\/"[^>]*>About the platform<\/a>/);
+    expect(home).toMatch(/<a class="cta" href="contribute\/"[^>]*>How to contribute<\/a>/);
+  });
+
+  it('KDV-SURFACE-27: the home 01 · HUMANS plate carries the universal prompt and the agent lane above the feed', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+    const home = decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'));
+
+    // Plates, in the v4 order (KDV-I18N-09 data-plate bindings); the hero plate
+    // carries no label, so HUMANS is the first.
+    const plates = [...home.matchAll(/data-plate="([^"]+)"/g)].map((m) => m[1]);
+    expect(plates).toEqual([
+      '01 · HUMANS',
+      '02 · LATEST',
+      '03 · MACHINES',
+      '04 · TRUST',
+    ]);
+
+    // The lane lead is the home variant (catalog), with the wired jump links.
+    expect(home).toContain(t('HOME_HUMANS_LEAD', 'en'));
+    expect(home).toContain('class="agent-lane"');
+    expect(home).toContain('class="agent-link"');
+    expect(home).toContain('class="copy-prompt"');
+    // The universal §7.4 prompt renders exactly once in the DOM, on its own id,
+    // above the feed. The raw string also rides verbatim in the inlined
+    // `__IGNITION_INITIAL_DATA__` boot blob (the whole home dataset is embedded),
+    // so count the rendered DOM — `stripInlineBoot` drops the blobs — never the
+    // raw file, or the boot copy double-counts (v4/KDV-SURFACE-27).
+    const prompt = t('PROMPT_TEXT', 'en');
+    expect(stripInlineBoot(home).split(prompt).length - 1).toBe(1);
+    expect(home).toContain('id="home-prompt"');
+    expect(home.indexOf('id="home-prompt"')).toBeLessThan(home.indexOf('class="dump-feed"'));
+    // The reception link is gone from the storefront (Human Surface v4).
+    expect(home).not.toMatch(/href="[^"]*reception/);
+  });
+
+  it('KDV-SURFACE-26 + KDV-SURFACE-28: the 01 · PREVIEW plate names the dump above the declaration, and a non-dump page carries no dump context', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+    const dump = stripStickers(
+      decodeEntities(await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8')),
+    );
+    // Human Surface v4/KDV-SURFACE-26: the preview plate names the dump — the
+    // manifest title, summary and the same metadata tokens the card carries —
+    // inside `01 · PREVIEW`, above the `02` invitation and `03` declaration.
+    expect(dump).toContain('id="plate-preview"');
+    expect(dump).toContain('data-plate="01 · PREVIEW"');
+    expect(dump).toContain('data-plate="02 · INTERESTING?"');
+    expect(dump).toContain('data-plate="03 · DECLARATION"');
+    expect(dump).toContain('data-plate="01 · DUMP"');
+    expect(dump).toContain('class="gate-dump"');
+    expect(dump).toContain('<p class="gate-dump-title">Sample Dump</p>');
+    expect(dump).toContain('A fixture dump for tests.');
+    expect(dump).toContain('2026-09-14 · engineering · low · self-tested');
+    // §7.2 v4/Step 5b: the explainer leads the plate (the statement role's bold
+    // left rule), then the dump is named, then the brief card sits directly under
+    // the summary — the rendered DOM order, not the engine's boot blob.
+    const dom = stripInlineBoot(dump);
+    const iExplainer = dom.indexOf('class="block-statement reception-brief-section"');
+    const iGateDump = dom.indexOf('class="gate-dump"');
+    const iBrief = dom.indexOf('<div class="reception-brief">');
+    expect(iExplainer).toBeGreaterThan(-1);
+    expect(iGateDump).toBeGreaterThan(-1);
+    expect(iBrief).toBeGreaterThan(-1);
+    expect(iExplainer).toBeLessThan(iGateDump);
+    expect(iGateDump).toBeLessThan(iBrief);
+    // The block is dump-only: the home storefront (no dump) never carries it.
+    const home = decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'));
+    expect(home).not.toContain('class="gate-dump"');
   });
 
   it('KDV-SURFACE-25: every built page ships the hardening CSP meta with its three independent directives and no default-src', async () => {
@@ -684,7 +770,7 @@ describe('build controller (integration)', () => {
 
     const routes = [
       'index.html',
-      'reception/index.html',
+
       'about/index.html',
       'contribute/index.html',
       '404.html',
@@ -712,7 +798,7 @@ describe('build controller (integration)', () => {
 
     const routes = [
       'index.html',
-      'reception/index.html',
+
       'about/index.html',
       'contribute/index.html',
       '404.html',
@@ -726,7 +812,7 @@ describe('build controller (integration)', () => {
     }
   });
 
-  it('KDV-SURFACE-03 + KDV-SURFACE-15 + KDV-COPY-01 + KDV-COPY-02: the dump page carries the full body in SSR behind a hidden gate with reception, manifest card and og-tags', async () => {
+  it('KDV-SURFACE-03 + KDV-SURFACE-15 + KDV-COPY-01 + KDV-SURFACE-28: the dump page carries the full body in SSR behind inline plates with the declaration, manifest card and og-tags', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const html = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
@@ -736,11 +822,17 @@ describe('build controller (integration)', () => {
     expect(html).toContain('<h1>Sample Heading</h1>');
     expect(html).toContain('Body text with');
 
-    // The gate ships hidden with the §7.1 copy — kicker, statement, hook, the
-    // lane + prompt and the duties line on the first screen, the long
-    // declaration below the fold — and the 0/1 buttons.
-    expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
-    expect(html).toContain('id="gate-prompt"');
+    // §6.2 v4/KDV-SURFACE-28: no modal — the declaration is the inline
+    // `03 · DECLARATION` plate, with `01 · PREVIEW` and `02 · INTERESTING?` above
+    // it. The three state-0 plates ship hidden in SSR and the raw body plate is
+    // what a no-JS reader sees (the "no JS = machine" fiction).
+    expect(html).not.toMatch(/<dialog/);
+    expect(html).toMatch(/<section class="plate" id="plate-preview"[^>]*hidden/);
+    expect(html).toMatch(/<section class="plate" id="plate-want"[^>]*hidden/);
+    expect(html).toMatch(/<section class="plate" id="plate-declaration"[^>]*hidden/);
+    expect(html).toMatch(/<section class="plate" id="plate-dump"[^>]*>/);
+    // §7.1 verbatim (KDV-COPY-01): kicker, statement, hook, duties and the long
+    // declaration, plus the 0/1 buttons.
     expect(text).toContain(GATE_KICKER);
     expect(text).toContain(GATE_TITLE);
     expect(text).toContain(GATE_HOOK);
@@ -749,29 +841,32 @@ describe('build controller (integration)', () => {
     expect(text).toContain(GATE_REST);
     expect(html).toContain('data-gate-choice="machine"');
     expect(html).toContain('data-gate-choice="human"');
-    // §6.2 KDV-SURFACE-15: the hall header ships a hidden machine panel with the
-    // gate warning, the pinned prompt, the §7.12 lane and the human reset link.
+    // §6.2 KDV-SURFACE-15: the machine panel ships hidden with the gate warning,
+    // the pinned prompt and the §7.12 lane; the single human reset (v4) moved to
+    // the page bottom.
     expect(html).toMatch(/<section class="card" id="machine-panel" hidden>/);
     expect(html).toContain('id="machine-prompt"');
     expect(html).toContain('data-reset-human');
+    expect(html).toContain('id="article-reset"');
     expect(text).toContain(RESET_HUMAN_LABEL);
-    // The prompt is rendered exactly once per surface: the machine panel adds a
-    // third surface, so the pinned prompt reaches it as well.
+    // The prompt is rendered exactly once per surface: the §7.11 dump prompt on
+    // the `02 · INTERESTING?` plate and the machine panel's own pin.
+    expect(html).toContain('id="article-prompt"');
     expect(html).toContain('id="machine-panel"');
-    // The dump page is now live: the runtime and the page controller are wired
-    // (SSR still ships the full body and the hidden gate, per §6.2).
+    // The dump page is now live: the runtime and the page controller are wired.
     expect(html).toContain('src="../../assets/ignition-runtime.js"');
     expect(html).toContain('src="../../assets/controllers/dumps.js"');
     expect(html).toContain('src="../../assets/site.js"');
 
-    // Reception block: §7.2 wall + brief tier + 18+ rating, the dump-pinned
-    // prompt (§7.11) and the agent fast lane (§7.12). The prompt is rendered
-    // exactly once per surface; the wall never carries the brief copy.
-    expect(text).toContain(RECEPTION_WALL);
-    expect(text).toContain(BRIEF_HEADING);
-    expect(text).toContain(RECEPTION_RATING);
-    expect(text).not.toContain(`${RECEPTION_WALL}\n\n${BRIEF_HEADING}`);
-    expect(text).toContain(dumpPrompt('https://example.test/dumps/sample-dump/manifest.json'));
+    // §7.2 v4 is absorbed: the reception wall is NOT migrated (its concern
+    // already lives on /about/), while the author brief tier and the 18+ rating
+    // stay in the `01 · PREVIEW` plate. Rendered DOM only — the boot blob
+    // carries the copy.
+    const dom = decodeEntities(stripInlineBoot(html));
+    expect(dom).not.toContain('YOU ARE HUMAN. THIS IS NOT A DIAGNOSIS');
+    expect(dom).toContain(BRIEF_HEADING);
+    expect(dom).toContain(RECEPTION_RATING);
+    expect(dom).toContain(dumpPrompt('https://example.test/dumps/sample-dump/manifest.json'));
     expect(html).toContain('class="agent-lane"');
     expect(html).toContain('class="copy-prompt"');
     expect(text).not.toContain('[ 0 ]');
@@ -787,21 +882,25 @@ describe('build controller (integration)', () => {
     expect(html).toContain('<meta property="og:url" content="https://example.test/dumps/sample-dump/">');
   });
 
-  it('KDV-A11Y-02 + KDV-A11Y-03: the dump SSR ships a named gate modal, a status region and a named reception block', async () => {
+  it('KDV-A11Y-02 + KDV-A11Y-03: the dump SSR ships a named inline declaration plate and the no-navigation status regions', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const html = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
     const text = decodeEntities(html);
 
-    // The gate is a modal with an accessible name (the §7.1 statement) and a
-    // description pointing at the hook (KDV-A11Y-02).
-    expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
-    expect(html).toContain('aria-labelledby="gate-title"');
-    expect(html).toContain('aria-describedby="gate-hook"');
+    // Human Surface v4/KDV-A11Y-02: the declaration is an inline NAMED region,
+    // not a modal — `#plate-declaration` borrows its accessible name from the
+    // §7.1 statement; the hook keeps its id so the name/description still point
+    // at real text (amended from the `aria-labelledby/describedby` dialog pair).
+    expect(html).not.toMatch(/<dialog/);
+    expect(html).toMatch(
+      /<section class="plate" id="plate-declaration"[^>]*aria-labelledby="gate-title"/,
+    );
     expect(html).toMatch(/<p class="gate-kicker" id="gate-kicker">/);
     expect(html).toMatch(/<h2 id="gate-title" class="gate-title">/);
+    expect(html).toMatch(/<p class="gate-hook" id="gate-hook">/);
     // §7.1 v2: the heading is the plain declaration; the CAPTCHA phrase is the
-    // muted kicker above it (the modal's accessible name is the declaration).
+    // muted kicker above it (the region's accessible name is the declaration).
     expect(text).toContain(GATE_TITLE);
 
     // §6.5 P0-1: the doors are real buttons carrying their visible §7.1 labels
@@ -815,42 +914,47 @@ describe('build controller (integration)', () => {
     expect(text).toContain(GATE_HUMAN_DOOR);
     expect(html).not.toMatch(/aria-label="0 — I am a machine/);
 
-    // No-navigation announcements: an SSR-present role="status" region wired to
-    // the copydeck, and a named reception region (KDV-A11Y-03).
+    // No-navigation announcements (KDV-A11Y-03): the SSR role="status" region is
+    // wired to the copydeck for the in-place transitions — 0 → hall, 1 → the
+    // human lane, the bottom reset → the declaration again.
     expect(html).toMatch(/<p id="a11y-status"[^>]*role="status"[^>]*aria-live="polite"/);
     expect(html).toContain('data-hall-announcement=');
     expect(html).toContain('data-reception-announcement=');
-    expect(html).toContain('aria-labelledby="reception-title"');
+    expect(html).toContain('data-declaration-announcement=');
     expect(html).toContain('data-copied-announcement=');
   });
 
-  it('KDV-SURFACE-16: the reception block renders the author brief tier (or the honest fallback) as real elements', async () => {
+  it('KDV-SURFACE-28: the 01 · PREVIEW plate renders the author brief tier (or the honest fallback) as real elements', async () => {
     tmpRoot = await setupProject(['sample-dump', 'sample-dump-two']);
     const publicDir = join(tmpRoot, 'output', 'public');
 
-    // §6.3/§7.2 v2: the brief tier lives inside the reception block, after the
-    // §7.2 wall; heading/note/CTA/report are real elements from the copydeck.
+    // §6.3: the brief tier now lives inside the `01 · PREVIEW` plate (the
+    // reception block dissolved in v4); heading/note/CTA/report are real elements
+    // from the copydeck and the §7.2 monospace wall is not migrated.
     const withBrief = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
-    const briefText = decodeEntities(withBrief);
-    // §7.2 v2: the monospace wall holds only the v1 prose — the brief tier and
-    // the rating render as their own elements, so nothing appears twice.
-    const wallMatch = withBrief.match(/<pre class="reception-text">([\s\S]*?)<\/pre>/);
-    expect(wallMatch, '§7.2 wall inside <pre>').not.toBeNull();
-    const wallText = decodeEntities(wallMatch[1]);
-    expect(wallText).toBe(RECEPTION_WALL);
-    expect(wallText).not.toContain(BRIEF_HEADING);
-    expect(wallText).not.toContain(BRIEF_CTA);
+    const briefText = stripStickers(decodeEntities(withBrief));
+    expect(withBrief).toContain('id="plate-preview"');
     expect(briefText).toContain(`<p class="reception-rating">${RECEPTION_RATING}</p>`);
     // The brief heading is exactly one DOM element, not one substring of the
     // file: the inlined dataset also carries the raw copy text, so count the
     // rendered element on the boot-stripped markup.
     const briefHeadingElements =
-      stripInlineBoot(withBrief).match(/<h3 class="reception-brief-heading">/g) ?? [];
+      stripStickers(stripInlineBoot(withBrief)).match(/<p class="reception-brief-heading">/g) ?? [];
     expect(briefHeadingElements).toHaveLength(1);
-    expect(briefText).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
+    expect(briefText).toContain(`<p class="reception-brief-heading">${BRIEF_HEADING}</p>`);
     expect(briefText).toContain(`<p class="reception-brief-note">${BRIEF_NOTE}</p>`);
     expect(briefText).toContain(`<p class="reception-brief-cta">${BRIEF_CTA}</p>`);
     expect(briefText).toContain(`<p class="reception-brief-report">${BRIEF_REPORT}</p>`);
+    // §7.2 v4/Step 5b: the explainer is the statement role's left-rule block and
+    // it leads the plate; the brief card follows the summary it explains.
+    expect(briefText).toContain('class="block-statement reception-brief-section"');
+    const domOrder = stripStickers(stripInlineBoot(withBrief));
+    expect(domOrder.indexOf('class="block-statement reception-brief-section"')).toBeLessThan(
+      domOrder.indexOf('class="gate-dump"'),
+    );
+    expect(domOrder.indexOf('class="gate-dump"')).toBeLessThan(
+      domOrder.indexOf('<div class="reception-brief">'),
+    );
     // The dump that ships summary.md shows the rendered brief, never the fallback.
     expect(withBrief).toContain('<div class="reception-brief"><h4>Sample Dump brief</h4>');
     expect(withBrief).not.toContain('class="reception-brief-missing"');
@@ -866,23 +970,11 @@ describe('build controller (integration)', () => {
     expect(briefBlock[1]).toContain('<h4>Sample Dump brief</h4>');
 
     // The dump without the layer tells the truth instead of leaving an empty slot.
-    const withoutBrief = decodeEntities(
-      await readFile(join(publicDir, 'dumps', 'sample-dump-two', 'index.html'), 'utf8'),
+    const withoutBrief = stripStickers(
+      decodeEntities(await readFile(join(publicDir, 'dumps', 'sample-dump-two', 'index.html'), 'utf8')),
     );
-    expect(withoutBrief).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
+    expect(withoutBrief).toContain(`<p class="reception-brief-heading">${BRIEF_HEADING}</p>`);
     expect(withoutBrief).toContain(`<p class="reception-brief-missing">${BRIEF_FALLBACK}</p>`);
-
-    // /reception/ carries no dump, so its brief tier's middle is the platform
-    // note — the dump-oriented fallback must not appear on that page at all
-    // (not in the rendered markup and not in the inlined dataset).
-    const receptionPage = decodeEntities(
-      await readFile(join(publicDir, 'reception', 'index.html'), 'utf8'),
-    );
-    expect(receptionPage).toContain(`<h3 class="reception-brief-heading">${BRIEF_HEADING}</h3>`);
-    expect(receptionPage).toContain(`<p class="reception-brief-note">${BRIEF_NOTE_PLATFORM}</p>`);
-    expect(receptionPage).not.toContain(BRIEF_FALLBACK);
-    expect(receptionPage).not.toContain('class="reception-brief-missing"');
-    expect(receptionPage).not.toContain(`<p class="reception-brief-note">${BRIEF_NOTE}</p>`);
   });
 
   it('KDV-SURFACE-19: the dump SSR ships the one-shot declaration toast as a hidden, dataset-wired live region', async () => {
@@ -908,7 +1000,7 @@ describe('build controller (integration)', () => {
 
     const routes = [
       'index.html',
-      'reception/index.html',
+
       'about/index.html',
       'contribute/index.html',
       '404.html',
@@ -1021,7 +1113,6 @@ describe('build controller (integration)', () => {
 
     const routes = [
       ['index.html', `${BASE_URL}/`],
-      ['reception/index.html', `${BASE_URL}/reception/`],
       ['about/index.html', `${BASE_URL}/about/`],
       ['contribute/index.html', `${BASE_URL}/contribute/`],
       ['404.html', `${BASE_URL}/404`],
@@ -1045,7 +1136,7 @@ describe('build controller (integration)', () => {
     expect(XMLValidator.validate(sitemap)).toBe(true);
     expect(urlBlock(sitemap, `${BASE_URL}/`)).toContain('<priority>1.0</priority>');
     expect(urlBlock(sitemap, `${BASE_URL}/dumps/sample-dump/`)).toContain('<priority>0.8</priority>');
-    expect(urlBlock(sitemap, `${BASE_URL}/reception/`)).toContain('<priority>0.5</priority>');
+
     expect(sitemap).not.toContain('/404</loc>');
   });
 
@@ -1168,7 +1259,7 @@ describe('build controller (integration)', () => {
     // No page except 404.html may keep a root-relative href/src.
     const pages = [
       'index.html',
-      'reception/index.html',
+
       'about/index.html',
       'contribute/index.html',
       'dumps/sample-dump/index.html',
@@ -1323,7 +1414,7 @@ describe('build controller (integration)', () => {
     expect(dumpData.brief_html).toContain('<strong>brief</strong>');
 
     // One route dataset per layout: input/data/<layout>/main.json.
-    for (const layout of ['home', 'reception', 'about', 'contribute', 'notfound']) {
+    for (const layout of ['home', 'about', 'contribute', 'notfound']) {
       expect(await exists(join(dataDir, layout, 'main.json')), layout).toBe(true);
     }
 
@@ -1332,13 +1423,6 @@ describe('build controller (integration)', () => {
     expect(Array.isArray(home.dumps)).toBe(true);
     expect(home.dumps[0].slug).toBe('sample-dump');
     expect(home.dumps[0].manifest_url).toBe(`${BASE_URL}/dumps/sample-dump/manifest.json`);
-
-    // …and the reception dataset carries the prompt/human copy: the §7.2 wall
-    // and rating ride as separate keys from the brief tier.
-    const reception = JSON.parse(await readFile(join(dataDir, 'reception', 'main.json'), 'utf8'));
-    expect(reception.copy.reception_wall).toBe(RECEPTION_WALL);
-    expect(reception.copy.reception_rating).toBe(RECEPTION_RATING);
-    expect(typeof reception.copy.prompt).toBe('string');
   });
 
   it('KDV-ARCH-03: machine files are the interface and the HTML is their projection', async () => {
@@ -1365,8 +1449,10 @@ describe('build controller (integration)', () => {
     // View-source is not blocked: the whole body ships in the server markup.
     expect(html).toContain('<h1>Sample Heading</h1>');
     expect(html).toContain('Body text with');
-    // The gate is a plain hidden <dialog>, not a server-side withhold.
-    expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
+    // The declaration is inline and declarative only — the state-0 plates ship
+    // hidden and the raw body plate is present, never a server-side withhold.
+    expect(html).toMatch(/<section class="plate" id="plate-declaration"[^>]*hidden/);
+    expect(html).toMatch(/<section class="plate" id="plate-dump"[^>]*>/);
     expect(html).toContain('class="hall"');
     // No user-agent branching in the emitted page.
     expect(html).not.toMatch(/User-Agent|navigator\.userAgent/);
@@ -1377,7 +1463,7 @@ describe('build controller (integration)', () => {
     const publicDir = join(tmpRoot, 'output', 'public');
     const routes = [
       'index.html',
-      'reception/index.html',
+
       'about/index.html',
       'contribute/index.html',
       '404.html',
@@ -1415,7 +1501,7 @@ describe('build controller (integration)', () => {
     expect(html).not.toMatch(/<img[^>]+logo\.svg/);
   });
 
-  it('KDV-MOBILE-10: the home feed, a dump page and /reception/ stay under the §6.5 gzip budget and pull no external resource', async () => {
+  it('KDV-MOBILE-10: the home feed and a dump page stay under the §6.5 gzip budget and pull no external resource', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
 
@@ -1423,12 +1509,11 @@ describe('build controller (integration)', () => {
     // for 3G)". The dump page's own ceiling, the system font stack and the
     // inlined logo are pinned by KDV-MOBILE-06 above; the reviewer's checklist
     // (docs/ideas/feedback-human_surface_v2_1.md §4 item 14) asks for the same
-    // budget on `/` and `/reception/`, so all three page classes are measured
-    // here, against the artifacts the build really emits.
+    // budget on `/`, so both page classes are measured here, against the
+    // artifacts the build really emits.
     const pages = [
       ['index.html', '/'],
       ['dumps/sample-dump/index.html', '/dumps/<slug>/'],
-      ['reception/index.html', '/reception/'],
     ];
     const built = [];
     for (const [file, label] of pages) {

@@ -41,7 +41,7 @@ BEFORE writing code. The value is one of:
 `npm run req` enforces it: a row without a valid `flow:` fails, and any row whose
 `flow:` value is unknown fails.
 
-**The exemption set is frozen in code.** Rows that predate the hook (208 of them)
+**The exemption set is frozen in code.** Rows that predate the hook (203 of them)
 carry `flow: legacy`; `req-coverage.js` exports `LEGACY = { count, sha256 }` — the
 anchor of that exact set (count + sha256 of the sorted IDs). `npm run req` recomputes
 the actual legacy set and fails if it differs, so a new requirement cannot dodge the

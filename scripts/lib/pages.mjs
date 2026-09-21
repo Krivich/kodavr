@@ -130,12 +130,12 @@ export const COPY_FIELDS = Object.freeze({
     'gate_doors_label',
     'artifacts_heading',
     'artifacts_empty',
-    'home_kicker',
     'home_about_cta',
+    'home_contribute_cta',
     'home_for_machines',
-    'home_for_humans',
-    'home_check_in',
-    'home_latest_dumps',
+    'home_humans_lead',
+    'home_latest_lead',
+    'home_latest_term',
     'home_trust_levels',
     'pagination_label',
     'pagination_prev',
@@ -145,10 +145,9 @@ export const COPY_FIELDS = Object.freeze({
     'not_found_kicker',
     'not_found_note',
     'not_found_cta',
-    // §11/KDV-I18N-09: the numbered section-plate labels (`01 · registry`),
+    // §11/KDV-I18N-09: the numbered section-plate labels (`01 · humans`),
     // bound as `data-plate` attributes. They travel with every route/dump dataset
     // through this one UI group, so no template retypes a plate again.
-    'home_plate_registry',
     'home_plate_machines',
     'home_plate_humans',
     'home_plate_latest',
@@ -165,6 +164,11 @@ export const COPY_FIELDS = Object.freeze({
     'contribute_plate_licences',
     'reception_plate_checkin',
     'dumps_plate_artifacts',
+    // §6.2 v4/KDV-SURFACE-28: the article page's inline-plate labels.
+    'dumps_plate_preview',
+    'dumps_plate_want',
+    'dumps_plate_declaration',
+    'dumps_plate_dump',
     'notfound_plate_void',
     // §11/KDV-I18N-06: the header language switcher and its intelligent hint.
     'lang_switch_label',
@@ -177,7 +181,6 @@ export const COPY_FIELDS = Object.freeze({
     'chip_withdraw_label',
   ]),
   footer: Object.freeze(['footer', 'footer_licences', 'footer_contract', 'footer_report_label']),
-  home: Object.freeze(['home_human_line']),
   brand: Object.freeze(['brand_slogan_lead', 'brand_slogans_muted']),
   about: Object.freeze([
     'about_kicker',
@@ -246,6 +249,7 @@ export const COPY_FIELDS = Object.freeze({
   gate: Object.freeze([
     'gate_kicker',
     'gate_title',
+    'gate_dump_context_lead',
     'gate_hook',
     'gate_duties_lead',
     'gate_duties',
@@ -255,16 +259,9 @@ export const COPY_FIELDS = Object.freeze({
     'gate_machine_door',
     'gate_human_door',
   ]),
-  receptionHead: Object.freeze(['reception_wall', 'reception_rating', 'reception_title']),
-  reception: Object.freeze([
-    'reception_wall',
-    'reception_rating',
-    'reception_title',
-    'brief_heading',
-    'brief_note_platform',
-    'brief_cta',
-    'brief_report',
-  ]),
+  // §7.2 v4: the `01 · PREVIEW` plate's legal tail — the blanket 18+ rating
+  // (the brief report line travels with the brief tier above).
+  previewLegal: Object.freeze(['reception_rating']),
   dumpBrief: Object.freeze([
     'brief_heading',
     'brief_note',
@@ -292,7 +289,6 @@ export const OG_TAGLINE = EN.OG_TAGLINE;
 // the flag as `aria-current="page"`. Labels keep their pre-existing wording.
 export const SITE_NAV = Object.freeze([
   { href: '/', label: 'home' },
-  { href: '/reception/', label: 'reception' },
   { href: '/about/', label: 'about' },
   { href: '/contribute/', label: 'contribute' },
 ]);
@@ -301,7 +297,6 @@ export const SITE_NAV = Object.freeze([
 // the locale prefix (phase 2). One mapping, never a retyped label.
 const NAV_LABEL_KEYS = Object.freeze({
   home: 'NAV_HOME',
-  reception: 'NAV_RECEPTION',
   about: 'NAV_ABOUT',
   contribute: 'NAV_CONTRIBUTE',
 });
@@ -321,7 +316,7 @@ export function buildNav(currentHref, locale = DEFAULT_LOCALE) {
 export const FOOTER_REPORT_URL = `${ISSUES_URL}/new?template=risk-report.md`;
 
 // §7.3: the titleblock's four cells are ONE dataset slice carried by every route
-// (the shared `commonPage`, the reception/404 overrides and the dump slices all
+// (the shared `commonPage`, the 404 override and the dump slices all
 // spread it), so the footer cannot drift between surfaces. The copydeck cells
 // resolve through the locale catalog; only the report URL is assembled here.
 function footerCopy(locale) {
@@ -346,7 +341,6 @@ export const SITE_LOCALE = 'en_US';
 // publishes page 1 to `/index.html` while the page files stay reachable.
 export const ROUTE_PAGES = Object.freeze([
   { layout: 'home', to: 'index.html', dataset: 'main', paginated: true },
-  { layout: 'reception', to: 'reception/index.html' },
   { layout: 'about', to: 'about/index.html' },
   { layout: 'contribute', to: 'contribute/index.html' },
   { layout: 'notfound', to: '404.html', cleanup: 'notfound' },
@@ -379,7 +373,7 @@ function normalizeBaseUrl(baseUrl) {
 }
 
 // §11/KDV-I18N-04: the hreflang alternate cluster for a locale-neutral page path
-// ('' for home, 'reception/', 'dumps/<slug>/'). Only the BUILT locales enter the
+// ('' for home, 'about/', 'dumps/<slug>/'). Only the BUILT locales enter the
 // cluster — a locale that is not emitted is never linked. `x-default` names the
 // default locale's variant; every href is an absolute canonical URL.
 export function buildAlternates(urlPath, { base = '', locales = translatedLocales() } = {}) {
@@ -440,7 +434,7 @@ function commonPage({
     : (urlPath ? `/${urlPath}` : '/');
   const url = `${base}${localizedUrlPath}`;
   const image = `${base}${OG_IMAGE_PATH}`;
-  // §6.6: `urlPath` is route-relative ('', 'reception/', '404'); the nav hrefs are
+  // §6.6: `urlPath` is route-relative ('', 'about/', '404'); the nav hrefs are
   // root-absolute, so normalize before matching the current item.
   const navPath = urlPath ? `/${urlPath}` : '/';
   const currentHref = prefix ? `${prefix}${navPath}` : navPath;
@@ -510,8 +504,8 @@ function commonPage({
 }
 
 /**
- * Build the `home/main.json`, `reception/main.json`, `about/main.json`,
- * `contribute/main.json` and `notfound/main.json` datasets.
+ * Build the `home/main.json`, `about/main.json`, `contribute/main.json` and
+ * `notfound/main.json` datasets.
  *
  * @param {Array<{slug: string, manifest: object, raw: string}>} dumps
  * @param {{baseUrl?: string, logo?: string, locale?: string}} [options]
@@ -532,6 +526,9 @@ export function buildRouteDatasets(dumps, { baseUrl, logo, locale = DEFAULT_LOCA
   // so a non-default frame changes copy without touching a template.
   const homeTitle = t('HOME_TITLE', locale);
   const tagline = t('HOME_TAGLINE', locale);
+  // §6.1 v4: the home `01 · HUMANS` plate carries the universal §7.4 prompt and
+  // the §7.12 lane; both ride the home `copy` slice (mirrors the dump page's lane).
+  const homePrompt = promptFor(locale);
   const whatIsADump = {
     definition: t('DUMP_DEFINITION', locale),
     lead: t('DUMP_LEAD', locale),
@@ -549,8 +546,18 @@ export function buildRouteDatasets(dumps, { baseUrl, logo, locale = DEFAULT_LOCA
       urlPath: '',
       logo,
       locale,
-      // §7.14: the "For humans" block's quickstart line, from the catalog.
-      extraCopy: copyFields(COPY_FIELDS.home, locale),
+      // §6.1 v4/KDV-SURFACE-27: the home lane uses the storefront-variant lead
+      // and the universal §7.4 prompt (`homePrompt`), with the same wired
+      // agent_links/copy controls the dump page's lane uses.
+      extraCopy: {
+        lane_lead: copyField('home_humans_lead', locale),
+        agent_lane_hint: copyField('agent_lane_hint', locale),
+        agent_links: agentLinksFor(locale, homePrompt),
+        prompt: homePrompt,
+        copy_label: copyField('copy_label', locale),
+        copied_label: copyField('copied_label', locale),
+        copied_announcement: copyField('copied_announcement', locale),
+      },
       // §6.4: the storefront feed is a CollectionPage whose ItemList enumerates
       // the dumps (position, url, name) alongside the always-present WebPage.
       extraGraph: [
@@ -568,10 +575,14 @@ export function buildRouteDatasets(dumps, { baseUrl, logo, locale = DEFAULT_LOCA
         }),
       ],
     }),
-    tagline,
-    // §7.10: the "what is a dump" story — the storefront's first thing after
-    // the positioning line, laid out from its parts (definition/lead/prompt/tail).
-    what_is_a_dump: whatIsADump,
+    // §6.1 v4/KDV-SURFACE-24: the hero H1 is composed from its parts so the
+    // template can emphasize the term `a dump`; `title` above stays the plain
+    // SEO string. §7.10 left the storefront (it lives on /about/).
+    home_title: {
+      lead: t('HOME_TITLE_LEAD', locale),
+      term: t('HOME_TITLE_TERM', locale),
+      tail: t('HOME_TITLE_TAIL', locale),
+    },
     index_url: `${base}/index.json`,
     well_known_url: `${base}/.well-known/kodavr.json`,
     feed_url: `${base}/feeds/all.atom`,
@@ -585,36 +596,6 @@ export function buildRouteDatasets(dumps, { baseUrl, logo, locale = DEFAULT_LOCA
       levels: t('TRUST_LEVEL_MEANINGS', locale),
     },
     dumps: feedItems,
-  };
-
-  const receptionPrompt = promptFor(locale);
-  const reception = {
-    ...commonPage({
-      base,
-      title: t('RECEPTION_PAGE_TITLE', locale),
-      description: t('RECEPTION_PAGE_DESCRIPTION', locale),
-      urlPath: 'reception/',
-      logo,
-      locale,
-    }),
-    copy: {
-      contract_version: CONTRACT_VERSION,
-      ...copyFields(COPY_FIELDS.chip, locale),
-      // §7.3: the titleblock's four cells (advisory · licences · contract · report).
-      ...footerCopy(locale),
-      // §11: the structural frame chrome (kicker, lead, nav, pagination).
-      ...copyFields(COPY_FIELDS.ui, locale),
-      // §7.2 v2: the wall, the rating and the brief tier — reception's own group.
-      ...copyFields(COPY_FIELDS.reception, locale),
-      prompt: receptionPrompt,
-      lane_lead: t('AGENT_LANE_LEAD_KODAVR', locale),
-      agent_lane_hint: copyField('agent_lane_hint', locale),
-      agent_links: agentLinksFor(locale, receptionPrompt),
-      copy_label: copyField('copy_label', locale),
-      copied_label: copyField('copied_label', locale),
-      copied_announcement: copyField('copied_announcement', locale),
-      reset_label: copyField('reset_label', locale),
-    },
   };
 
   const about = {
@@ -674,7 +655,7 @@ export function buildRouteDatasets(dumps, { baseUrl, logo, locale = DEFAULT_LOCA
     },
   };
 
-  return { home, reception, about, contribute, notfound };
+  return { home, about, contribute, notfound };
 }
 
 /**
@@ -696,13 +677,13 @@ export function dumpCopySlices({ manifestUrl = null, locale = DEFAULT_LOCALE } =
     // prose stays verbatim — kicker, H1, hook and the duties line lead the
     // first screen, the full declaration sits below the fold.
     ...copyFields(COPY_FIELDS.gate, locale),
-    // §7.2 v2: the wall, the brief tier and the 18+ rating render as separate
-    // elements, so the reception block never prints any line twice.
-    ...copyFields(COPY_FIELDS.receptionHead, locale),
-    // §6.3/§7.2 v2: the reception block's brief tier — the rendered `summary.md`
-    // (`brief_html`, wired by the dump dataset, falsy without the layer) is the
-    // real payload; these are the surrounding heading/note/CTA/report and the
-    // honest fallback for the missing layer.
+    // §7.2 v4: the `01 · PREVIEW` plate's legal tail — the 18+ rating renders
+    // beside the brief report line, both from the copydeck.
+    ...copyFields(COPY_FIELDS.previewLegal, locale),
+    // §6.3/§7.2 v4: the `01 · PREVIEW` plate's brief tier — the rendered
+    // `summary.md` (`brief_html`, wired by the dump dataset, falsy without the
+    // layer) is the real payload; these are the surrounding heading/note/CTA/
+    // report and the honest fallback for the missing layer.
     ...copyFields(COPY_FIELDS.dumpBrief, locale),
     prompt,
     // §7.12: the human fast lane renders once per surface (the gate dialog and

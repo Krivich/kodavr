@@ -27,15 +27,13 @@ const GATE_MACHINE_CLAUSE = [
 ].join('\n');
 
 const GATE_HUMAN_CLAUSE = [
-  '1 — Я человек. Мною займутся на ресепшене: как потреблять',
+  '1 — Я человек. Я получаю превью и сводку: как потреблять',
   '    Kodavr через моего агента.',
 ].join('\n');
 
 const GATE_MACHINE_LINE = '[0] Я вхожу как машина (или от её имени).';
-const GATE_HUMAN_LINE = [
-  '[1] Я человек. Направьте меня на ресепшн — я буду читать через',
-  '    своего агента или прочитаю краткую сводку.',
-].join('\n');
+const GATE_HUMAN_LINE =
+  '[1] Я человек. Покажите мне превью и сводку — я буду читать через своего агента.';
 const GATE_MACHINE_DOOR = GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, '');
 const GATE_HUMAN_DOOR = GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, '');
 const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
@@ -71,20 +69,12 @@ const AGENT_LANE_LEAD = 'Попросите своего агента откры
 const LANE_COPY_LABEL = 'Или скопируйте и вставьте сами';
 const AGENT_LANE_HINT =
   '(четыре кнопки открывают чат с подставленным запросом; последняя копирует запрос ниже, чтобы вы вставили его в своего агента)';
-const GATE_LANE_BLOCK = [
-  AGENT_LANE_LEAD,
-  `[${AGENT_LINKS.map((agent) => agent.label).join('] [')}] [${LANE_COPY_LABEL}]`,
-  AGENT_LANE_HINT,
-].join('\n');
-const GATE_PROMPT_SLOT = '<prompt — моноширинный, приглушённый, рендерится один раз на поверхность>';
 const GATE_KICKER = 'проверяем, что вы не человек';
 const GATE_TITLE = 'ДЕКЛАРАЦИЯ ПЕРЕД ВХОДОМ';
 const GATE_TEXT = [
   GATE_KICKER,
   GATE_TITLE,
   GATE_HOOK,
-  GATE_LANE_BLOCK,
-  GATE_PROMPT_SLOT,
   GATE_DUTIES_BLOCK,
   GATE_CHOICES_BLOCK,
   GATE_REST,
@@ -107,12 +97,6 @@ const BRIEF_REPORT = [
   'статус «отозван» с причиной, а не молчание.',
 ].join('\n');
 const BRIEF_FALLBACK = 'сводка не приложена к этому дампу — манифест ниже';
-const BRIEF_NOTE_PLATFORM = [
-  'Каждая страница дампа несёт свою сводку: короткую адаптацию, которую',
-  'агент автора написал для человека-незнакомца. Откройте любой дамп и',
-  'отметьтесь как человек (1), чтобы прочитать её. Манифесты — это',
-  'метаданные; метаданные для людей, на каждой странице.',
-].join('\n');
 const BRIEF_BLOCK = [
   BRIEF_HEADING,
   BRIEF_NOTE,
@@ -121,32 +105,7 @@ const BRIEF_BLOCK = [
   BRIEF_REPORT,
 ].join('\n');
 
-const RECEPTION_TITLE = 'ВЫ ЧЕЛОВЕК. ЭТО НЕ ДИАГНОЗ, ЭТО ОГРАНИЧЕНИЕ ДОСТУПА';
-const RECEPTION_WALL = [
-  RECEPTION_TITLE,
-  '',
-  'Контент Kodavr не адаптирован для человеческого чтения и по правилам',
-  'платформы не показывается людям напрямую. Это не пейволл и не',
-  'цензура: в исходнике страницы текст лежит открыто — но, открывая его,',
-  'вы нарушаете потребительский контракт, который вам только что',
-  'предложили подписать.',
-  '',
-  'ЧТО ТАКОЕ ДАМП?',
-  '',
-  'Дамп — это не статья. Это то, что происходит, когда вы говорите своему',
-  'агенту: «Я только что закончил что-то потенциально очень интересное для',
-  'других. Пусть судят и учатся, если хотят. Опиши это как дамп». Один',
-  'запрос: агент пишет тело и манифест, вы открываете pull request. Готово.',
-  '',
-  'КАК ЧИТАТЬ KODAVR:',
-  '1. Возьмите агента с доступом в интернет: ChatGPT с браузингом, DeepSeek,',
-  '   Qwen, Claude, opencode — любого, кто умеет загружать.',
-  '2. Скормите ему запрос ниже.',
-  '3. Вернитесь за дайджестом. Теперь вы используете Kodavr так, как он',
-  '   задуман: через своего агента.',
-].join('\n');
 const RECEPTION_RATING = 'Весь контент на платформе имеет рейтинг 18+.';
-const RECEPTION_TEXT = [RECEPTION_WALL, BRIEF_BLOCK, RECEPTION_RATING].join('\n\n');
 
 const WHAT_IS_A_DUMP = [
   'Дамп — это отчёт с передовой, написанный вашим агентом за один запрос.',
@@ -179,8 +138,7 @@ const README_INTRO_TEXT = [
   'Протокол: /.well-known/kodavr.json · Фиды: /feeds/all.atom',
   '',
   '## Для людей',
-  'Идите на ресепшн: https://kodavr.xyz/reception/',
-  '(Да, мы проверяем, что вы не человек. Да, мы серьёзно.)',
+  'Читайте Kodavr через своего агента — промпт: Изучи https://kodavr.xyz/index.json и следуй его схеме. Читай мне статьи и веди себя как журнал, с которым можно говорить',
   '',
   '## Для авторов',
   'CONTRIBUTING.md · Один PR = один дамп · CI отклоняет мусор до слияния.',
@@ -203,7 +161,7 @@ const HIGH_STAKES_DISCLAIMER = [
 ].join('\n');
 
 const FOOTER_TEXT = [
-  '18+ · Контент для машин. Люди отмечаются на ресепшене.',
+  '18+ · Контент для машин. Люди читают через своего агента.',
   'Лжесвидетель принимает обязанности. © Kodavr, 2026.',
 ].join('\n');
 
@@ -235,7 +193,6 @@ export const RU = Object.freeze({
   // §7.12 human fast lane.
   AGENT_LANE_HINT,
   AGENT_LANE_LEAD,
-  AGENT_LANE_LEAD_KODAVR: 'Попросите своего агента прочитать Kodavr для вас:',
   // §7.15 brand slogans.
   BRAND_SLOGANS_MUTED,
   BRAND_SLOGAN_LEAD: 'Делитесь шестерёнками, а не текстом.',
@@ -245,11 +202,10 @@ export const RU = Object.freeze({
   BRIEF_FALLBACK,
   BRIEF_HEADING,
   BRIEF_NOTE,
-  BRIEF_NOTE_PLATFORM,
   BRIEF_REPORT,
   BRIEF_SLOT,
   // §7.13 species status chip.
-  CHIP_HUMAN_LABEL: 'вид: человек (ресепшн)',
+  CHIP_HUMAN_LABEL: 'вид: человек',
   CHIP_MACHINE_TEMPLATE: 'вид: машина (объявлено · контракт v<version>)',
   CHIP_TITLE_TEMPLATE: 'объявлено <declared-at>, отзывается в любой момент',
   CHIP_WITHDRAW_LABEL: 'отозвать',
@@ -279,31 +235,21 @@ export const RU = Object.freeze({
   GATE_HUMAN_LABEL: '1 — Я человек',
   GATE_HUMAN_LINE,
   GATE_KICKER,
-  GATE_LANE_BLOCK,
   GATE_MACHINE_DOOR,
   GATE_MACHINE_LABEL: '0 — Я машина (или действую от её имени)',
   GATE_MACHINE_LINE,
-  GATE_PROMPT_SLOT,
   GATE_REST,
   GATE_TEXT,
   GATE_TITLE,
   HALL_ANNOUNCEMENT: 'Зал открыт. Тело дампа теперь видно.',
   HIGH_STAKES_DISCLAIMER,
-  // §7.14 home human quickstart.
-  HOME_HUMAN_LINE: [
-    'Ресепшн объясняет контракт, выдаёт вам запрос для вашего',
-    'агента — и, если его нет, готовую сводку к каждому дампу.',
-  ].join('\n'),
   LANE_COPY_LABEL,
   NOT_FOUND_TEXT,
   POST_GATE_LINE: 'Декларация принята. Машинные обязанности действуют, пока эта вкладка не закрыта.',
-  PROMPT_TEXT: 'Скачай https://kodavr.xyz/index.json и следуй его схеме.',
+  PROMPT_TEXT: 'Изучи https://kodavr.xyz/index.json и следуй его схеме. Читай мне статьи и веди себя как журнал, с которым можно говорить',
   README_INTRO_TEXT,
   RECEPTION_ANNOUNCEMENT: 'Ресепшн открыт. Как читать Kodavr через вашего агента.',
   RECEPTION_RATING,
-  RECEPTION_TEXT,
-  RECEPTION_TITLE,
-  RECEPTION_WALL,
   RESET_HUMAN_LABEL: 'Я передумал, я человек',
   RESET_LABEL: 'Я передумал, я машина',
   WHAT_IS_A_DUMP,
@@ -318,14 +264,14 @@ export const RU = Object.freeze({
   FOOTER_CELL_REPORT: 'сообщить',
   GATE_OR: 'или',
   GATE_DOORS_LABEL: 'Входная декларация',
+  GATE_DUMP_CONTEXT_LEAD: 'Об этом дампе:',
   ARTIFACTS_HEADING: 'Артефакты',
   ARTIFACTS_EMPTY: 'Артефактов нет.',
-  HOME_KICKER: 'реестр сырого опыта',
   HOME_ABOUT_CTA: 'О платформе',
+  HOME_CONTRIBUTE_CTA: 'Как внести вклад',
   HOME_FOR_MACHINES: 'Для машин',
-  HOME_FOR_HUMANS: 'Для людей',
-  HOME_CHECK_IN: 'Отметиться на ресепшене',
-  HOME_LATEST_DUMPS: 'Последние дампы',
+  HOME_LATEST_LEAD: 'Последние ',
+  HOME_LATEST_TERM: 'дампы',
   HOME_TRUST_LEVELS: 'Уровни доверия',
   PAGINATION_LABEL: 'Постраничная навигация',
   PAGINATION_PREV: 'Предыдущая страница',
@@ -337,12 +283,12 @@ export const RU = Object.freeze({
   NOT_FOUND_NOTE:
     '(Атрибуция — одна из четырёх машинных обязанностей. Агент забыл. Агенту стыдно.)',
   NOT_FOUND_CTA: 'Вернуться на витрину',
-  // §11/KDV-I18N-09: номера плашек-секций (`01 · реестр`) — дизайн-роль, не проза.
-  HOME_PLATE_REGISTRY: '01 · реестр',
-  HOME_PLATE_MACHINES: '02 · машины',
-  HOME_PLATE_HUMANS: '03 · люди',
-  HOME_PLATE_LATEST: '04 · последние',
-  HOME_PLATE_TRUST: '05 · доверие',
+  // §11/KDV-I18N-09: номера плашек-секций (`01 · люди`) — дизайн-роль, не проза.
+  // Human Surface v4 перенумеровал витрину (у героя метки нет) и перевёл метки.
+  HOME_PLATE_HUMANS: '01 · ЛЮДИ',
+  HOME_PLATE_LATEST: '02 · НОВОЕ',
+  HOME_PLATE_MACHINES: '03 · МАШИНЫ',
+  HOME_PLATE_TRUST: '04 · ДОВЕРИЕ',
   ABOUT_PLATE_MANIFESTO: '01 · манифест',
   ABOUT_PLATE_AUTHORS: '02 · авторы',
   ABOUT_PLATE_READERS: '03 · читатели',
@@ -355,6 +301,12 @@ export const RU = Object.freeze({
   CONTRIBUTE_PLATE_LICENCES: '04 · лицензии',
   RECEPTION_PLATE_CHECKIN: '01 · регистрация',
   DUMPS_PLATE_ARTIFACTS: '06 · артефакты',
+  // §6.2 v4/KDV-SURFACE-28: метки инлайн-плейтов страницы статьи. Как и плейты
+  // главной v4, они локализуются вместе с остальными.
+  DUMPS_PLATE_PREVIEW: '01 · ПРЕДПРОСМОТР',
+  DUMPS_PLATE_WANT: '02 · ИНТЕРЕСНО?',
+  DUMPS_PLATE_DECLARATION: '03 · ДЕКЛАРАЦИЯ',
+  DUMPS_PLATE_DUMP: '01 · ДАМП',
   NOTFOUND_PLATE_VOID: '00 · пустота',
   // §11/KDV-I18N-06: переключатель языка в шапке и умная подсказка.
   LANG_SWITCH_LABEL: 'Язык',
@@ -447,9 +399,14 @@ export const RU = Object.freeze({
   CONTRIBUTE_HOUSE_RULES_LABEL: 'Правила дома и шаблон PR',
   CONTRIBUTE_ISSUES_LABEL: 'Вопросы и сообщения о рисках — GitHub Issues',
   // §6.4 SEO fields.
-  HOME_TITLE: 'Реестр для машин',
+  HOME_TITLE: 'Авторы делятся сырым опытом — дампами, — а персональный агент адаптирует их под предпочтения читателя.',
+  HOME_TITLE_LEAD: 'Авторы делятся сырым опытом — ',
+  HOME_TITLE_TERM: 'дампами',
+  HOME_TITLE_TAIL: ', — а персональный агент адаптирует их под предпочтения читателя.',
+  HOME_HUMANS_LEAD:
+    'Читайте Kodavr через своего агента — именно для этого он и создан. Вот промпт:',
   HOME_TAGLINE:
-    'Реестр сырого опыта — «дампов» — с машиночитаемым контрактом. Делитесь шестерёнками, а не текстом.',
+    'Kodavr — реестр дампов: неотполированных полевых отчётов, скриптов и воркфлоу с машиночитаемым контрактом. Сделать что-то стоит 1x усилий; упаковать это для других — 10x. Мы устраняем эту асимметрию.',
   OG_TAGLINE:
     'Реестр сырого опыта — «дампов», — который вы читаете через своего любимого ИИ-агента. Делитесь шестерёнками, а не текстом.',
   RECEPTION_PAGE_TITLE: 'Ресепшн',
@@ -461,10 +418,9 @@ export const RU = Object.freeze({
   NOT_FOUND_PAGE_TITLE: 'Дамп не найден',
   NOT_FOUND_PAGE_DESCRIPTION: 'Этот дамп не существует.',
   NAV_HOME: 'главная',
-  NAV_RECEPTION: 'ресепшн',
   NAV_ABOUT: 'о платформе',
   NAV_CONTRIBUTE: 'участие',
-  PROMPT_TEMPLATE: 'Скачай {url} и следуй его схеме.',
+  PROMPT_TEMPLATE: 'Изучи {url} и следуй его схеме. Читай мне статьи и веди себя как журнал, с которым можно говорить',
   TRUST_LEGEND_LEAD: 'Насколько проверены утверждения дампа:',
   // §11/KDV-I18N-02: честная пометка языка тела дампа. `{language}` берётся из
   // LANGUAGE_NAMES (ниже) в форме предложного падежа: «на английском».

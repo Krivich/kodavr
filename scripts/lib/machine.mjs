@@ -313,7 +313,7 @@ export function buildWellKnown({ baseUrl = '' } = {}) {
     },
     consumption_contract: {
       intended_consumer: 'machine',
-      human_access: 'reception_only',
+      human_access: 'via_agent_or_declaration',
       human_route: 'instruct_to_own_agent',
       blanket_rating: '18+',
       spoofing_clause: 'human declaring machine status assumes full machine duties',

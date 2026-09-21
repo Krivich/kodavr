@@ -35,7 +35,7 @@ describe('i18n dataset routing (KDV-I18N-03)', () => {
 
   it('KDV-I18N-03: the default locale maps to today’s unprefixed output paths', () => {
     expect(routeOutputPath({ locale: 'en', layout: 'home', key: 'main', paginated: true })).toBe('index.html');
-    expect(routeOutputPath({ locale: 'en', layout: 'reception', key: 'main' })).toBe('reception/index.html');
+
     expect(routeOutputPath({ locale: 'en', layout: 'about', key: 'main' })).toBe('about/index.html');
     expect(routeOutputPath({ locale: 'en', layout: 'contribute', key: 'main' })).toBe('contribute/index.html');
     expect(routeOutputPath({ locale: 'en', layout: 'notfound', key: 'main' })).toBe('404.html');
@@ -44,7 +44,7 @@ describe('i18n dataset routing (KDV-I18N-03)', () => {
 
   it('KDV-I18N-03: a non-default locale maps under its URL prefix; the 404 is deferred', () => {
     expect(routeOutputPath({ locale: 'ru', layout: 'home', key: 'main', paginated: true })).toBe('/ru/index.html');
-    expect(routeOutputPath({ locale: 'ru', layout: 'reception', key: 'main' })).toBe('/ru/reception/index.html');
+
     expect(routeOutputPath({ locale: 'zh-Hans', layout: 'about', key: 'main' })).toBe('/zh/about/index.html');
     expect(routeOutputPath({ locale: 'es', layout: 'contribute', key: 'main' })).toBe('/es/contribute/index.html');
     expect(routeOutputPath({ locale: 'ru', layout: 'dumps', key: 'sample-dump' })).toBe('/ru/dumps/sample-dump/index.html');

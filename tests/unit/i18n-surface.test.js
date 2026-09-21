@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { EN } from '../../scripts/lib/i18n-en.mjs';
-import { LOCALES, getLocale } from '../../scripts/lib/i18n.mjs';
+import { LOCALES, getLocale, t } from '../../scripts/lib/i18n.mjs';
 import { GATE_TITLE, FOOTER_TEXT } from '../../scripts/lib/copy.mjs';
 import { buildRouteDatasets, HOME_TAGLINE } from '../../scripts/lib/pages.mjs';
 import { readDumps, toDataset } from '../../scripts/lib/dumps.mjs';
@@ -17,26 +17,29 @@ const FIXTURES = fileURLToPath(new URL('../fixtures', import.meta.url));
 const template = (name) => readFileSync(join(ROOT, 'input/templates', name), 'utf8');
 
 // The full layouts that carry `<html lang>` — the dump hall plus the UI routes.
-const LAYOUTS = ['home.hbs', 'reception.hbs', 'notfound.hbs', 'dumps.hbs', 'about.hbs', 'contribute.hbs'];
+const LAYOUTS = ['home.hbs', 'notfound.hbs', 'dumps.hbs', 'about.hbs', 'contribute.hbs'];
 
 // file → [binding markup, the old literal markup, catalog key, English value].
 // The source must carry the binding and must not carry the literal.
 const BINDINGS = {
   'home.hbs': [
     ['<a class="skip-link" href="#main">{{copy.skip_to_content}}</a>', '<a class="skip-link" href="#main">Skip to content</a>', 'SKIP_TO_CONTENT', 'Skip to content'],
-    ['<p class="kicker">{{copy.home_kicker}}</p>', '<p class="kicker">registry of raw experience</p>', 'HOME_KICKER', 'registry of raw experience'],
-    ['href="{{locale_prefix}}/about/">{{copy.home_about_cta}}</a>', 'href="/about/">About the platform</a>', 'HOME_ABOUT_CTA', 'About the platform'],
+    // §6.1 v4/KDV-SURFACE-24: the hero is the literal KODAVR wordmark over the
+    // lead composed from its parts (the term `a dump` emphasized); HOME_TITLE
+    // stays the plain SEO string.
+    ['<p class="home-lead">{{home_title.lead}}<strong>{{home_title.term}}</strong>{{home_title.tail}}</p>', "Writers share raw experience — a dump — the reader's agent adapts it to their needs.", 'HOME_TITLE_LEAD', 'Writers share raw experience — '],
+    ['href="{{locale_prefix}}/about/">{{copy.home_about_cta}}</a>', 'href="/about/">Read the manifesto</a>', 'HOME_ABOUT_CTA', 'About the platform'],
+    ['href="{{locale_prefix}}/contribute/">{{copy.home_contribute_cta}}</a>', 'href="/contribute/">Publish a dump</a>', 'HOME_CONTRIBUTE_CTA', 'How to contribute'],
     ['<h2>{{copy.home_for_machines}}</h2>', '<h2>For machines</h2>', 'HOME_FOR_MACHINES', 'For machines'],
-    ['<h2>{{copy.home_for_humans}}</h2>', '<h2>For humans</h2>', 'HOME_FOR_HUMANS', 'For humans'],
-    ['href="{{locale_prefix}}/reception/">{{copy.home_check_in}}</a>', 'href="/reception/">Check in at reception</a>', 'HOME_CHECK_IN', 'Check in at reception'],
-    ['<h2>{{copy.home_latest_dumps}}</h2>', '<h2>Latest dumps</h2>', 'HOME_LATEST_DUMPS', 'Latest dumps'],
+    ['<h2>{{copy.home_latest_lead}}<em>{{copy.home_latest_term}}</em></h2>', '<h2>Latest dumps</h2>', 'HOME_LATEST_LEAD', 'Latest '],
+    ['<em>{{copy.home_latest_term}}</em>', '<em>dumps</em>', 'HOME_LATEST_TERM', 'dumps'],
     ['<h2>{{copy.home_trust_levels}}</h2>', '<h2>Trust levels</h2>', 'HOME_TRUST_LEVELS', 'Trust levels'],
-    // §11/KDV-I18N-09: the numbered plates bind the catalog as a `data-plate` attribute.
-    ['data-plate="{{copy.home_plate_registry}}"', 'data-plate="01 · registry"', 'HOME_PLATE_REGISTRY', '01 · registry'],
-    ['data-plate="{{copy.home_plate_machines}}"', 'data-plate="02 · machines"', 'HOME_PLATE_MACHINES', '02 · machines'],
-    ['data-plate="{{copy.home_plate_humans}}"', 'data-plate="03 · humans"', 'HOME_PLATE_HUMANS', '03 · humans'],
-    ['data-plate="{{copy.home_plate_latest}}"', 'data-plate="04 · latest"', 'HOME_PLATE_LATEST', '04 · latest'],
-    ['data-plate="{{copy.home_plate_trust}}"', 'data-plate="05 · trust"', 'HOME_PLATE_TRUST', '05 · trust'],
+    // §11/KDV-I18N-09: the numbered plates bind the catalog as a `data-plate`
+    // attribute; the hero plate carries none (Human Surface v4 renumbers them).
+    ['data-plate="{{copy.home_plate_humans}}"', 'data-plate="01 · humans"', 'HOME_PLATE_HUMANS', '01 · HUMANS'],
+    ['data-plate="{{copy.home_plate_latest}}"', 'data-plate="02 · latest"', 'HOME_PLATE_LATEST', '02 · LATEST'],
+    ['data-plate="{{copy.home_plate_machines}}"', 'data-plate="03 · machines"', 'HOME_PLATE_MACHINES', '03 · MACHINES'],
+    ['data-plate="{{copy.home_plate_trust}}"', 'data-plate="04 · trust"', 'HOME_PLATE_TRUST', '04 · TRUST'],
   ],
   'about.hbs': [
     ['data-plate="{{copy.about_plate_manifesto}}"', 'data-plate="01 · manifesto"', 'ABOUT_PLATE_MANIFESTO', '01 · manifesto'],
@@ -51,12 +54,6 @@ const BINDINGS = {
     ['data-plate="{{copy.contribute_plate_flow}}"', 'data-plate="02 · flow"', 'CONTRIBUTE_PLATE_FLOW', '02 · flow'],
     ['data-plate="{{copy.contribute_plate_schema}}"', 'data-plate="03 · schema"', 'CONTRIBUTE_PLATE_SCHEMA', '03 · schema'],
     ['data-plate="{{copy.contribute_plate_licences}}"', 'data-plate="04 · licences"', 'CONTRIBUTE_PLATE_LICENCES', '04 · licences'],
-  ],
-  'reception.hbs': [
-    ['<a class="skip-link" href="#main">{{copy.skip_to_content}}</a>', '<a class="skip-link" href="#main">Skip to content</a>', 'SKIP_TO_CONTENT', 'Skip to content'],
-    ['<p class="kicker">{{copy.reception_kicker}}</p>', '<p class="kicker">human surface · check-in</p>', 'RECEPTION_KICKER', 'human surface · check-in'],
-    ['<p class="lead">{{copy.reception_lead}}</p>', '<p class="lead">You are at the human desk: instructions and metadata live here; the raw content stays machine-first.</p>', 'RECEPTION_LEAD', 'You are at the human desk: instructions and metadata live here; the raw content stays machine-first.'],
-    ['data-plate="{{copy.reception_plate_checkin}}"', 'data-plate="01 · check-in"', 'RECEPTION_PLATE_CHECKIN', '01 · check-in'],
   ],
   'notfound.hbs': [
     ['<a class="skip-link" href="#main">{{copy.skip_to_content}}</a>', '<a class="skip-link" href="#main">Skip to content</a>', 'SKIP_TO_CONTENT', 'Skip to content'],
@@ -91,6 +88,12 @@ const BINDINGS = {
     ['aria-label="{{copy.gate_doors_label}}"', 'aria-label="Entry declaration"', 'GATE_DOORS_LABEL', 'Entry declaration'],
     ['<span class="gate-or" aria-hidden="true">{{copy.gate_or}}</span>', '<span class="gate-or" aria-hidden="true">or</span>', 'GATE_OR', 'or'],
   ],
+  'dumps.hbs': [
+    ['data-plate="{{copy.dumps_plate_preview}}"', 'data-plate="01 · PREVIEW"', 'DUMPS_PLATE_PREVIEW', '01 · PREVIEW'],
+    ['data-plate="{{copy.dumps_plate_want}}"', 'data-plate="02 · INTERESTING? WANT MORE?"', 'DUMPS_PLATE_WANT', '02 · INTERESTING?'],
+    ['data-plate="{{copy.dumps_plate_declaration}}"', 'data-plate="03 · DECLARATION"', 'DUMPS_PLATE_DECLARATION', '03 · DECLARATION'],
+    ['data-plate="{{copy.dumps_plate_dump}}"', 'data-plate="01 · DUMP"', 'DUMPS_PLATE_DUMP', '01 · DUMP'],
+  ],
   'site/artifacts.hbs': [
     ['<h2 class="card-h">{{copy.artifacts_heading}}</h2>', '<h2 class="card-h">Artifacts</h2>', 'ARTIFACTS_HEADING', 'Artifacts'],
     ['<p class="artifacts-empty">{{copy.artifacts_empty}}</p>', '<p class="artifacts-empty">No artifacts.</p>', 'ARTIFACTS_EMPTY', 'No artifacts.'],
@@ -104,12 +107,33 @@ describe('i18n surface: catalog (KDV-I18N-01)', () => {
         expect(EN[key], key).toBe(english);
       }
     }
+    // Human Surface v4: the reception route and its nav/home keys are gone.
+    expect(EN.NAV_RECEPTION).toBeUndefined();
+    expect(EN.HOME_CHECK_IN).toBeUndefined();
+    // v4 also drops the home kicker, the "For humans" heading and the plain
+    // "Latest dumps" key (the feed heading is composed from lead + term now),
+    // and the hero plate label (the storefront hero is a literal wordmark).
+    expect(EN.HOME_KICKER).toBeUndefined();
+    expect(EN.HOME_FOR_HUMANS).toBeUndefined();
+    expect(EN.HOME_LATEST_DUMPS).toBeUndefined();
+    expect(EN.HOME_PLATE_REGISTRY).toBeUndefined();
+  });
+
+  it('KDV-SURFACE-24: the home hero parts compose HOME_TITLE in every locale', () => {
+    // §6.1 v4: the H1 is one sentence composed from three parts (the term in the
+    // middle). The plain HOME_TITLE — the SEO <title>/JSON-LD string — must equal
+    // that composition, in every locale, or the visible hero and the metadata drift.
+    for (const locale of LOCALES.map((entry) => entry.code)) {
+      const composed =
+        t('HOME_TITLE_LEAD', locale) + t('HOME_TITLE_TERM', locale) + t('HOME_TITLE_TAIL', locale);
+      expect(composed, locale).toBe(t('HOME_TITLE', locale));
+    }
   });
 
   it('KDV-I18N-01: the copy.mjs-derived part of the bundle stays verbatim', () => {
     expect(EN.GATE_TITLE).toBe(GATE_TITLE);
     expect(EN.FOOTER_TEXT).toBe(FOOTER_TEXT);
-    expect(EN.HOME_HUMAN_LINE).toBeDefined();
+
     expect(HOME_TAGLINE.length).toBeGreaterThan(0);
   });
 });
@@ -162,13 +186,17 @@ describe('i18n surface: datasets carry lang/rtl and the frame copy (KDV-I18N-01)
   });
 
   it('KDV-I18N-01: the route-specific copy reaches the route that renders it', () => {
-    expect(routes.home.copy.home_kicker).toBe('registry of raw experience');
+    // v4/KDV-SURFACE-27: the home kicker is gone; the storefront on-ramp is the
+    // HUMANS plate lead and the two CTAs carry the v4 labels.
+    expect(routes.home.copy.home_humans_lead).toBe(
+      'Read Kodavr through your own agent — that is the way it was designed for. Here is the prompt:',
+    );
     expect(routes.home.copy.home_about_cta).toBe('About the platform');
+    expect(routes.home.copy.home_contribute_cta).toBe('How to contribute');
     expect(routes.home.copy.pagination_label).toBe('Pagination');
     expect(routes.home.copy.pagination_prev).toBe('Previous page');
     expect(routes.home.copy.pagination_next).toBe('Next page');
-    expect(routes.reception.copy.reception_kicker).toBe('human surface · check-in');
-    expect(routes.reception.copy.reception_lead).toContain('You are at the human desk');
+
     expect(routes.notfound.copy.not_found_kicker).toBe('error sheet');
     expect(routes.notfound.copy.not_found_cta).toBe('Return to the storefront');
   });
@@ -182,6 +210,7 @@ describe('i18n surface: datasets carry lang/rtl and the frame copy (KDV-I18N-01)
     expect(dataset.copy.back_to_feed).toBe('Back to feed');
     expect(dataset.copy.gate_or).toBe('or');
     expect(dataset.copy.gate_doors_label).toBe('Entry declaration');
+    expect(dataset.copy.gate_dump_context_lead).toBe('About this dump:');
     expect(dataset.copy.artifacts_heading).toBe('Artifacts');
     expect(dataset.copy.artifacts_empty).toBe('No artifacts.');
     expect(dataset.copy.footer_cell_report).toBe('report');

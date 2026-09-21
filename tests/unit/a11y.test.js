@@ -13,7 +13,6 @@ import { readDumps, toDataset } from '../../scripts/lib/dumps.mjs';
 import {
   GATE_MACHINE_DOOR,
   GATE_HUMAN_DOOR,
-  RECEPTION_TITLE,
   HALL_ANNOUNCEMENT,
   RECEPTION_ANNOUNCEMENT,
   COPIED_ANNOUNCEMENT,
@@ -102,7 +101,7 @@ describe('accessibility: landmarks and skip link (KDV-A11Y-01)', () => {
     .filter(([, content]) => content.includes('<!DOCTYPE'));
 
   it('finds every full layout (DOCTYPE-bearing) and no fragment', () => {
-    expect(layouts.length).toBeGreaterThanOrEqual(6);
+    expect(layouts.length).toBeGreaterThanOrEqual(5);
     expect(layouts.map(([name]) => name)).not.toContain('home/page.hbs');
   });
 
@@ -146,14 +145,14 @@ describe('accessibility: keyboard and current state (KDV-A11Y-04)', () => {
     const routes = buildRouteDatasets([], { baseUrl: 'https://example.test' });
     const currentOf = (dataset) => dataset.nav.filter((item) => item.current).map((item) => item.href);
     expect(currentOf(routes.home)).toEqual(['/']);
-    expect(currentOf(routes.reception)).toEqual(['/reception/']);
+
     expect(currentOf(routes.about)).toEqual(['/about/']);
     expect(currentOf(routes.contribute)).toEqual(['/contribute/']);
     expect(currentOf(routes.notfound)).toEqual([]);
 
     const dumps = await readDumps(FIXTURES);
     const dump = toDataset(dumps.find((d) => d.slug === 'sample-dump'));
-    expect(dump.nav).toHaveLength(4);
+    expect(dump.nav).toHaveLength(3);
     expect(dump.nav.every((item) => item.current === false)).toBe(true);
   });
 
@@ -205,18 +204,25 @@ describe('accessibility: media and sr-only (KDV-A11Y-06)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// KDV-A11Y-02: the gate is an accessible modal (dynamic half, P6b).
+// KDV-A11Y-02: the declaration is an accessible inline region (v4).
 // ---------------------------------------------------------------------------
 
-describe('accessibility: accessible gate modal (KDV-A11Y-02)', () => {
+describe('accessibility: accessible inline declaration (KDV-A11Y-02)', () => {
   const gate = template('site/gate.hbs');
+  const dumps = template('dumps.hbs');
 
-  it('names the dialog from the §7.1 statement and describes it with the gate hook', () => {
-    expect(gate).toMatch(/<dialog id="gate"[^>]*hidden/);
-    expect(gate).toMatch(/aria-labelledby="gate-title"/);
-    expect(gate).toMatch(/aria-describedby="gate-hook"/);
+  it('names the inline declaration from the §7.1 statement and keeps the hook id', () => {
+    // Human Surface v4/KDV-A11Y-02: the declaration is an inline NAMED region,
+    // not a modal — dumps.hbs wraps the partial in `#plate-declaration` and
+    // borrows the accessible name from the §7.1 statement; the hook keeps its id.
+    expect(dumps).toMatch(
+      /<section class="plate" id="plate-declaration"[^>]*aria-labelledby="gate-title"/,
+    );
+    expect(gate).not.toMatch(/<dialog/);
     expect(gate).toContain('id="gate-title"');
+    expect(gate).toContain('id="gate-hook"');
     expect(gate).toMatch(/<p class="gate-kicker" id="gate-kicker">/);
+    expect(gate).toMatch(/<h2 id="gate-title" class="gate-title">/);
     expect(gate).toMatch(/<p class="gate-hook" id="gate-hook">/);
     expect(gate).toContain('{{copy.gate_title}}');
   });
@@ -243,11 +249,10 @@ describe('accessibility: accessible gate modal (KDV-A11Y-02)', () => {
     }
   });
 
-  it('ships an SSR status region and a named reception region (KDV-A11Y-03)', () => {
-    const dumps = template('dumps.hbs');
+  it('ships an SSR status region and a labelled inline declaration (KDV-A11Y-03)', () => {
     expect(dumps).toMatch(/<p id="a11y-status"[^>]*role="status"/);
     expect(dumps).toMatch(/aria-live="polite"/);
-    expect(template('site/reception-block.hbs')).toMatch(/aria-labelledby="reception-title"/);
+    expect(dumps).toMatch(/id="plate-declaration"[^>]*aria-labelledby="gate-title"/);
   });
 });
 
@@ -263,7 +268,7 @@ describe('accessibility: no-navigation announcements (KDV-A11Y-03)', () => {
     expect(template('site/agent-lane.hbs')).toContain(
       'data-copied-announcement="{{copy.copied_announcement}}"',
     );
-    for (const text of [HALL_ANNOUNCEMENT, RECEPTION_ANNOUNCEMENT, COPIED_ANNOUNCEMENT, RECEPTION_TITLE]) {
+    for (const text of [HALL_ANNOUNCEMENT, RECEPTION_ANNOUNCEMENT, COPIED_ANNOUNCEMENT]) {
       expect(text.length).toBeGreaterThan(0);
     }
   });
@@ -282,6 +287,9 @@ describe('accessibility: no-navigation announcements (KDV-A11Y-03)', () => {
     expect(controller).toContain("getElementById('a11y-status')");
     expect(controller).toContain('data-hall-announcement');
     expect(controller).toContain('data-reception-announcement');
+    // Human Surface v4/KDV-SURFACE-28: the bottom reset announces the re-opened
+    // declaration in place (no dialog open/close to announce any more).
+    expect(controller).toContain('data-declaration-announcement');
     expect(controller).toMatch(/focusMain|getElementById\('main'\)/);
   });
 });
@@ -378,7 +386,7 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     expect(css).not.toMatch(/https?:\/\//i);
 
     // The human-contour classes inherit the prose stack from one grouped rule.
-    expect(css).toMatch(/\.reception-page,\s*\n\.reception-brief-section/);
+    expect(css).toMatch(/\.reception-brief-section,\s*\n\.reception-brief-heading/);
     const prose = css.match(/\.reception-brief-section[^{]*\{[^}]*\}/);
     expect(prose, 'human-contour rule').not.toBeNull();
     expect(prose[0]).toContain('font-family: var(--font-prose)');
@@ -396,7 +404,7 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     }
   });
 
-  it('KDV-SURFACE-13: the machine contour reuses one --font-mono token while the reception prose keeps --font-prose', () => {
+  it('KDV-SURFACE-13: the machine contour reuses one --font-mono token while the preview prose keeps --font-prose', () => {
     // §6.5: one source for the mono stack — declared once and never repeated.
     expect((css.match(/--font-mono\s*:/g) || []).length).toBe(1);
     expect(css).toMatch(
@@ -406,8 +414,10 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     expect((css.match(/ui-monospace/g) || []).length).toBe(1);
 
     // The prompt walls and code blocks reference the token, not a literal list.
+    // v4/KDV-SURFACE-28 introduces `.article-prompt` (the `02` plate's pinned
+    // prompt) and retires the gate/reception prompt walls with the modal.
     expect(css).toMatch(
-      /\.reception-prompt,\s*\.gate-prompt,\s*\.machine-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
     );
     expect(css).toMatch(/^pre\s*\{[^}]*font-family:\s*var\(--font-mono\)/m);
 
@@ -417,87 +427,70 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     expect(css).toMatch(/\.hall\s*\{[^}]*clamp\(1rem, 2\.5vw, 1\.125rem\)/);
     expect(css).toMatch(/details\.card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
 
-    // The human contour stays proportional: the reception prose rule keeps the
-    // prose token and never picks up the mono one.
-    const prose = css.match(/\.reception-page,[^{]*\{[^}]*\}/);
+    // The human contour stays proportional: the preview/brief prose rule keeps
+    // the prose token and never picks up the mono one.
+    const prose = css.match(/\.reception-brief-section,[^{]*\{[^}]*\}/);
     expect(prose, 'human-contour rule').not.toBeNull();
     expect(prose[0]).toContain('font-family: var(--font-prose)');
     expect(prose[0]).not.toContain('--font-mono');
   });
 
-  it('KDV-SURFACE-13: the gate dialog is framed as a contract card with a clause list and a signature rule', () => {
-    // A document frame around the dialog content.
-    expect(css).toMatch(/#gate\s*\{[^}]*border:\s*1px solid var\(--line\)/);
-    // The duties read as a clause — a left rule with indented text.
+  it('KDV-SURFACE-13: the inline declaration keeps the clause list and the signature rule', () => {
+    // Human Surface v4/KDV-SURFACE-28: the plate role frames the declaration (the
+    // modal card and its scrim are gone) — the duties read as a clause and the
+    // doors sit under the signature rule.
+    expect(css).toMatch(/\.plate\s*\{[^}]*border-top:\s*1px solid var\(--line-2\)/);
     expect(css).toMatch(/\.gate-duties\s*\{[^}]*border-left:\s*2px solid var\(--line\)/);
-    // The doors sit under a rule — the signature line.
     expect(css).toMatch(/\.gate-doors\s*\{[^}]*border-top:\s*1px solid var\(--line\)/);
   });
 
-  it('KDV-SURFACE-13: the gate dialog is a document measure (46rem cap, 68ch prose, modal scrim)', () => {
-    // §6.5 P1-1: the dialog is a contract document, not a full-viewport panel —
-    // a measure cap and a prose measure so the hook stops running one ~200-char
-    // line across the desktop width.
-    const gate = css.match(/#gate\s*\{[^}]*\}/);
-    expect(gate, '#gate rule').not.toBeNull();
-    expect(gate[0]).toMatch(/max-width:\s*46rem/);
-
-    const proseMeasure = css.match(/#gate p,\s*\n?\s*#gate \.door-label\s*\{[^}]*\}/);
-    expect(proseMeasure, '#gate prose measure').not.toBeNull();
+  it('KDV-SURFACE-13: the declaration is a document measure (68ch prose) with no modal scrim', () => {
+    // §6.5: the declaration prose keeps its measure cap inside the inline plate;
+    // the v4 change removed the fixed 46rem viewport cap and the dark backdrop.
+    const proseMeasure = css.match(
+      /#plate-declaration p,\s*\n?\s*#plate-declaration \.door-label\s*\{[^}]*\}/,
+    );
+    expect(proseMeasure, '#plate-declaration prose measure').not.toBeNull();
     expect(proseMeasure[0]).toMatch(/max-width:\s*68ch/);
-
-    // The modal must read as modal: an explicit dark scrim instead of the UA
-    // default (~10%). It sits behind the card, so no text contrast is affected.
-    const backdrop = css.match(/dialog#gate::backdrop\s*\{[^}]*\}/);
-    expect(backdrop, 'dialog#gate::backdrop rule').not.toBeNull();
-    expect(backdrop[0]).toMatch(/background:\s*rgb\(17 17 17 \/ \.32\)/);
-
-    // KDV-MOBILE-01: below 480px the card stays full-bleed — the later, equally
-    // specific mobile rule must still win over the document cap.
-    const mobile = css.match(/@media \(max-width: 480px\)[\s\S]*?#gate\s*\{[^}]*\}/);
-    expect(mobile, '#gate mobile override').not.toBeNull();
-    expect(mobile[0]).toMatch(/max-width:\s*none/);
-    expect(mobile[0]).toMatch(/padding:\s*16px/);
-    expect(css.indexOf(mobile[0])).toBeGreaterThan(css.indexOf(gate[0]));
+    expect(css).not.toMatch(/::backdrop/);
+    expect(css).not.toMatch(/#gate\b/);
+    // The first screen holds the H2/duties/doors at 1280x720; the old modal
+    // height cap must not clip the inline flow.
+    expect(css).not.toMatch(/#plate-declaration\s*\{[^}]*max-height/);
   });
 
   it('KDV-SURFACE-13: the grey prompt/rest blocks hug their text — no empty field on the right', () => {
-    // §6.5 P1-1: the gate blocks and the machine panel prompt shrink to their
-    // text; the hall's code blocks keep full width + horizontal scroll
+    // §6.5 P1-1: the pinned prompt blocks and the declaration's long tail shrink
+    // to their text; the hall's code blocks keep full width + horizontal scroll
     // (KDV-MOBILE-02), so this must NOT be a bare `pre { width: fit-content }`.
-    const hug = css.match(/\.gate-prompt,\s*\.gate-rest,\s*\.machine-prompt\s*\{[^}]*\}/);
+    // v4/KDV-SURFACE-28: `.article-prompt` (the `02` plate) joins the grey blocks
+    // that hug their text; `.gate-rest` stays the declaration's own block.
+    const hug = css.match(/\.article-prompt,\s*\.gate-rest,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*\}/);
     expect(hug, 'prompt/rest hug rule').not.toBeNull();
     expect(hug[0]).toMatch(/width:\s*fit-content/);
     expect(hug[0]).toMatch(/max-width:\s*100%/);
     expect(css).not.toMatch(/^pre\s*\{[^}]*width:\s*fit-content/m);
 
-    // §6.5/KDV-MOBILE-01 (owner decision 2026-09-17): the gate keeps the desktop
-    // reading order at every width — no <480px flex/`order` reorder of the prompt
-    // and the doors (the doors are a short scroll away instead).
-    expect(css).not.toMatch(/\.gate-(?:prompt|rest)\s*\{[^}]*order:/);
-    expect(css).not.toMatch(/#gate:not\(\[hidden\]\)\s*>\s*\*/);
+    // §6.5/KDV-MOBILE-01 (owner decision 2026-09-17): the declaration keeps the
+    // desktop reading order at every width — no <480px flex/`order` reorder of
+    // the prompt and the doors (the doors are a short scroll away instead).
+    expect(css).not.toMatch(/\.gate-rest\s*\{[^}]*order:/);
+    expect(css).not.toMatch(/#plate-declaration:not\(\[hidden\]\)\s*>\s*\*/);
   });
 
-  it('KDV-SURFACE-13: the reception §7.2 wall is human contour prose, not a machine grey block', () => {
-    // §3.7 / P1-5: the verbatim wall keeps its line breaks and headings but is
-    // set in the proportional stack, on the page background, under a left rule —
-    // the same prose group as the brief around it.
-    const prose = css.match(/\.reception-page,[^{]*\{[^}]*\}/);
+  it('KDV-SURFACE-13: the preview/brief prose is human contour, the prompt walls stay machine mono', () => {
+    // §6.5: the author's brief tier lives in the `01 · PREVIEW` plate and stays
+    // proportional prose; the §7.2 wall it used to sit beside is not migrated.
+    const prose = css.match(/\.reception-brief-section,[^{]*\{[^}]*\}/);
     expect(prose, 'human-contour rule').not.toBeNull();
-    expect(prose[0]).toContain('.reception-text');
     expect(prose[0]).toContain('font-family: var(--font-prose)');
 
     const wall = css.match(/\.reception-text\s*\{[^}]*\}/);
-    expect(wall, '.reception-text rule').not.toBeNull();
-    expect(wall[0]).toMatch(/background:\s*transparent/);
-    expect(wall[0]).toMatch(/border-left:\s*3px solid var\(--line\)/);
-    expect(wall[0]).toMatch(/white-space:\s*pre-wrap/);
-    expect(wall[0]).not.toContain('--font-mono');
+    expect(wall, 'the retired §7.2 wall rule').toBeNull();
 
-    // §6.5 two contours: the prompt walls and the manifest card on that page
-    // stay monospace.
+    // §6.5 two contours: the prompt walls and the manifest card stay monospace.
     expect(css).toMatch(
-      /\.reception-prompt,\s*\.gate-prompt,\s*\.machine-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
     );
     expect(css).toMatch(/details\.card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
   });

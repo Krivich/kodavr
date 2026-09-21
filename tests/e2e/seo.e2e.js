@@ -50,9 +50,12 @@ test('KDV-SURFACE-12: a Googlebot request gets the readable SSR body with the ga
   // The full body ships in the markup, so a crawler reads the dump itself.
   expect(html).toContain('<h1>Sample Heading</h1>');
   expect(html).toContain('Body text with');
-  // The gate and the reception block stay hidden, and nothing branches on the UA.
-  expect(html).toMatch(/<dialog id="gate"[^>]*hidden/);
-  expect(html).toMatch(/class="reception-block card"[^>]*hidden/);
+  // Human Surface v4/KDV-SURFACE-28: no modal — the article's state-0 plates
+  // ship hidden while the raw body plate is the SSR page; nothing branches on UA.
+  expect(html).not.toMatch(/<dialog/);
+  expect(html).toMatch(/id="plate-preview"[^>]*hidden/);
+  expect(html).toMatch(/id="plate-want"[^>]*hidden/);
+  expect(html).toMatch(/id="plate-declaration"[^>]*hidden/);
   expect(html).not.toMatch(/Googlebot|navigator\.userAgent/);
 
   // canonical/og are absolute and on the build's own origin, never a bare path.

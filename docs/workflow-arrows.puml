@@ -137,11 +137,10 @@ package "scripts/tooling\nthe development tooling: quality gates, the map, dev t
 
 package "input/controllers\nclient controllers injected by the engine" as P_CTRL {
   component "dumps.js\nthe gate, the hall, the reception toggle" as CTRL_DUMPS <<ctrl>> [[../input/controllers/dumps.js]]
-  component "reception.js\nthe reception page behaviour" as CTRL_REC <<ctrl>> [[../input/controllers/reception.js]]
 }
 
 package "input/templates\nHandlebars layouts + partials (the HTML projection)" as P_VIEW {
-  component "home.hbs · about.hbs · dumps.hbs\nreception.hbs · contribute.hbs\nthe human-surface layouts" as VIEW_PAGES <<view>> [[../input/templates/home.hbs]]
+  component "home.hbs · about.hbs · dumps.hbs\ncontribute.hbs\nthe human-surface layouts" as VIEW_PAGES <<view>> [[../input/templates/home.hbs]]
   component "site/gate.hbs · site/reception-block.hbs\nthe consumption-contract partials" as VIEW_GATE <<view>> [[../input/templates/site/gate.hbs]]
 }
 
@@ -240,7 +239,6 @@ BUILD -[#9E9E9E]..> ASSET_IMG : and the brand images
 IGN -[#9E9E9E]..> VIEW_PAGES : the engine renders the layouts
 IGN -[#9E9E9E]..> VIEW_GATE : and the consumption-contract partials
 IGN -[#9E9E9E]..> CTRL_DUMPS : injects the page controller
-IGN -[#9E9E9E]..> CTRL_REC : injects the reception controller
 PAGES -[#9E9E9E]..> MACHINE : reads buildIndexEntry / buildWellKnown
 MACHINE -[#9E9E9E]..> SCHEMA : embeds + serves the index/manifest JSON Schemas
 MACHINE -[#9E9E9E]..> VERB : writes robots.txt / humans.txt verbatim
@@ -273,10 +271,9 @@ legend right
 endlegend
 
 ' ── lint suppressions ─────────────────────────────────────────────────────────
-' The ignition engine injects the client controllers by path, never by import.
+' The ignition engine injects the client controller by path, never by import.
 ' @lint-ignore
 ' [I] IGN -> CTRL_DUMPS  # by-path: the controller is spawned by path, not imported
-' [I] IGN -> CTRL_REC    # by-path: the controller is spawned by path, not imported
 ' @end
 
 @enduml

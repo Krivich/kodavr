@@ -38,13 +38,16 @@ const TESTS_DIR = join(ROOT, "tests")
 // sorted legacy IDs joined by "\n". Changing this set is a deliberate, reviewable
 // act: edit the constant only when the change is intentional.
 export const LEGACY = {
-  count: 208,
-  sha256: "97c7be2609f74241f5bc402013ee93daae8473032fd5809b4b8f133ee06754de",
+  count: 203,
+  sha256: "e1f24923d9a346c38a29f616bbe261e10f8d224cd905cae4fafc666bebee0a87",
 }
 
 // Group codes may contain digits (e.g. KDV-A11Y), so the class is [A-Z0-9].
 // One grammar for both the coverage pass and the flow pass (one truth per row).
 const ROW = new RegExp(`^-\\s*(✅|🟧|⬜|❓)\\s*\\*\\*(${PREFIX}-[A-Z0-9]+-\\d+)\\*\\*[^\\n]*`, "gm")
+// A test may only name an ACTIVE requirement ID: DEPRECATED rows leave the known
+// set, so a stale test that still names a retired ID fails loudly instead of
+// being silently grandfathered.
 // The optional flow: field. It MUST be delimited — preceded by `(` or `;` (the
 // reference block's separators) — so prose that merely mentions "flow:" (or a
 // `workflow:` token) is never mistaken for the field. The capture stops at `;`

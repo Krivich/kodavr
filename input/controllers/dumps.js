@@ -1,38 +1,56 @@
 /**
  * CONTRACT: input/controllers/dumps.js
- * ROLE: the §6.2 gate / hall / reception behaviour on a dump page
+ * ROLE: the §6.2 inline-plate declaration behaviour on a dump page (states 0 / M / H)
  * INVARIANTS:
- *   — the gate ships hidden in SSR: without JS the body is the whole page
- *   — focus never falls to <body> when an overlay closes
+ *   — the `01 · PREVIEW` / `02 · INTERESTING?` / `03 · DECLARATION`
+ *     plates ship hidden in SSR: without JS the raw body is the whole page
+ *   — no modal: the state transitions are in-place (plate visibility + the
+ *     bottom "передумал" reset), never a dialog open/close
+ *   — focus never falls to <body> when the declaration collapses
  */
 
-// input/controllers/dumps.js — the §6.2 gate/reception behaviour on a dump page.
+// input/controllers/dumps.js — the §6.2 declaration behaviour on a dump page.
 //
 // The engine sees this file, marks the dump page "live" and auto-injects the
-// ignition runtime plus this controller. The gate ships hidden in SSR: without
-// JS the body is the whole page (the documented "no JS = machine" fiction).
-// This controller only toggles DOM state and remembers the species choice; the
-// copydeck strings arrive through the dataset.
+// ignition runtime plus this controller. Human Surface v4/KDV-SURFACE-28: the
+// gate is no longer a <dialog> overlay — it is the inline `03 · DECLARATION`
+// plate, with `01 · PREVIEW` and `02 · INTERESTING?` above it. The
+// three states:
+//   0  (nothing declared) — all three plates open, the raw body collapsed;
+//   M  (pressed 0)        — collapses to the raw `01 · DUMP` plate + machine panel;
+//   H  (pressed 1)        — collapses to `01 · PREVIEW` + `02`;
+// the single bottom reset (`передумал`) re-opens the declaration in place.
+// The plates ship hidden in SSR, so the no-JS page is the raw body (the
+// documented "no JS = machine" fiction). This controller only toggles DOM state
+// and remembers the species choice; the copydeck strings arrive through the dataset.
 (function () {
   'use strict';
 
   // §6.2/§6.6 KDV-SURFACE-19: the declaration toast is one-shot per page load —
-  // the flag lives at module scope so a later explicit choice (the reception
-  // reset, a re-opened gate) cannot replay it.
+  // the flag lives at module scope so a later explicit choice (the reset, a
+  // re-opened declaration) cannot replay it.
   var declarationToastShown = false;
   var TOAST_MS = 4000;
 
   window.ignition.controller(function () {
-    var gate = document.getElementById('gate');
-    var body = document.querySelector('.hall');
-    var reception = document.querySelector('.reception-block');
-    var postGate = document.querySelector('.statusline');
+    var platePreview = document.getElementById('plate-preview');
+    var plateWant = document.getElementById('plate-want');
+    var plateDeclaration = document.getElementById('plate-declaration');
+    var plateDump = document.getElementById('plate-dump');
     var machinePanel = document.getElementById('machine-panel');
+    var postGate = document.querySelector('.statusline');
+    var resetLine = document.getElementById('article-reset');
     var toast = document.querySelector('.declaration-toast');
     var status = document.getElementById('a11y-status');
+    // The live state: 'undeclared' (0) | 'machine' (M) | 'human' (H).
+    var state = 'undeclared';
 
-    // §6.6: focus must never fall to <body> when an overlay closes — hand it
-    // back to the page (main is programmatically focusable, tabindex="-1").
+    function setHidden(el, hidden) {
+      if (el) el.hidden = hidden;
+    }
+
+    // §6.6: focus must never fall to <body> when the declaration collapses —
+    // hand it back to the page (main is programmatically focusable, tabindex="-1").
     function focusMain() {
       var main = document.getElementById('main');
       if (main && typeof main.focus === 'function') main.focus();
@@ -47,71 +65,55 @@
 
     // §7.13: the shared header chip mirrors the stored declaration. site.js
     // fills it on load; every species transition here refreshes it in place so
-    // the chip follows the gate without a reload. Guarded — the helper may be
-    // absent on an older asset tree.
+    // the chip follows the declaration without a reload. Guarded — the helper
+    // may be absent on an older asset tree.
     function refreshChip() {
       if (window.Kodavr && typeof window.Kodavr.refreshSpeciesChip === 'function') {
         window.Kodavr.refreshSpeciesChip();
       }
     }
 
-    function focusFirstChoice() {
-      var first = gate && gate.querySelector('[data-gate-choice]');
-      if (first && typeof first.focus === 'function') first.focus();
-    }
-
-    function closeGate() {
-      if (!gate) return;
-      if (typeof gate.close === 'function' && gate.open) gate.close();
-      gate.removeAttribute('open');
-      gate.hidden = true;
-      focusMain();
-    }
-
-    function openGate() {
-      if (!gate) return;
-      gate.hidden = false;
-      if (typeof gate.showModal === 'function') {
-        if (!gate.open) {
-          try {
-            // The native modal already moves focus into the dialog.
-            gate.showModal();
-          } catch (err) {
-            gate.setAttribute('open', '');
-            focusFirstChoice();
-          }
-        }
-      } else {
-        // No showModal(): make the [open] fallback focusable the same way.
-        gate.setAttribute('open', '');
-        focusFirstChoice();
+    // §6.2 v4/KDV-SURFACE-28: pure visibility — no scrolling, no history side
+    // effects, so each transition is one in-place repaint.
+    function showState(next) {
+      state = next;
+      if (next === 'machine') {
+        setHidden(platePreview, true);
+        setHidden(plateWant, true);
+        setHidden(plateDeclaration, true);
+        setHidden(plateDump, false);
+        setHidden(machinePanel, false);
+        setHidden(postGate, false);
+        setHidden(resetLine, false);
+        return;
       }
+      if (next === 'human') {
+        setHidden(platePreview, false);
+        setHidden(plateWant, false);
+        setHidden(plateDeclaration, true);
+        setHidden(plateDump, true);
+        setHidden(machinePanel, true);
+        setHidden(postGate, true);
+        setHidden(resetLine, false);
+        return;
+      }
+      setHidden(platePreview, false);
+      setHidden(plateWant, false);
+      setHidden(plateDeclaration, false);
+      setHidden(plateDump, true);
+      setHidden(machinePanel, true);
+      setHidden(postGate, true);
+      setHidden(resetLine, true);
     }
 
-    function showBody() {
-      if (body) body.hidden = false;
-      if (reception) reception.hidden = true;
-    }
-
-    // §6.2: the machine panel shares the post-gate line's visibility — it is
-    // shown for a stored/committed machine choice and stays hidden otherwise.
-    function showMachinePanel() {
-      if (machinePanel) machinePanel.hidden = false;
-    }
-
-    function showReception() {
-      if (body) body.hidden = true;
-      if (reception) reception.hidden = false;
-    }
-
-    // §6.5 Android/back: an overlay (gate or reception) owns one history entry
-    // so the hardware back button dismisses it instead of leaving the dump.
-    // SSR/no-JS is untouched — this is pure progressive enhancement.
-    function pushOverlay(state) {
+    // §6.5: state 0 / H stay one history entry (the Android back button returns
+    // to the machine-adjacent state instead of leaving the dump), while a
+    // committed choice clears it. Pure progressive enhancement — SSR untouched.
+    function pushOverlay(name) {
       try {
-        window.history.pushState({ kodavrOverlay: state }, '');
+        window.history.pushState({ kodavrOverlay: name }, '');
       } catch (err) {
-        /* history unavailable — the overlay still closes via its buttons */
+        /* history unavailable — the state still changes via the controls */
       }
     }
 
@@ -122,16 +124,6 @@
         /* ignore */
       }
     }
-
-    window.addEventListener('popstate', function () {
-      if (gate && !gate.hidden) {
-        closeGate();
-        showBody();
-      } else if (reception && !reception.hidden) {
-        showBody();
-        focusMain();
-      }
-    });
 
     // §6.2/§6.6: the declaration toast is its own live region. It shows once,
     // only for the explicit "0" choice, and hides itself after a few seconds.
@@ -148,45 +140,52 @@
       }, TOAST_MS);
     }
 
+    // Back to state 0: clear the stored species and re-open the declaration in
+    // place (the owner's "передумал", §3). `announce`/`focus` are off on boot.
+    function applyUndeclared(options) {
+      if (window.Kodavr && typeof window.Kodavr.clearSpecies === 'function') {
+        window.Kodavr.clearSpecies();
+        refreshChip();
+      }
+      showState('undeclared');
+      clearOverlay();
+      if (options && options.announce) announceFrom('data-declaration-announcement');
+      if (options && options.focus) focusMain();
+    }
+
     function applyMachine(options) {
       window.Kodavr.setSpecies('machine');
       refreshChip();
-      closeGate();
-      showBody();
-      if (postGate) postGate.hidden = false;
-      showMachinePanel();
-      // The gate was dismissed by an explicit choice: no overlay entry left.
+      showState('machine');
+      // The declaration was dismissed by an explicit choice: no overlay entry left.
       clearOverlay();
       announceFrom('data-hall-announcement');
-      // KDV-SURFACE-19: only the explicit gate choice shows the toast — Esc, a
-      // backdrop tap, hardware back and the machine reset stay silent.
+      // KDV-SURFACE-19: only the explicit "0" choice shows the toast — Esc, the
+      // hardware back and a boot with the species already stored stay silent.
       if (options && options.declared) showDeclarationToast();
     }
 
     function applyHuman() {
       window.Kodavr.setSpecies('human');
       refreshChip();
-      closeGate();
-      if (machinePanel) machinePanel.hidden = true;
-      showReception();
-      // Reception is a new overlay; back dismisses it back to the hall.
-      pushOverlay('reception');
+      showState('human');
+      // State H owns one history entry; back returns to the machine-adjacent state.
+      pushOverlay('human');
       announceFrom('data-reception-announcement');
     }
 
-    // Boot: a persisted choice applies silently — the gate is shown once.
-    var species = window.Kodavr.getSpecies();
-    if (species === 'machine') {
-      showBody();
-      if (postGate) postGate.hidden = false;
-      showMachinePanel();
-    } else if (species === 'human') {
-      showReception();
-      pushOverlay('reception');
-    } else {
-      openGate();
-      pushOverlay('gate');
-    }
+    window.addEventListener('popstate', function () {
+      if (state === 'machine') return;
+      applyMachine();
+    });
+
+    // Esc is a machine-adjacent dismissal from an open declaration (§6.2, §6.5).
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape' && event.key !== 'Esc') return;
+      if (state === 'machine') return;
+      event.preventDefault();
+      applyMachine();
+    });
 
     var machineButton = document.querySelector('[data-gate-choice="machine"]');
     var humanButton = document.querySelector('[data-gate-choice="human"]');
@@ -199,40 +198,26 @@
     }
     if (humanButton) humanButton.addEventListener('click', applyHuman);
 
-    // Esc (cancel) and a tap on the dimmed backdrop both count as
-    // "machine-adjacent" (§6.2, §6.5).
-    if (gate) {
-      gate.addEventListener('cancel', function (event) {
-        event.preventDefault();
-        applyMachine();
-      });
-      gate.addEventListener('click', function (event) {
-        if (event.target === gate) applyMachine();
-      });
-    }
-
-    var resets = document.querySelectorAll('[data-reset-machine]');
-    for (var i = 0; i < resets.length; i++) {
-      resets[i].addEventListener('click', function (event) {
-        event.preventDefault();
-        applyMachine();
-      });
-    }
-
-    // §6.2: the machine panel's reset forgets the stored species and re-opens
-    // the gate so the visitor re-declares. It must never navigate.
+    // §6.2 v4/KDV-SURFACE-28: the single bottom "передумал" reset forgets the
+    // stored species and re-opens the declaration in place. It must never navigate.
     var humanResets = document.querySelectorAll('[data-reset-human]');
-    for (var j = 0; j < humanResets.length; j++) {
-      humanResets[j].addEventListener('click', function (event) {
+    for (var i = 0; i < humanResets.length; i++) {
+      humanResets[i].addEventListener('click', function (event) {
         event.preventDefault();
-        if (window.Kodavr && typeof window.Kodavr.clearSpecies === 'function') {
-          window.Kodavr.clearSpecies();
-          refreshChip();
-        }
-        if (machinePanel) machinePanel.hidden = true;
-        openGate();
-        pushOverlay('gate');
+        applyUndeclared({ announce: true, focus: true });
       });
+    }
+
+    // Boot: a persisted choice applies silently — the declaration is shown once.
+    var species = window.Kodavr.getSpecies();
+    if (species === 'machine') {
+      showState('machine');
+    } else if (species === 'human') {
+      showState('human');
+      pushOverlay('human');
+    } else {
+      showState('undeclared');
+      pushOverlay('undeclared');
     }
 
     window.Kodavr.initCopyButtons();

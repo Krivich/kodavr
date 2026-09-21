@@ -37,8 +37,8 @@ const lintText = (text) => lintDiagram(text, opts).join('\n');
 describe('workflow-arrows map (§8.1)', () => {
   it('KDV-CI-12: the committed map is clean, and the linter really catches drift', () => {
     expect(lintDiagram(puml, opts)).toEqual([]);
-    // Two justified masks: the by-path controllers (KDV-CI-24).
-    expect(lintProblems(puml, opts).suppressed.count).toBe(2);
+    // One justified mask: the by-path controller (KDV-CI-24).
+    expect(lintProblems(puml, opts).suppressed.count).toBe(1);
 
     // Not a no-op: erase one code brick and the missing file is reported.
     const broken = puml.split('\n').filter((line) => !line.includes('as COPY <<lib>>')).join('\n');
@@ -323,9 +323,8 @@ describe('workflow-arrows module imports (§8.1)', () => {
     const iProblems = suppressed.list.map(formatProblem).filter((p) => p.startsWith('I:'));
     expect(iProblems).toEqual([
       'I: IGN -> CTRL_DUMPS — drawn edge is not a real import in either direction',
-      'I: IGN -> CTRL_REC — drawn edge is not a real import in either direction',
     ]);
-    expect(suppressed.count).toBe(2);
+    expect(suppressed.count).toBe(1);
     // Step 18 was retargeted to a real import, so no PAGES -> COPY drift survives.
     expect(formatted(puml)).not.toContain('I: PAGES');
   });

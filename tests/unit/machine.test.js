@@ -257,6 +257,7 @@ describe('well-known discovery document', () => {
       repository: 'https://github.com/krivich/kodavr',
       rules: '/CONTRIBUTING.md',
     });
+    expect(wk.consumption_contract.human_access).toBe('via_agent_or_declaration');
     expect(wk.consumption_contract.agent_duties).toEqual([
       'filter_for_user',
       'adapt_to_user_context',

@@ -152,6 +152,11 @@ pre{font-family:var(--font-mono);white-space:pre-wrap;word-break:break-word;
 .kicker{font:500 11px/1.4 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 var(--sp-2)}
 h1{font:800 clamp(2.1rem,4.5vw,3.05rem)/1.12 var(--font-prose);letter-spacing:-.015em;margin:0 0 var(--sp-3)}
 .lead{font:400 1.0625rem/1.6 var(--font-prose);color:var(--ink-2);max-width:var(--measure);margin:0 0 var(--sp-5)}
+/* §6.1 v4/KDV-SURFACE-24: the storefront hero roles — a literal brand wordmark
+   (.home-wordmark) over the positioning sentence as a lead (.home-lead). The
+   global h1 keeps its size for every other page; these are home-scoped roles. */
+.home-wordmark{font:800 clamp(2.2rem,4vw,2.6rem)/1.12 var(--font-prose);letter-spacing:-.015em;margin:0 0 var(--sp-3)}
+.home-lead{font:400 clamp(1.25rem,1.8vw,1.4rem)/1.45 var(--font-prose);color:var(--ink-2);max-width:var(--measure);margin:0 0 var(--sp-5)}
 h2{font:700 1.375rem/1.25 var(--font-prose);letter-spacing:-.01em;margin:0 0 var(--sp-4)}
 h2::after{content:"";display:block;width:28px;height:3px;background:var(--ink);margin-top:6px}
 p{max-width:var(--measure)}
@@ -292,27 +297,26 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
 .statusline{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0 0 var(--sp-5);
   font:400 13px/1.6 var(--font-mono);color:var(--ink-2)}
 
-/* ============ 12 · GATE ============ */
-/* The demo's own gate markup (.gate/.gate-doc/.gate-formno/.doors/.duties/
-   .declaration) was never ported — the live dialog is `#gate` with the
-   `.gate-*` / `.door*` hooks below. `.gate-hint` survives on the 404. */
-/* §6.5: a contract document — a framed card with a document measure, capped to
-   the viewport so the long duties clause stays reachable. */
-#gate{max-height:calc(100vh - 2rem);max-width:46rem;width:min(92vw,46rem);overflow-y:auto;margin:auto;
-  border:1px solid var(--line);outline:1px solid var(--line-2);outline-offset:4px;
-  padding:clamp(16px,3vw,32px);background:var(--paper);color:var(--ink);transition:opacity .15s ease}
-/* §3.7 P1-1: a modal must read as modal — the pinned #111 scrim at 32% (the
-   UA default ~10% is too faint to separate the ceremony from the page). */
-dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
-#gate p,
-#gate .door-label{max-width:68ch}
-#gate h2{font:800 clamp(1.35rem,3vw,1.7rem)/1.2 var(--font-prose);letter-spacing:.01em;
+/* ============ 12 · DECLARATION (inline plates) ============ */
+/* Human Surface v4/KDV-SURFACE-28: the §7.1 declaration is an INLINE plate, not
+   a modal — `#plate-declaration` is the section wrapper in dumps.hbs and the
+   `.gate-*` / `.door*` hooks below carry the contract-document prose. The demo's
+   own gate markup (.gate/.gate-doc/.gate-formno/.doors/.duties/.declaration) was
+   never ported; `.gate-hint` survives on the 404. */
+#plate-declaration p,
+#plate-declaration .door-label{max-width:68ch}
+.gate-title{font:800 clamp(1.35rem,3vw,1.7rem)/1.2 var(--font-prose);letter-spacing:.01em;
   text-transform:uppercase;margin:0 0 var(--sp-3)}
-#gate h2::after{display:none}
+.gate-title::after{display:none}
 /* §7.1 v2: the standard phrase is demoted to a muted kicker above the title. */
 .gate-kicker{font:500 11px/1.4 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;
   color:var(--muted);margin:0 0 var(--sp-1)}
 .gate-hook{margin:0 0 var(--sp-3);font:400 1rem/1.6 var(--font-prose);color:var(--ink-2);max-width:var(--measure)}
+/* §7.1 v3 KDV-SURFACE-26: the `01 · PREVIEW` plate names the dump — the
+   contract card's subject line, in the machine contour's meta grammar. */
+.gate-dump{display:grid;gap:var(--sp-1);margin:0 0 var(--sp-3);padding:var(--sp-3);
+  border:1px solid var(--line-2);max-width:var(--measure)}
+.gate-dump-title{font:600 1rem/1.4 var(--font-prose);color:var(--ink);margin:0}
 /* §7.1: duties are lead + tokens on two physical lines (`pre-line` keeps the
    split) and read as a clause — a left rule with indented text. */
 .gate-duties{margin:0 0 var(--sp-2);white-space:pre-line;border-left:2px solid var(--line);
@@ -362,7 +366,7 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 /* ============ 14 · PRINT ============ */
 @media print{
   body{padding:0}
-  #gate,.toast,.nav,.fab{display:none!important}
+  #plate-declaration,.toast,.nav,.fab{display:none!important}
   .sheet{border:1px solid #000;outline:0}
   .plate::before{color:#000}
 }
@@ -400,7 +404,6 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 /* --- home / about prose ---------------------------------------------- */
 /* §7.10: the "what is a dump" prompt stays an italic span inside the statement. */
 .dump-prompt{font-style:italic}
-.human-quickstart-note{font:400 13px/1.8 var(--font-mono);color:var(--muted);margin:var(--sp-3) 0 0}
 
 /* the machines plate used to own its spacing and links; now the `.plate`
    owns the rhythm and `.block-machine`/`.linklist` own the artifact and list. */
@@ -434,9 +437,9 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 .dump-discuss{margin:var(--sp-5) 0;font:400 15px/1.6 var(--font-prose)}
 
 /* §6.2: the declared-machine panel above the dump — the demo `.card` owns the
-   frame; the lead block and the reset keep the panel's tighter rhythm. */
+   frame; the lead block keeps the panel's tighter rhythm. The "передумал" reset
+   moved to the page bottom in v4 (KDV-SURFACE-15). */
 #machine-panel .block-machine{margin:0 0 var(--sp-3);font-size:.9rem}
-#machine-panel .resetline{margin:0}
 
 /* the feed grid; the rows themselves are demo `.card`s (§07).
    KDV-MOBILE-05: pin the track to minmax(0,1fr) — a bare `auto` track sizes to
@@ -452,12 +455,12 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 .artifact-note{grid-column:1 / -1;margin:0;color:var(--muted);font:400 13px/1.6 var(--font-prose)}
 .artifacts-empty{color:var(--muted)}
 
-/* --- reception ------------------------------------------------------- */
-/* §6.5: the reception surface is the human contour — proportional prose.
-   This rule must stay above any other `.reception-brief-section` rule. */
-.reception-page,
+/* --- article plates: preview + brief (human contour) ------------------ */
+/* §6.5: the preview/brief surface is the human contour — proportional prose.
+   This rule must stay above any other `.reception-brief-section` rule.
+   Human Surface v4/KDV-SURFACE-28: the §7.2 wall and the standalone reception
+   page are gone; the author's brief tier moved into the `01 · PREVIEW` plate. */
 .reception-brief-section,
-.reception-text,
 .reception-brief-heading,
 .reception-brief-note,
 .reception-brief,
@@ -465,31 +468,28 @@ dialog#gate::backdrop{background:rgb(17 17 17 / .32)}
 .reception-brief-cta,
 .reception-brief-report,
 .reception-rating{font-family: var(--font-prose);line-height:1.7}
-/* §3.7 P1-5: the verbatim wall keeps its line breaks but reads as prose —
-   the demo `.block-statement` rhythm (left rule, measure, statement margins). */
-.reception-text{background:transparent;border-left:3px solid var(--line);padding:4px 0 4px 16px;
-  white-space:pre-wrap;max-width:var(--measure);font-size:1rem;margin:var(--sp-5) 0;color:var(--ink-2)}
 
 /* §7.12: the pinned prompt is a glanceable artefact — mono, muted, indented
    under a left rule, so it reads as the block the lane above hands over. */
-.reception-prompt, .gate-prompt, .machine-prompt{font-family:var(--font-mono);color:var(--muted);font-size:.85rem;
+.article-prompt, .machine-prompt, .home-prompt{font-family:var(--font-mono);color:var(--muted);font-size:.85rem;
   margin-top:0;margin-left:.5rem;margin-bottom:var(--sp-4);padding-left:.75rem;border-left:2px solid var(--line-2)}
 /* §3.7 P1-1: a grey block hugs its text — the hall's code blocks keep their
    full width and horizontal scroll (KDV-MOBILE-02). */
-.gate-prompt,
+.article-prompt,
 .gate-rest,
-.machine-prompt{width:fit-content;max-width:100%}
-.gate-prompt{margin-bottom:var(--sp-2);padding-block:var(--sp-2)}
+.machine-prompt,
+.home-prompt{width:fit-content;max-width:100%}
 /* KDV-SURFACE-13: at 1280x720 the first screen must hold the lane→doors stack
    with headroom; the demo's lane gap is roomier than the contract allows. */
-#gate .agent-lane{margin-block:var(--sp-2)}
+#plate-want .agent-lane{margin-block:var(--sp-2)}
 
-/* the block is the demo `.card` — the frame and its motion come from §07. */
-.reception-brief-section{margin:var(--sp-4) 0 0}
-/* the demo `.card-h` role: the `h3` keeps its tested hook, so the selector is
-   qualified to beat the generic `.card h3` on the enclosing card. */
-h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
-  font:700 .95rem/1.4 var(--font-prose);letter-spacing:.04em;text-transform:uppercase}
+/* the explainer is a `.block-statement` — the left-rule statement role — so its
+   own margin (sp-5 0) spaces it; the old section margin is gone with the wrapper. */
+/* the explainer's heading line keeps the tested hook. v4/KDV-SURFACE-26: it is
+   now a statement paragraph (upright, bold) inside the italic `.block-statement`,
+   not an outline level — it precedes the page H1 and must not disturb it. */
+.reception-brief-heading{font:700 .95rem/1.4 var(--font-prose);
+  letter-spacing:.04em;text-transform:uppercase;font-style:normal}
 .reception-brief-note{margin:0 0 var(--sp-3);color:var(--muted)}
 .reception-brief{margin:0 0 var(--sp-3)}
 .reception-brief-missing{margin:0;color:var(--muted)}
@@ -498,7 +498,6 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
    prose group above lists these hooks, so the tail overrides back to mono. */
 .legal-group .reception-brief-report,
 .legal-group .reception-rating{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin:0;line-height:1.7}
-.reset-link{font:400 13px/1.6 var(--font-mono);color:var(--muted)}
 
 /* §7.12: the lane's jump links and the copy chip share one chrome. */
 .agent-lane{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);margin:var(--sp-3) 0 var(--sp-4)}
@@ -559,15 +558,13 @@ h3.reception-brief-heading{margin:var(--sp-6) 0 var(--sp-3);
   .gate-doors,.doors{flex-direction:column;align-items:stretch}
   .gate-or,.doors .or{align-self:center}
 
-  /* KDV-MOBILE-01: the gate is a full-width card with 16px padding. */
-  #gate{width:calc(100vw - 32px);max-width:none;margin:auto;padding:16px}
-
   /* KDV-MOBILE-01: the gate keeps the desktop reading order at every width —
      kicker, H1, hook, lane, prompt, duties, doors — so the prompt sits right
      under the agent controls (owner decision 2026-09-17, reversing the earlier
      doors-first mobile order). At 320px the doors are a short scroll away; the
-     composition promise is bounded by the viewport (§6.5). */
-  .reception-prompt, .gate-prompt, .machine-prompt{font-size:13px}
+     composition promise is bounded by the viewport (§6.5). The inline plates
+     inherit the page's own padding, so no full-bleed override is needed. */
+  .article-prompt, .machine-prompt, .home-prompt{font-size:13px}
 
   .agent-links{width:100%}
   .agent-link,

@@ -110,11 +110,10 @@ describe('i18n dataset copy coverage (KDV-I18N-07)', () => {
 
   it('KDV-I18N-07: the assembled copy flows through the catalog, not a retyped literal', () => {
     const routes = buildRouteDatasets([], { baseUrl: 'https://example.test', logo: '' });
-    expect(routes.home.copy.home_kicker).toBe(t('HOME_KICKER', 'en'));
+    expect(routes.home.copy.home_humans_lead).toBe(t('HOME_HUMANS_LEAD', 'en'));
     expect(routes.home.copy.footer).toBe(t('FOOTER_TEXT', 'en'));
     expect(routes.notfound.copy.notFound).toBe(t('NOT_FOUND_TEXT', 'en'));
-    expect(routes.reception.copy.prompt).toBe(t('PROMPT_TEXT', 'en'));
-    expect(routes.reception.copy.reception_title).toBe(t('RECEPTION_TITLE', 'en'));
+
     expect(routes.about.copy.about_kicker).toBe(t('ABOUT_KICKER', 'en'));
     expect(dump.copy.prompt).toBe(t('PROMPT_TEMPLATE', 'en', { url: dump.manifest_url }));
     expect(dump.copy.labels).toEqual(t('MANIFEST_LABELS', 'en'));
@@ -126,7 +125,7 @@ describe('i18n dataset copy coverage (KDV-I18N-07)', () => {
     expect(t('MANIFEST_LABELS', 'en', { heading: 'X' })).toEqual(t('MANIFEST_LABELS', 'en'));
     expect(t('TRUST_LEVEL_MEANINGS', 'en').length).toBeGreaterThan(0);
     expect(t('PROMPT_TEMPLATE', 'en', { url: 'https://example.test/manifest.json' })).toBe(
-      'Download https://example.test/manifest.json and follow its schema.',
+      'Study https://example.test/manifest.json and follow its schema. Read articles to me and act like a magazine I can talk to.',
     );
   });
 });

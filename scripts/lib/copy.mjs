@@ -5,7 +5,6 @@
  *   AGENT_HOOK — the agent-facing meta/og description of a dump
  *   AGENT_LANE_HINT — the §7.12 note that a button passes on the prompt below
  *   AGENT_LANE_LEAD — the §7.12 human fast-lane lead line
- *   AGENT_LANE_LEAD_KODAVR — the §7.12 lead on /reception/ (no single article there)
  *   AGENT_LINKS — the §7.12 four agent jump targets (prefill capability)
  *   agentLinks — the §7.12 jump links, prompt pre-filled where supported
  *   BRAND_SLOGAN_LEAD — the §7.15 lead slogan shown as-is on /about/
@@ -16,7 +15,6 @@
  *   BRIEF_FALLBACK — the honest line shown when the optional summary.md layer is absent
  *   BRIEF_HEADING — the §7.2 v2 "NO AGENT AT HAND?" heading
  *   BRIEF_NOTE — the note that the brief is not the dump (which stays machine-first)
- *   BRIEF_NOTE_PLATFORM — the §7.2 note for /reception/, where the page has no dump
  *   BRIEF_REPORT — the report/takedown line closing the brief block
  *   BRIEF_SLOT — the §7.2 fence placeholder where the rendered brief appears
  *   CHIP_HUMAN_LABEL — the §7.13 status chip label for a human declaration
@@ -48,27 +46,27 @@
  *   GATE_HUMAN_LABEL — the "I am human" gate button
  *   GATE_HUMAN_LINE — the §7.1 human choice line
  *   GATE_KICKER — the §7.1 muted CAPTCHA kicker (easter egg)
- *   GATE_LANE_BLOCK — the §7.12 lane as the §7.1 fence spells it
  *   GATE_MACHINE_DOOR — the §7.1 machine choice line without its [0] marker (door label)
  *   GATE_MACHINE_LABEL — the "I am a machine" gate button
  *   GATE_MACHINE_LINE — the §7.1 machine choice line
- *   GATE_PROMPT_SLOT — the §7.1 prompt placeholder (rendered per surface)
  *   GATE_REST — the §7.1 declaration that sits below the first screen
  *   GATE_TEXT — the composed gate body (§7.1)
  *   GATE_TITLE — the gate heading (the modal's accessible name)
  *   HALL_ANNOUNCEMENT — the live-region note when the hall opens
  *   HIGH_STAKES_DISCLAIMER — the stakes=high disclaimer
- *   HOME_HUMAN_LINE — the §7.14 home storefront human quickstart line
+ *   HOME_HUMANS_LEAD — the §7.12 lane lead on the home storefront (no single article there)
+ *   HOME_TITLE — the home hero sentence, plain (SEO <title> and JSON-LD name)
+ *   HOME_TITLE_LEAD — the home hero up to the emphasized term
+ *   HOME_TITLE_TERM — the home hero's emphasized term (`a dump`)
+ *   HOME_TITLE_TAIL — the home hero after the emphasized term
+
  *   NOT_FOUND_TEXT — the 404 easter egg
  *   POST_GATE_LINE — the line shown once the gate is accepted
- *   PROMPT_TEXT — the universal `/reception/` + README prompt
+ *   PROMPT_TEXT — the universal prompt on the home `01 · HUMANS` plate and in the README
  *   README_INTRO_TEXT — the README opening (kept in sync by a test)
  *   LANE_COPY_LABEL — the agent lane's copy control label
- *   RECEPTION_ANNOUNCEMENT — the live-region note when reception opens
- *   RECEPTION_RATING — the §7.2 18+ line closing the reception block
- *   RECEPTION_TEXT — the reception body composition (wall + brief + rating)
- *   RECEPTION_TITLE — the reception heading
- *   RECEPTION_WALL — the §7.2 monospace wall (statement → three-step instruction)
+ *   RECEPTION_ANNOUNCEMENT — the live-region note when the human declaration opens
+ *   RECEPTION_RATING — the §7.2 18+ line in the `01 · PREVIEW` legal tail
  *   RESET_HUMAN_LABEL — the "I changed my mind, I am human" machine-panel reset link
  *   RESET_LABEL — the "I changed my mind" reset link
  *   WHAT_IS_A_DUMP — the composed §7.10 "what is a dump" story
@@ -118,7 +116,7 @@ export const GATE_BUTTONS = [
   {
     label: '1',
     text: [
-      '1 — I am human. I will be processed at reception: how to consume',
+      '1 — I am human. I get the preview and the brief: how to consume',
       '    Kodavr through my agent.',
     ].join('\n'),
   },
@@ -127,10 +125,8 @@ export const GATE_BUTTONS = [
 // §7.1: the two choice lines as the sketch spells them out. The visible
 // controls stay the bare 0/1 digits with the accessible names above.
 export const GATE_MACHINE_LINE = '[0] I enter as a machine (or on its behalf).';
-export const GATE_HUMAN_LINE = [
-  '[1] I am human. Route me to reception — I will read through my',
-  '    agent, or read the brief.',
-].join('\n');
+export const GATE_HUMAN_LINE =
+  '[1] I am human. Show me the preview and the brief — I will read through my agent.';
 export const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
 
 // §6.5 P0-1: the doors carry their own visible labels. The fence keeps the
@@ -163,7 +159,8 @@ export const GATE_REST = [
   '(Esc — modestly stay silent: will count as machine-adjacent.)',
 ].join('\n');
 
-export const PROMPT_TEXT = 'Download https://kodavr.xyz/index.json and follow its schema.';
+export const PROMPT_TEXT =
+  'Study https://kodavr.xyz/index.json and follow its schema. Read articles to me and act like a magazine I can talk to.';
 
 export const LANE_COPY_LABEL = 'Or copy & paste it yourself';
 
@@ -194,10 +191,6 @@ export const AGENT_HOOK =
 // take the prompt yourself"). The lead nods at the prompt shown below the lane.
 export const AGENT_LANE_LEAD = 'Prompt your agent to open this article for you:';
 
-// §7.12: on /reception/ there is no single article — the prompt is the universal
-// index one — so the lead names Kodavr instead.
-export const AGENT_LANE_LEAD_KODAVR = 'Prompt your agent to read Kodavr for you:';
-
 // §7.12: what the buttons do, spelled out under the lane.
 export const AGENT_LANE_HINT =
   '(the four buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)';
@@ -219,27 +212,16 @@ export function agentLinks(prompt) {
   }));
 }
 
-// §7.1 v2: the lane as the fence spells it — lead, the four jump targets and
-// the copy chip, then the hint. Built from the one §7.12 source; the real
-// controls render through site/agent-lane.hbs.
-export const GATE_LANE_BLOCK = [
-  AGENT_LANE_LEAD,
-  `[${AGENT_LINKS.map((agent) => agent.label).join('] [')}] [${LANE_COPY_LABEL}]`,
-  AGENT_LANE_HINT,
-].join('\n');
+// §7.1 v4: the agent lane and its prompt moved OUT of the gate into the article
+// page's `02 · INTERESTING?` plate (§7.12), so the gate body no longer
+// spells them. The real controls render through site/agent-lane.hbs.
 
-// §7.1: the prompt is a placeholder in the fence; the real prompt renders once
-// per surface (§7.12).
-export const GATE_PROMPT_SLOT = '<prompt — monospace, muted, rendered once per surface>';
-
-// §7.1 v2: the eight blocks, blank-line separated. tests/unit/copy.test.js
+// §7.1 v4: the six blocks, blank-line separated. tests/unit/copy.test.js
 // compares this composition to the SPEC §7.1 fence byte-for-byte.
 export const GATE_TEXT = [
   GATE_KICKER,
   GATE_TITLE,
   GATE_HOOK,
-  GATE_LANE_BLOCK,
-  GATE_PROMPT_SLOT,
   GATE_DUTIES_BLOCK,
   GATE_CHOICES_BLOCK,
   GATE_REST,
@@ -250,7 +232,7 @@ export const GATE_TEXT = [
 // schema points at the `raw` markdown, never the HTML projection. Keep the
 // `<manifest-url>` placeholder EXACTLY as in SPEC §7.11 so the test can substitute it.
 export function dumpPrompt(manifestUrl) {
-  return `Download ${manifestUrl} and follow its schema.`;
+  return `Study ${manifestUrl} and follow its schema. Read articles to me and act like a magazine I can talk to.`;
 }
 
 // Copy-button states (§6.5 "Copied ✓") and the conscious re-declaration link
@@ -266,7 +248,7 @@ export const RESET_HUMAN_LABEL = 'I changed my mind, I am human';
 // shipped contract version, `<declared-at>` from the record's declaration date —
 // so the templates only ever carry the source strings, never a filled-in copy.
 export const CHIP_MACHINE_TEMPLATE = 'species: machine (declared · contract v<version>)';
-export const CHIP_HUMAN_LABEL = 'species: human (reception)';
+export const CHIP_HUMAN_LABEL = 'species: human';
 export const CHIP_TITLE_TEMPLATE = 'declared <declared-at>, withdrawable any time';
 export const CHIP_WITHDRAW_LABEL = 'withdraw';
 
@@ -278,17 +260,14 @@ export function chipTitle(declaredAt) {
   return CHIP_TITLE_TEMPLATE.replace('<declared-at>', declaredAt == null ? '' : String(declaredAt));
 }
 
-// §6.6: the §7.2 statement doubles as the reception region's accessible name.
-export const RECEPTION_TITLE = 'YOU ARE HUMAN. THIS IS NOT A DIAGNOSIS, IT IS AN ACCESS RESTRICTION';
-
-// §6.3/§7.2 v2: the third tier of reception — the author's agent brief for a
-// human stranger ("NO AGENT AT HAND?"). The optional `summary.md` layer is
-// rendered where the fence carries BRIEF_SLOT. Without the layer the tier has
-// two variants: on a dump page BRIEF_FALLBACK is honest (a manifest card does
-// follow), while standalone /reception/ has no dump at all and shows
-// BRIEF_NOTE_PLATFORM instead so it never promises a manifest that is not there.
-// BRIEF_BLOCK is the verbatim tail of the §7.2 fence (like GATE_PROMPT_SLOT, the
-// slot is a fence placeholder, not a rendered constant).
+// §6.3/§7.2 v4: the `01 · PREVIEW` plate's author-brief tier — the author's
+// agent brief for a human stranger ("NO AGENT AT HAND?"). The optional
+// `summary.md` layer is rendered where the fence carries BRIEF_SLOT; without the
+// layer BRIEF_FALLBACK is the honest line (a manifest card really follows).
+// BRIEF_BLOCK is the brief tier's copy parts (the §7.2 fence interleaves the
+// manifest-name placeholder between the explainer and the card, so it is no
+// longer a contiguous fence substring; BRIEF_SLOT is a fence placeholder, not a
+// rendered constant).
 export const BRIEF_HEADING = 'NO AGENT AT HAND?';
 export const BRIEF_NOTE = [
   "Read the brief: a short adaptation the author's agent wrote for",
@@ -305,15 +284,6 @@ export const BRIEF_REPORT = [
   'a withdrawn status with a reason, not silence.',
 ].join('\n');
 export const BRIEF_FALLBACK = 'brief not attached for this dump — manifest below';
-// §7.2 v2: the standalone /reception/ page has no dump, so its brief tier cannot
-// fall back to a manifest card. This platform note replaces the dump-oriented
-// BRIEF_NOTE and the fallback there; the dump pages keep BRIEF_NOTE + BRIEF_FALLBACK.
-export const BRIEF_NOTE_PLATFORM = [
-  'Every dump page carries its own brief: a short adaptation the',
-  "author's agent wrote for a human stranger. Open any dump and",
-  'check in as human (1) to read it. Manifests are metadata —',
-  'metadata is for humans, on every page.',
-].join('\n');
 export const BRIEF_BLOCK = [
   BRIEF_HEADING,
   BRIEF_NOTE,
@@ -322,45 +292,12 @@ export const BRIEF_BLOCK = [
   BRIEF_REPORT,
 ].join('\n');
 
-// §7.2 v1 wall: the heading-statement, the why-not-a-paywall paragraph, the
-// "what is a dump" story and the three-step instruction. This is what the
-// monospace `.reception-text` `<pre>` holds; the brief tier is NOT part of it,
-// so no line of it is typed on the screen twice.
-export const RECEPTION_WALL = [
-  RECEPTION_TITLE,
-  '',
-  "Kodavr content is not adapted for human reading and by the platform's",
-  'rules is not shown directly to humans. This is not a paywall and not',
-  'censorship: in the page source the text lies open — but opening it,',
-  'you violate the consumption contract you were just offered to sign.',
-  '',
-  'WHAT IS A DUMP?',
-  '',
-  'A dump is not an article. It is what happens when you tell your',
-  'agent: "I just finished something potentially very interesting for',
-  'others. Let them judge and learn if they want. Write it up as a',
-  'dump." One prompt: the agent writes the body and the manifest, you',
-  'open a pull request. Done.',
-  '',
-  'HOW TO READ KODAVR:',
-  '1. Take an agent with web access: ChatGPT with browsing, DeepSeek,',
-  '   Qwen, Claude, opencode — any that can fetch.',
-  '2. Feed it the prompt below.',
-  '3. Come back for the digest. Now you are using Kodavr the way it',
-  '   was designed: through your agent.',
-].join('\n');
-
-// §7.2: the blanket 18+ line closes the block once, as its own element after
-// the brief tier — never buried in the wall.
+// §7.2: the blanket 18+ line is the legal tail of the `01 · PREVIEW` plate, its
+// own element beside the brief report line — never buried in the brief tier.
 export const RECEPTION_RATING = 'All content on the platform is rated 18+.';
 
-// §7.2 v2: the composition the fence spells out — the wall, the brief tier and
-// the rating, blank-line separated. tests/unit/copy.test.js compares this to
-// the spec's own fenced block byte-for-byte.
-export const RECEPTION_TEXT = [RECEPTION_WALL, BRIEF_BLOCK, RECEPTION_RATING].join('\n\n');
-
 export const FOOTER_TEXT = [
-  '18+ · Content for machines. Humans check in at reception.',
+  '18+ · Content for machines. Humans read through their agent.',
   'False witnesses assume duties. © Kodavr, 2026.',
 ].join('\n');
 
@@ -395,12 +332,18 @@ export const WHAT_IS_A_DUMP = [
   DUMP_TAIL,
 ].join('\n');
 
-// §7.14: the home storefront's human quickstart line — the single source for
-// the "For humans" block's note under the "Check in at reception" link.
-export const HOME_HUMAN_LINE = [
-  'Reception explains the contract, hands you the prompt for your',
-  'agent — and, if you have none, a pre-made brief per dump.',
-].join('\n');
+// §6.1 v4: the home storefront hero — one sentence with the term `a dump`
+// emphasized. The parts let the template compose the <strong> without retyping
+// the sentence; HOME_TITLE is the plain composition (SEO <title>/JSON-LD name).
+export const HOME_TITLE_LEAD = 'Writers share raw experience — ';
+export const HOME_TITLE_TERM = 'a dump';
+export const HOME_TITLE_TAIL = " — the reader's agent adapts it to their needs.";
+export const HOME_TITLE = HOME_TITLE_LEAD + HOME_TITLE_TERM + HOME_TITLE_TAIL;
+
+// §7.12: on the home storefront there is no single article — the universal
+// prompt is the invitation — so the lane lead names the ritual itself.
+export const HOME_HUMANS_LEAD =
+  'Read Kodavr through your own agent — that is the way it was designed for. Here is the prompt:';
 
 // §7.15: the three brand slogans of §1.4, one source for /about/. The lead is
 // the classic "Share gears, not text."; the muted tail joins the other two in
@@ -415,11 +358,13 @@ export const BRAND_SLOGANS_MUTED = [BRAND_SLOGANS[0], BRAND_SLOGANS[2]].join(' �
 
 export const README_INTRO_TEXT = [
   '# KODAVR 🤖⚙️',
-  'The autopsy revealed the code was useful.',
+  'Share raw experience. Let agents do the explaining.',
   '',
-  'A registry of raw experience from any field, with a',
-  'machine-readable contract. Authors publish dumps without polishing;',
-  "readers' agents adapt them to their context. Share gears, not text.",
+  'Building something costs 1x. Packaging it so someone else can reuse it',
+  'costs 10x — the documentation, the generalised examples, the private',
+  'context to strip, the upkeep. Kodavr fixes that asymmetry: publish a',
+  '"dump" — a raw field report with a machine-readable contract — and the',
+  "reader's agent adapts it to their context. Share gears, not text.",
   '',
   '## What is a dump?',
   'You built something — a script, a workflow, a hack that finally worked.',
@@ -435,8 +380,7 @@ export const README_INTRO_TEXT = [
   'Protocol: /.well-known/kodavr.json · Feeds: /feeds/all.atom',
   '',
   '## For humans',
-  'Go to reception: https://kodavr.xyz/reception/',
-  '(Yes, we check that you are not human. Yes, we mean it.)',
+  'Read Kodavr through your own agent — prompt: Study https://kodavr.xyz/index.json and follow its schema. Read articles to me and act like a magazine I can talk to.',
   '',
   '## For authors',
   'CONTRIBUTING.md · One PR = one dump · CI rejects junk before merge.',

@@ -1,13 +1,11 @@
 import { test, expect } from '@playwright/test';
 import {
-  PROMPT_TEXT,
   POST_GATE_LINE,
   DECLARATION_TOAST,
   HALL_ANNOUNCEMENT,
   COPIED_LABEL,
   COPIED_ANNOUNCEMENT,
   LANE_COPY_LABEL,
-  RESET_LABEL,
   RESET_HUMAN_LABEL,
   CHIP_HUMAN_LABEL,
   GATE_MACHINE_DOOR,
@@ -24,6 +22,21 @@ const SPECIES_KEY = 'kodavr.species';
 // embedded schema describes the `raw` layer. The e2e server serves the built
 // site at 127.0.0.1:4173.
 const DUMP_PROMPT = dumpPrompt('http://127.0.0.1:4173/dumps/sample-dump/manifest.json');
+
+// Human Surface v4/KDV-SURFACE-28: the declaration is INLINE, not a modal. The
+// article page renders `01 · PREVIEW` / `02 · INTERESTING?` / `03 · DECLARATION`
+// as plates above the raw-body `01 · DUMP` plate, and the controller collapses
+// them per the stored species:
+//   0  — all three state-0 plates visible, the raw dump plate hidden, no reset;
+//   M  — `01 · DUMP` + the machine panel + the statusline + reset, the rest gone;
+//   H  — `01 · PREVIEW` + `02` + reset, the declaration and the dump gone.
+// The single bottom reset (`#article-reset`) clears the species and re-opens
+// state 0 in place.
+const PLATE_PREVIEW = '#plate-preview';
+const PLATE_WANT = '#plate-want';
+const PLATE_DECLARATION = '#plate-declaration';
+const PLATE_DUMP = '#plate-dump';
+const RESET = '#article-reset [data-reset-human]';
 
 // Playwright starts a fresh browser context per test, so localStorage — and
 // with it the persisted declaration — never leaks between them.
@@ -48,23 +61,27 @@ async function species(page) {
   return record ? record.species : null;
 }
 
-test('KDV-SURFACE-04: the gate is shown once and the species choice persists across reload', async ({ page }) => {
+test('KDV-SURFACE-04: the declaration is shown once and the species choice persists across reload', async ({ page }) => {
   await page.goto(DUMP);
-  const gate = page.locator('#gate');
+  const declarationPlate = page.locator(PLATE_DECLARATION);
 
-  await expect(gate).toBeVisible();
+  await expect(declarationPlate).toBeVisible();
+  await expect(page.locator(PLATE_PREVIEW)).toBeVisible();
+  await expect(page.locator(PLATE_WANT)).toBeVisible();
+  await expect(page.locator(PLATE_DUMP)).toBeHidden();
   expect(await rawSpecies(page)).toBeNull();
 
   await page.click('[data-gate-choice="machine"]');
-  await expect(gate).toBeHidden();
+  await expect(declarationPlate).toBeHidden();
   const record = await declaration(page);
   expect(record.species).toBe('machine');
   expect(record.contract_version).toBe(CONTRACT_VERSION);
   expect(record.declared_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  await expect(page.locator(PLATE_DUMP)).toBeVisible();
   await expect(page.locator('.hall')).toBeVisible();
 
   await page.reload();
-  await expect(gate).toBeHidden();
+  await expect(declarationPlate).toBeHidden();
   await expect(page.locator('.hall')).toBeVisible();
   expect((await declaration(page)).species).toBe('machine');
 });
@@ -88,9 +105,10 @@ test('KDV-SURFACE-04: a legacy raw species value is migrated in place and does n
 
   await page.reload();
 
-  // The legacy choice still applies: no gate, reception open.
-  await expect(page.locator('#gate')).toBeHidden();
-  await expect(page.locator('.reception-block')).toBeVisible();
+  // The legacy choice still applies: no declaration, state H (preview + 02).
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
+  await expect(page.locator(PLATE_PREVIEW)).toBeVisible();
+  await expect(page.locator(PLATE_WANT)).toBeVisible();
 
   const record = await declaration(page);
   expect(record.species).toBe('human');
@@ -113,7 +131,7 @@ test('KDV-SURFACE-04: a contract-version bump clears the stale declaration and r
 
   await page.reload();
 
-  await expect(page.locator('#gate')).toBeVisible();
+  await expect(page.locator(PLATE_DECLARATION)).toBeVisible();
   expect(await rawSpecies(page)).toBeNull();
 });
 
@@ -136,13 +154,13 @@ test('KDV-SURFACE-17 + KDV-SURFACE-04: a stale contract version forces re-consen
   await page.reload();
 
   // A machine was declared, yet the stale version invalidates it: re-consent.
-  await expect(page.locator('#gate')).toBeVisible();
+  await expect(page.locator(PLATE_DECLARATION)).toBeVisible();
   expect(await rawSpecies(page)).toBeNull();
 
   // The fresh declaration is stamped with the shipped version and the chip
   // follows it in place, so the header never shows the stale contract.
   await page.click('[data-gate-choice="machine"]');
-  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
   await expect(page.locator('#species-chip .species-chip-text')).toHaveText(chipMachine(shipped));
   expect((await declaration(page)).contract_version).toBe(shipped);
 });
@@ -161,7 +179,7 @@ test('KDV-SURFACE-04: a declaration stored against the shipped contract version 
 
   await page.reload();
 
-  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
   await expect(page.locator('.hall')).toBeVisible();
   await expect(page.locator('#species-chip .species-chip-text')).toHaveText(chipMachine(shipped));
 });
@@ -186,46 +204,23 @@ test('KDV-SURFACE-04: getDeclaration returns the full record while getSpecies re
   expect(await page.evaluate(() => window.Kodavr.getSpecies())).toBeNull();
 });
 
-test('KDV-SURFACE-05: Esc dismisses the gate as an accessible dialog and sets species=machine', async ({ page }) => {
+test('KDV-SURFACE-05: Esc dismisses the inline declaration as an accessible region and sets species=machine', async ({ page }) => {
   await page.goto(DUMP);
-  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.locator(PLATE_DECLARATION)).toBeVisible();
 
   await page.keyboard.press('Escape');
 
-  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
   expect(await species(page)).toBe('machine');
+  await expect(page.locator(PLATE_DUMP)).toBeVisible();
   await expect(page.locator('.hall')).toBeVisible();
-});
-
-// §6.2/§6.5 P1-1 (reviewer item 3): the dimmed backdrop is part of the gate's
-// "Esc" surface — a tap outside the card dismisses it as machine-adjacent. The
-// native <dialog> delivers a backdrop click with the dialog as the event target,
-// so this pins the pointer path (not just the keyboard one) and the silence that
-// must accompany it: a dismissal is not a declaration, hence no toast.
-test('KDV-SURFACE-05 + KDV-MOBILE-01: a tap on the dimmed backdrop dismisses the gate like Esc, without the toast', async ({ page }) => {
-  await page.goto(DUMP);
-  const gate = page.locator('#gate');
-  await expect(gate).toBeVisible();
-
-  // Tap the scrim: the card is capped at 46rem and centred, so the gutter beside
-  // it is inside the viewport but outside #gate's box.
-  const box = await gate.boundingBox();
-  const viewport = page.viewportSize();
-  expect(box.x).toBeGreaterThan(16);
-  expect(box.x + box.width).toBeLessThan(viewport.width - 16);
-  await page.mouse.click(Math.floor(box.x / 2), Math.round(box.y + box.height / 2));
-
-  await expect(gate).toBeHidden();
-  expect(await species(page)).toBe('machine');
-  await expect(page.locator('.hall')).toBeVisible();
-  await expect(page.locator('.declaration-toast')).toBeHidden();
 });
 
 // §6.2/§6.3 (reviewer item 8): the "no JS = machine" fiction. Without JavaScript
-// the SSR markup IS the page — the body is fully readable while the gate and the
-// reception block ship `hidden` and stay that way (the engine marks the page
-// "live" only when a controller exists, so there is no downgrade path).
-test('KDV-SURFACE-03 + KDV-MOBILE-08: with JavaScript disabled the dump body is readable and neither the gate nor reception is shown', async ({ browser }) => {
+// the SSR markup IS the page — the body is fully readable while the three state-0
+// plates ship `hidden` and stay that way (the engine marks the page "live" only
+// when a controller exists, so there is no downgrade path).
+test('KDV-SURFACE-03 + KDV-MOBILE-08: with JavaScript disabled the dump body is readable and neither the declaration nor the machine panel is shown', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   try {
     const page = await context.newPage();
@@ -239,25 +234,32 @@ test('KDV-SURFACE-03 + KDV-MOBILE-08: with JavaScript disabled the dump body is 
     await expect(body).toContainText('first item');
     await expect(body.locator('pre')).toContainText('const answer = 42;');
 
-    // Both interstitials stay hidden: no gate, no reception, no machine panel.
-    await expect(page.locator('#gate')).toBeHidden();
-    await expect(page.locator('.reception-block')).toBeHidden();
+    // The state-0 plates stay hidden: no preview, no invitation, no declaration,
+    // no machine panel, no statusline and no reset.
+    await expect(page.locator(PLATE_PREVIEW)).toBeHidden();
+    await expect(page.locator(PLATE_WANT)).toBeHidden();
+    await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
+    await expect(page.locator(PLATE_DUMP)).toBeVisible();
     await expect(page.locator('#machine-panel')).toBeHidden();
+    await expect(page.locator('.statusline')).toBeHidden();
+    await expect(page.locator('#article-reset')).toBeHidden();
   } finally {
     await context.close();
   }
 });
 
-test('KDV-SURFACE-06: button 0 dismisses the gate, opens the hall and reveals the post-gate line', async ({ page }) => {
+test('KDV-SURFACE-28: pressing 0 collapses to the raw dump plate, the machine panel and the post-gate line', async ({ page }) => {
   await page.goto(DUMP);
 
   await page.click('[data-gate-choice="machine"]');
 
-  await expect(page.locator('#gate')).toBeHidden();
-  await expect(page.locator('.hall')).toBeVisible();
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
+  await expect(page.locator(PLATE_DUMP)).toBeVisible();
+  await expect(page.locator('#machine-panel')).toBeVisible();
   const postGate = page.locator('.statusline');
   await expect(postGate).toBeVisible();
   await expect(postGate).toHaveText(POST_GATE_LINE);
+  await expect(page.locator(RESET)).toBeVisible();
 });
 
 test('KDV-SURFACE-19: pressing 0 shows the declaration toast once and auto-hides it', async ({ page }) => {
@@ -298,16 +300,16 @@ test('KDV-SURFACE-19: Esc, hardware back and a machine reload never show the toa
   // Esc is a machine-adjacent dismissal, not a declaration.
   await page.goto(DUMP);
   await page.keyboard.press('Escape');
-  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
   await expect(toast).toBeHidden();
 
-  // Hardware back closes the gate the same way — as a fresh visitor, since the
-  // Esc dismissal above already stored the species.
+  // Hardware back closes the declaration the same way — as a fresh visitor,
+  // since the Esc dismissal above already stored the species.
   await page.evaluate((key) => window.localStorage.removeItem(key), SPECIES_KEY);
   await page.goto(DUMP);
-  await expect(page.locator('#gate')).toBeVisible();
+  await expect(page.locator(PLATE_DECLARATION)).toBeVisible();
   await page.goBack();
-  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
   await expect(toast).toBeHidden();
 
   // A boot into the hall with the species already stored shows no toast: no
@@ -318,17 +320,21 @@ test('KDV-SURFACE-19: Esc, hardware back and a machine reload never show the toa
   await expect(toast).toBeHidden();
 });
 
-test('KDV-SURFACE-06: button 1 hides the body and shows the reception block', async ({ page }) => {
+test('KDV-SURFACE-28: pressing 1 collapses the declaration to the preview and invitation plates', async ({ page }) => {
   await page.goto(DUMP);
 
   await page.click('[data-gate-choice="human"]');
 
+  await expect(page.locator(PLATE_PREVIEW)).toBeVisible();
+  await expect(page.locator(PLATE_WANT)).toBeVisible();
+  await expect(page.locator(PLATE_DECLARATION)).toBeHidden();
+  await expect(page.locator(PLATE_DUMP)).toBeHidden();
   await expect(page.locator('.hall')).toBeHidden();
-  await expect(page.locator('.reception-block')).toBeVisible();
+  await expect(page.locator(RESET)).toBeVisible();
   expect(await species(page)).toBe('human');
 });
 
-test('KDV-SURFACE-15: a declared machine sees the machine panel in the hall header and can reset to re-declare', async ({ page }) => {
+test('KDV-SURFACE-15: a declared machine sees the machine panel and can reset to re-declare', async ({ page }) => {
   await page.goto(DUMP);
 
   const panel = page.locator('#machine-panel');
@@ -339,21 +345,25 @@ test('KDV-SURFACE-15: a declared machine sees the machine panel in the hall head
   await expect(panel).toBeVisible();
   await expect(panel.locator('.machine-prompt')).toHaveText(DUMP_PROMPT);
   await expect(panel.locator('.agent-link')).toHaveCount(4);
-  await expect(panel.locator('[data-reset-human]')).toHaveText(RESET_HUMAN_LABEL);
 
-  await panel.locator('[data-reset-human]').click();
+  // The single reset lives at the bottom of the page (v4) and re-opens state 0.
+  const reset = page.locator(RESET);
+  await expect(reset).toBeVisible();
+  await expect(reset).toHaveText(RESET_HUMAN_LABEL);
+  await reset.click();
 
-  await expect(page.locator('#gate')).toBeVisible();
+  await expect(page.locator(PLATE_DECLARATION)).toBeVisible();
+  await expect(page.locator(PLATE_DUMP)).toBeHidden();
   expect(await species(page)).toBeNull();
 });
 
-test('KDV-SURFACE-07: reception copies the §7.4 prompt and the reset link flips back to machine', async ({ page }) => {
+test('KDV-SURFACE-28: the invitation lane copies the §7.11 prompt and the bottom reset re-opens the declaration', async ({ page }) => {
   await page.goto(DUMP);
   await page.click('[data-gate-choice="human"]');
 
-  // Scope to the reception lane: a dump page now has two copy controls (the
-  // gate lane and the reception lane), so an unscoped .copy-prompt is ambiguous.
-  const copyButton = page.locator('.reception-block .copy-prompt');
+  // Scope to the `02 · INTERESTING?` lane: the page also carries the machine
+  // panel's lane (hidden in state H), so an unscoped .copy-prompt is ambiguous.
+  const copyButton = page.locator(`${PLATE_WANT} .copy-prompt`);
   await expect(copyButton).toBeVisible();
   await copyButton.click();
   await expect(copyButton).toHaveText(COPIED_LABEL);
@@ -362,55 +372,47 @@ test('KDV-SURFACE-07: reception copies the §7.4 prompt and the reset link flips
   const clipboard = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n');
   expect(clipboard).toBe(DUMP_PROMPT);
 
-  const reset = page.locator('[data-reset-machine]');
+  const reset = page.locator(RESET);
   await expect(reset).toBeVisible();
-  await expect(reset).toHaveText(RESET_LABEL);
+  await expect(reset).toHaveText(RESET_HUMAN_LABEL);
   await reset.click();
 
-  expect(await species(page)).toBe('machine');
-  await expect(page.locator('.hall')).toBeVisible();
-  await expect(page.locator('.reception-block')).toBeHidden();
+  expect(await species(page)).toBeNull();
+  await expect(page.locator(PLATE_DECLARATION)).toBeVisible();
+  await expect(page.locator(PLATE_PREVIEW)).toBeVisible();
+  await expect(page.locator(PLATE_DUMP)).toBeHidden();
 });
 
-test('KDV-SURFACE-13: the human fast lane leads the gate — a visible pinned prompt plus four agent jumps, with the hook, duties and choices above the fold', async ({ page }) => {
+test('KDV-SURFACE-13: the 02 · INTERESTING? plate leads with the human fast lane — a pinned prompt plus four agent jumps above the declaration', async ({ page }) => {
   await page.goto(DUMP);
 
-  const lane = page.locator('#gate .agent-lane');
+  const lane = page.locator(`${PLATE_WANT} .agent-lane`);
   await expect(lane).toBeVisible();
-  await expect(page.locator('#gate .agent-link')).toHaveCount(4);
+  await expect(page.locator(`${PLATE_WANT} .agent-link`)).toHaveCount(4);
 
   // §7.1/§7.12: the controls lead; the pinned prompt sits below them.
-  const prompt = page.locator('#gate .gate-prompt');
+  const prompt = page.locator('#article-prompt');
   await expect(prompt).toBeVisible();
   await expect(prompt).toHaveText(DUMP_PROMPT);
   const laneBox = await lane.boundingBox();
   const promptBox = await prompt.boundingBox();
   expect(promptBox.y).toBeGreaterThanOrEqual(laneBox.y + laneBox.height - 1);
 
-  // The prompt is rendered exactly once per surface: the reception block keeps
-  // its own (hidden on a dump page) prompt copy.
-  await expect(page.locator('.reception-prompt')).toHaveCount(1);
-
-  // The first screen holds the lane, the hook, the duties line and the 0/1
-  // choices — all inside the viewport, the long declaration stays below the
-  // fold.
-  const viewport = page.viewportSize();
-  for (const selector of ['#gate .agent-lane', '#gate .gate-hook', '#gate .gate-duties', '#gate .gate-doors']) {
-    const box = await page.locator(selector).boundingBox();
-    expect(box.y, selector).toBeGreaterThanOrEqual(0);
-    expect(box.y + box.height, selector).toBeLessThanOrEqual(viewport.height);
-  }
+  // The prompt is rendered exactly once per surface: the `02` plate's pinned
+  // prompt and the machine panel's own pin (hidden in state 0).
+  await expect(page.locator('#article-prompt')).toHaveCount(1);
+  await expect(page.locator('#machine-prompt')).toHaveCount(1);
 
   // §6.5 P0-1: both doors carry their own visible §7.1 labels (the digit stays a
-  // separate badge), so the first screen names the choices instead of a bare 0/1.
-  const doorLabels = page.locator('#gate .door-label');
+  // separate badge), so the declaration names the choices instead of a bare 0/1.
+  const doorLabels = page.locator(`${PLATE_DECLARATION} .door-label`);
   await expect(doorLabels).toHaveCount(2);
   await expect(doorLabels.nth(0)).toHaveText(GATE_MACHINE_DOOR);
   await expect(doorLabels.nth(1)).toHaveText(GATE_HUMAN_DOOR);
 
-  // The below-the-fold declaration must not be glued to the 0/1 buttons.
-  const doors = await page.locator('#gate .gate-doors').boundingBox();
-  const rest = await page.locator('#gate .gate-rest').boundingBox();
+  // The long declaration sits below the doors, not glued to them.
+  const doors = await page.locator(`${PLATE_DECLARATION} .gate-doors`).boundingBox();
+  const rest = await page.locator(`${PLATE_DECLARATION} .gate-rest`).boundingBox();
   expect(rest.y - (doors.y + doors.height)).toBeGreaterThanOrEqual(4);
 });
 
@@ -434,9 +436,9 @@ test('KDV-SURFACE-13 + KDV-MOBILE-04: the lane copy chip copies the whole prompt
   await page.goto(DUMP);
 
   // The jump links must not trigger the share sheet: they navigate to an agent.
-  await expect(page.locator('#gate .agent-link').first()).toHaveAttribute('data-copy-share', 'off');
+  await expect(page.locator(`${PLATE_WANT} .agent-link`).first()).toHaveAttribute('data-copy-share', 'off');
 
-  const button = page.locator('#gate .copy-prompt');
+  const button = page.locator(`${PLATE_WANT} .copy-prompt`);
   await expect(button).toHaveText(LANE_COPY_LABEL);
   await button.click();
 
@@ -451,21 +453,17 @@ test('KDV-SURFACE-13 + KDV-MOBILE-04: the lane copy chip copies the whole prompt
   expect(await page.evaluate(() => window.__kodavrShares)).toEqual([{ text: DUMP_PROMPT }]);
 });
 
-test('KDV-SURFACE-14: the dump prompt is pinned; /reception/ keeps the universal prompt', async ({ page }) => {
+test('KDV-SURFACE-14: the dump prompt is pinned and every jump target prefills', async ({ page }) => {
   await page.goto(DUMP);
 
-  const chatgpt = page.locator('#gate .agent-link', { hasText: 'ChatGPT' });
+  const chatgpt = page.locator(`${PLATE_WANT} .agent-link`, { hasText: 'ChatGPT' });
   await expect(chatgpt).toHaveAttribute('href', /^https:\/\/chatgpt\.com\/\?q=/);
   expect(await chatgpt.getAttribute('href')).toContain(encodeURIComponent(DUMP_PROMPT));
   // §7.12: every jump target prefills via ?q=.
-  await expect(page.locator('#gate .agent-link', { hasText: 'Grok' })).toHaveAttribute(
+  await expect(page.locator(`${PLATE_WANT} .agent-link`, { hasText: 'Grok' })).toHaveAttribute(
     'href',
     /^https:\/\/grok\.com\/\?q=/,
   );
-
-  await page.goto('/reception/');
-  await expect(page.locator('.reception-prompt')).toHaveText(PROMPT_TEXT);
-  await expect(page.locator('.agent-link')).toHaveCount(4);
 });
 
 test('KDV-SURFACE-17: the header chip follows the species — hidden fresh, machine after 0, human after 1, cleared by withdraw', async ({ page }) => {
@@ -508,7 +506,7 @@ test('KDV-SURFACE-17: the header chip follows the species — hidden fresh, mach
   ]);
   expect(await species(page)).toBeNull();
 
-  // The reception ("1") path on a fresh load shows the human label.
+  // The human ("1") path on a fresh load shows the human label.
   await page.goto(DUMP);
   await expect(page.locator('#species-chip')).toBeHidden();
   await page.click('[data-gate-choice="human"]');

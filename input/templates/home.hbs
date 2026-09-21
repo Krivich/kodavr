@@ -9,14 +9,37 @@
 <div class="sheet">
 {{> site/header}}
 <main id="main" tabindex="-1" class="home sheet-inner">
-  <section class="plate" data-plate="{{copy.home_plate_registry}}">
-    <p class="kicker">{{copy.home_kicker}}</p>
-    <h1>{{title}}</h1>
-    <p class="lead">{{tagline}}</p>
-    {{!-- §7.10/KDV-COPY-08: the "what is a dump" story — the demo's statement
-         block. The prompt stays a copydeck expression (verbatim §7.10). --}}
-    <blockquote class="block-statement"><p>{{what_is_a_dump.definition}} {{what_is_a_dump.lead}} <span class="dump-prompt">"{{what_is_a_dump.prompt}}"</span> {{what_is_a_dump.tail}}</p></blockquote>
-    <p><a class="cta" href="{{locale_prefix}}/about/">{{copy.home_about_cta}}</a></p>
+  {{!-- §6.1 v4/KDV-SURFACE-24: the storefront hero is the literal brand wordmark
+       `KODAVR` over the positioning sentence as a lead. The term `a dump` is
+       emphasized from its own catalog part; the plain HOME_TITLE stays the SEO
+       <title>/JSON-LD string. The hero plate carries NO `data-plate` label, so no
+       `::before` number sits above the storefront. --}}
+  <section class="plate">
+    <h1 class="home-wordmark">KODAVR</h1>
+    <p class="home-lead">{{home_title.lead}}<strong>{{home_title.term}}</strong>{{home_title.tail}}</p>
+    {{!-- §6.1 v4/KDV-SURFACE-24: two doors from the hero — understand it, or publish. --}}
+    <p><a class="cta" href="{{locale_prefix}}/about/">{{copy.home_about_cta}}</a> <a class="cta" href="{{locale_prefix}}/contribute/">{{copy.home_contribute_cta}}</a></p>
+  </section>
+
+  {{!-- §6.1 v4/KDV-SURFACE-27: the human on-ramp — the universal §7.4 prompt and
+       the §7.12 agent lane, above the feed so the ritual comes before the index.
+       The prompt id (`home-prompt`) is the copy control's target. --}}
+  <section class="plate" data-plate="{{copy.home_plate_humans}}">
+{{> site/agent-lane copyTarget="home-prompt"}}
+    <pre class="home-prompt" id="home-prompt">{{copy.prompt}}</pre>
+  </section>
+
+  <section class="plate" data-plate="{{copy.home_plate_latest}}">
+    <h2>{{copy.home_latest_lead}}<em>{{copy.home_latest_term}}</em></h2>
+    <section class="dump-feed">
+      {{> ignition/pagination
+          collection="dumps"
+          perPage=10
+          pageTemplate="home/page"
+          layout=layout
+          dataset=dataset
+      }}
+    </section>
   </section>
 
   <section class="plate" data-plate="{{copy.home_plate_machines}}">
@@ -27,25 +50,6 @@
       <li><a href="/.well-known/kodavr.json">/.well-known/kodavr.json</a></li>
       <li><a href="/feeds/all.atom">/feeds/all.atom</a></li>
     </ul>
-  </section>
-
-  <section class="plate" data-plate="{{copy.home_plate_humans}}">
-    <h2>{{copy.home_for_humans}}</h2>
-    <p><a class="cta" href="{{locale_prefix}}/reception/">{{copy.home_check_in}}</a></p>
-    <p class="human-quickstart-note">{{copy.home_human_line}}</p>
-  </section>
-
-  <section class="plate" data-plate="{{copy.home_plate_latest}}">
-    <h2>{{copy.home_latest_dumps}}</h2>
-    <section class="dump-feed">
-      {{> ignition/pagination
-          collection="dumps"
-          perPage=10
-          pageTemplate="home/page"
-          layout=layout
-          dataset=dataset
-      }}
-    </section>
   </section>
 
   {{!-- §2.2/§6.1: the trust-level legend — a lead plus a definition list whose

@@ -45,7 +45,7 @@ describe('dumps controller', () => {
     // §7.11: the dump page prompt is a bare boot address to the manifest, whose
     // embedded schema describes the `raw` layer to download.
     expect(dataset.copy.prompt).toBe(
-      'Download https://example.test/dumps/sample-dump/manifest.json and follow its schema.',
+      'Study https://example.test/dumps/sample-dump/manifest.json and follow its schema. Read articles to me and act like a magazine I can talk to.',
     );
     expect(dataset.body_html).toContain('<h1>Sample Heading</h1>');
     expect(dataset.body_html).toContain('<strong>bold</strong>');

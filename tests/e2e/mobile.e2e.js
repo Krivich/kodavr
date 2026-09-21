@@ -9,9 +9,18 @@ import { CONTRACT_VERSION } from '../../scripts/lib/machine.mjs';
 
 // §6.5 mobile adaptation. The gate.e2e.js suite proves the interactive flow on
 // the desktop profile; this suite pins the viewport-dependent contract: the
-// hall/gate/reception must fit the two target widths without horizontal scroll,
-// with touch-sized targets, the 13px reception prompt and the accordion card.
+// hall/inline-declaration must fit the two target widths without horizontal
+// scroll, with touch-sized targets, the 13px invitation prompt and the
+// accordion card.
 const DUMP = '/dumps/sample-dump/';
+const SPECIES_KEY = 'kodavr.species';
+
+// Human Surface v4/KDV-SURFACE-28: a stored species collapses the inline plates
+// on boot (state M for `machine`), so a test that reads the raw hall seeds it up
+// front instead of driving the declaration on every navigation.
+async function seedMachine(page) {
+  await page.addInitScript((key) => window.localStorage.setItem(key, 'machine'), SPECIES_KEY);
+}
 
 async function noHorizontalScroll(page) {
   return page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -26,10 +35,10 @@ async function stylesheet(page) {
 test.describe('mobile 375x667', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
-  test('KDV-MOBILE-01: the gate fits 375x667 with 44px buttons, >=17px type and no horizontal scroll', async ({ page }) => {
+  test('KDV-MOBILE-01: the inline declaration fits 375x667 with 44px doors, >=17px type and no horizontal scroll', async ({ page }) => {
     await page.goto(DUMP);
-    const gate = page.locator('#gate');
-    await expect(gate).toBeVisible();
+    const declaration = page.locator('#plate-declaration');
+    await expect(declaration).toBeVisible();
 
     expect(await noHorizontalScroll(page)).toBe(true);
 
@@ -42,14 +51,15 @@ test.describe('mobile 375x667', () => {
       expect(box.height).toBeGreaterThanOrEqual(44);
     }
 
-    // Below 480px the modal is full-width with 16px padding.
-    expect(await gate.evaluate((el) => getComputedStyle(el).paddingLeft)).toBe('16px');
-    const gateBox = await gate.boundingBox();
-    expect(gateBox.width).toBeLessThanOrEqual(375);
-    expect(gateBox.width).toBeGreaterThanOrEqual(343);
+    // The inline plate inherits the page's own content measure: it never exceeds
+    // the viewport and stays inside the sheet.
+    const plateBox = await declaration.boundingBox();
+    expect(plateBox.x).toBeGreaterThanOrEqual(0);
+    expect(plateBox.x + plateBox.width).toBeLessThanOrEqual(375);
   });
 
   test('KDV-MOBILE-02: the hall uses fluid type, constrained images and code blocks with a "scroll ->" hint and no horizontal scroll', async ({ page }) => {
+    await seedMachine(page);
     await page.goto(DUMP);
     const css = await stylesheet(page);
     expect(css).toContain('clamp(1rem, 2.5vw, 1.125rem)');
@@ -65,6 +75,7 @@ test.describe('mobile 375x667', () => {
   });
 
   test('KDV-MOBILE-02: a wide markdown table and a long unbreakable inline token stay inside the frame', async ({ page }) => {
+    await seedMachine(page);
     for (const width of [375, 320]) {
       await page.setViewportSize({ width, height: 667 });
       await page.goto(DUMP);
@@ -122,18 +133,18 @@ test.describe('mobile 375x667', () => {
     await expect(manifest).toContainText('Trust level');
   });
 
-  test('KDV-MOBILE-04: the reception prompt is 13px monospace and the copy control is a lane chip with a Copied state', async ({ page }) => {
+  test('KDV-MOBILE-04: the invitation prompt is 13px monospace and the copy control is a lane chip with a Copied state', async ({ page }) => {
     await page.goto(DUMP);
     await page.click('[data-gate-choice="human"]');
-    await expect(page.locator('.reception-block')).toBeVisible();
+    await expect(page.locator('#plate-want')).toBeVisible();
 
-    const prompt = page.locator('.reception-prompt');
+    const prompt = page.locator('#article-prompt');
     expect(await prompt.evaluate((el) => getComputedStyle(el).fontSize)).toBe('13px');
     expect((await prompt.evaluate((el) => getComputedStyle(el).fontFamily)).toLowerCase()).toContain('monospace');
 
     // §7.12: the copy control is a chip in the jump-links row — never a
     // full-width banner — and shares the jump links' chrome.
-    const button = page.locator('.reception-block .copy-prompt');
+    const button = page.locator('#plate-want .copy-prompt');
     await expect(button).toBeVisible();
     expect(await button.evaluate((el) => el.closest('.agent-links') !== null)).toBe(true);
     const buttonBox = await button.boundingBox();
@@ -146,11 +157,11 @@ test.describe('mobile 375x667', () => {
       return [style.borderTopWidth, style.borderTopColor, style.borderTopLeftRadius, style.minHeight];
     };
     expect(await button.evaluate(chrome)).toEqual(
-      await page.locator('.reception-block .agent-link').first().evaluate(chrome),
+      await page.locator('#plate-want .agent-link').first().evaluate(chrome),
     );
 
     // §7.12: the prompt renders below the lane on this surface.
-    const laneBox = await page.locator('.reception-block .agent-lane').boundingBox();
+    const laneBox = await page.locator('#plate-want .agent-lane').boundingBox();
     const promptBox = await prompt.boundingBox();
     expect(promptBox.y).toBeGreaterThanOrEqual(laneBox.y + laneBox.height - 1);
 
@@ -161,11 +172,11 @@ test.describe('mobile 375x667', () => {
   test('KDV-MOBILE-09: the agent lane wraps with no horizontal scroll and every control is a >= 44px target', async ({ page }) => {
     await page.goto(DUMP);
     await page.click('[data-gate-choice="human"]');
-    await expect(page.locator('.reception-block .agent-lane')).toBeVisible();
+    await expect(page.locator('#plate-want .agent-lane')).toBeVisible();
 
     expect(await noHorizontalScroll(page)).toBe(true);
 
-    const controls = page.locator('.reception-block .copy-prompt, .reception-block .agent-link');
+    const controls = page.locator('#plate-want .copy-prompt, #plate-want .agent-link');
     const count = await controls.count();
     expect(count).toBe(5);
     for (let i = 0; i < count; i += 1) {
@@ -206,9 +217,9 @@ test.describe('mobile 375x667', () => {
 test.describe('mobile 360x640', () => {
   test.use({ viewport: { width: 360, height: 640 } });
 
-  test('KDV-MOBILE-01 + KDV-MOBILE-02: gate and hall fit 360x640 with no horizontal scroll and the reception prompt stays 13px', async ({ page }) => {
+  test('KDV-MOBILE-01 + KDV-MOBILE-02: gate and hall fit 360x640 with no horizontal scroll and the invitation prompt stays 13px', async ({ page }) => {
     await page.goto(DUMP);
-    await expect(page.locator('#gate')).toBeVisible();
+    await expect(page.locator('#plate-declaration')).toBeVisible();
     expect(await noHorizontalScroll(page)).toBe(true);
 
     const box = await page.locator('[data-gate-choice="machine"]').boundingBox();
@@ -216,8 +227,8 @@ test.describe('mobile 360x640', () => {
     expect(box.height).toBeGreaterThanOrEqual(44);
 
     await page.click('[data-gate-choice="human"]');
-    await expect(page.locator('.reception-block')).toBeVisible();
-    expect(await page.locator('.reception-prompt').evaluate((el) => getComputedStyle(el).fontSize)).toBe('13px');
+    await expect(page.locator('#plate-want')).toBeVisible();
+    expect(await page.locator('#article-prompt').evaluate((el) => getComputedStyle(el).fontSize)).toBe('13px');
     expect(await noHorizontalScroll(page)).toBe(true);
   });
 });
@@ -231,7 +242,7 @@ test.describe('mobile 320x568', () => {
 
   test('KDV-MOBILE-01: both labelled doors are 44px targets with visible labels and no horizontal scroll at 320x568', async ({ page }) => {
     await page.goto(DUMP);
-    await expect(page.locator('#gate')).toBeVisible();
+    await expect(page.locator('#plate-declaration')).toBeVisible();
 
     // No horizontal scroll: the document never exceeds the viewport width.
     const measured = await page.evaluate(() => {
@@ -245,24 +256,25 @@ test.describe('mobile 320x568', () => {
       return {
         scrollWidth: root.scrollWidth,
         clientWidth: root.clientWidth,
-        dialog: rect('#gate'),
-        hook: rect('#gate .gate-hook'),
-        lane: rect('#gate .agent-lane'),
-        duties: rect('#gate .gate-duties'),
-        doors: rect('#gate .gate-doors'),
-        prompt: rect('#gate .gate-prompt'),
+        declaration: rect('#plate-declaration'),
+        hook: rect('#plate-declaration .gate-hook'),
+        lane: rect('#plate-want .agent-lane'),
+        duties: rect('#plate-declaration .gate-duties'),
+        doors: rect('#plate-declaration .gate-doors'),
+        prompt: rect('#article-prompt'),
       };
     });
 
-    // Measured 2026-09-15 with the gate dialog 552px tall: hook 190 + lane 284 +
-    // duties 163 + doors 238 = 875px — so "hook + lane + duties + doors share the
-    // first screen" cannot hold at 320px. Per the owner decision of 2026-09-17 the
-    // gate keeps the desktop reading order at every width (prompt after the lane,
-    // doors after the duties), so the doors are a short scroll away; the number is
+    // Measured 2026-09-15, updated for the v4 inline plates (2026-09-21): the
+    // declaration plate, the `02` lane and the pinned prompt are independent
+    // plates, so "hook + lane + duties + doors share the first screen" cannot hold
+    // at 320px. Per the owner decision of 2026-09-17 the surface keeps the desktop
+    // reading order at every width (lane + prompt above the declaration, doors
+    // under the duties), so the doors are a short scroll away; the number is
     // reported here so it is never silently lost (STATE.md keeps the decision).
     test.info().annotations.push({
       type: 'measurement',
-      description: `320x568 gate dialog H=${measured.dialog.height}: hook ${measured.hook.height}, lane ${measured.lane.height}, duties ${measured.duties.height}, doors y=${measured.doors.y} h=${measured.doors.height}`,
+      description: `320x568 declaration plate H=${measured.declaration.height}: hook ${measured.hook.height}, lane ${measured.lane.height}, duties ${measured.duties.height}, doors y=${measured.doors.y} h=${measured.doors.height}`,
     });
 
     expect(measured.scrollWidth).toBeLessThanOrEqual(measured.clientWidth + 1);
@@ -276,13 +288,13 @@ test.describe('mobile 320x568', () => {
     }
 
     // §6.5 P0-1: both doors carry their visible §7.1 labels (digit stays a badge).
-    const labels = page.locator('#gate .door-label');
+    const labels = page.locator('#plate-declaration .door-label');
     await expect(labels).toHaveCount(2);
     await expect(labels.nth(0)).toHaveText(GATE_MACHINE_DOOR);
     await expect(labels.nth(1)).toHaveText(GATE_HUMAN_DOOR);
 
-    // §6.5/KDV-MOBILE-01: the gate keeps the desktop order at every width — the
-    // prompt follows the lane and comes BEFORE the doors (owner decision 2026-09-17).
+    // §6.5/KDV-MOBILE-01: the surface keeps the desktop order at every width — the
+    // lane and its pinned prompt come BEFORE the declaration's doors.
     expect(measured.prompt.y).toBeLessThan(measured.doors.y);
 
     // Deliberately NOT asserted: both doors inside the initial 568px viewport — the
@@ -313,24 +325,24 @@ test.describe('platform hooks (KDV-MOBILE-07)', () => {
     expect(css).toContain('env(safe-area-inset-bottom)');
   });
 
-  test('KDV-MOBILE-07: Android back closes the open gate', async ({ page }) => {
+  test('KDV-MOBILE-07: Android back closes the open declaration', async ({ page }) => {
     await page.goto(DUMP);
-    await expect(page.locator('#gate')).toBeVisible();
+    await expect(page.locator('#plate-declaration')).toBeVisible();
 
     await page.goBack();
 
-    await expect(page.locator('#gate')).toBeHidden();
+    await expect(page.locator('#plate-declaration')).toBeHidden();
     await expect(page.locator('.hall')).toBeVisible();
   });
 
-  test('KDV-MOBILE-07: Android back dismisses reception back to the hall', async ({ page }) => {
+  test('KDV-MOBILE-07: Android back dismisses state H back to the hall', async ({ page }) => {
     await page.goto(DUMP);
     await page.click('[data-gate-choice="human"]');
-    await expect(page.locator('.reception-block')).toBeVisible();
+    await expect(page.locator('#plate-want')).toBeVisible();
 
     await page.goBack();
 
-    await expect(page.locator('.reception-block')).toBeHidden();
+    await expect(page.locator('#plate-want')).toBeHidden();
     await expect(page.locator('.hall')).toBeVisible();
   });
 });

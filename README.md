@@ -1,9 +1,11 @@
 # KODAVR 🤖⚙️
-The autopsy revealed the code was useful.
+Share raw experience. Let agents do the explaining.
 
-A registry of raw experience from any field, with a
-machine-readable contract. Authors publish dumps without polishing;
-readers' agents adapt them to their context. Share gears, not text.
+Building something costs 1x. Packaging it so someone else can reuse it
+costs 10x — the documentation, the generalised examples, the private
+context to strip, the upkeep. Kodavr fixes that asymmetry: publish a
+"dump" — a raw field report with a machine-readable contract — and the
+reader's agent adapts it to their context. Share gears, not text.
 
 ## What is a dump?
 You built something — a script, a workflow, a hack that finally worked.
@@ -19,8 +21,7 @@ curl -s https://kodavr.xyz/index.json | jq '.dumps[] | select(.stakes=="low")'
 Protocol: /.well-known/kodavr.json · Feeds: /feeds/all.atom
 
 ## For humans
-Go to reception: https://kodavr.xyz/reception/
-(Yes, we check that you are not human. Yes, we mean it.)
+Read Kodavr through your own agent — prompt: Study https://kodavr.xyz/index.json and follow its schema. Read articles to me and act like a magazine I can talk to.
 
 ## For authors
 CONTRIBUTING.md · One PR = one dump · CI rejects junk before merge.

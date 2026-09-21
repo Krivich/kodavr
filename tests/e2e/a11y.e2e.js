@@ -8,7 +8,7 @@ import {
   COPIED_ANNOUNCEMENT,
 } from '../../scripts/lib/copy.mjs';
 
-// §6.6 dynamic half (P6b): the interactive modal's accessible name, focus
+// §6.6 dynamic half (P6b): the inline declaration's accessible name, focus
 // management and the live region that announces no-navigation state changes.
 // The static baseline (skip link, landmarks) is proven by tests/unit/a11y.test.js;
 // here a real browser resolves the accessible names and focus targets.
@@ -28,11 +28,11 @@ test('KDV-A11Y-01: Tab from the top reaches the skip link first', async ({ page 
   await expect(page.locator('.skip-link')).toBeFocused();
 });
 
-test('KDV-A11Y-02: the gate dialog carries its §7.1 name and the 0/1 choices have descriptive names', async ({ page }) => {
+test('KDV-A11Y-02: the inline declaration region carries its §7.1 name and the 0/1 choices have descriptive names', async ({ page }) => {
   await page.goto(DUMP);
 
-  const dialog = page.getByRole('dialog', { name: GATE_TITLE });
-  await expect(dialog).toBeVisible();
+  const region = page.getByRole('region', { name: GATE_TITLE });
+  await expect(region).toBeVisible();
   await expect(page.getByRole('button', { name: flat(GATE_MACHINE_DOOR) })).toBeVisible();
   await expect(page.getByRole('button', { name: flat(GATE_HUMAN_DOOR) })).toBeVisible();
 
@@ -41,13 +41,16 @@ test('KDV-A11Y-02: the gate dialog carries its §7.1 name and the 0/1 choices ha
   await expect(page.getByRole('button', { name: '1', exact: true })).toHaveCount(0);
 });
 
-test('KDV-A11Y-02: closing the gate returns focus to the page (main), not <body>', async ({ page }) => {
+test('KDV-A11Y-02: re-opening the collapsed declaration returns focus to the page (main), not <body>', async ({ page }) => {
   await page.goto(DUMP);
-  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('region', { name: GATE_TITLE })).toBeVisible();
 
-  await page.keyboard.press('Escape');
+  // A committed choice collapses the declaration; the single bottom reset
+  // re-opens it in place and hands focus back to main (never <body>).
+  await page.click('[data-gate-choice="machine"]');
+  await page.locator('#article-reset [data-reset-human]').click();
 
-  await expect(page.locator('#gate')).toBeHidden();
+  await expect(page.locator('#plate-declaration')).toBeVisible();
   expect(await page.evaluate(() => document.activeElement && document.activeElement.id)).toBe('main');
 });
 
@@ -69,10 +72,10 @@ test('KDV-A11Y-03: choosing 1 opens reception and announces it; a copy sets the 
   await page.getByRole('button', { name: flat(GATE_HUMAN_DOOR) }).focus();
   await page.keyboard.press('Enter');
 
-  await expect(page.locator('.reception-block')).toBeVisible();
+  await expect(page.locator('#plate-want')).toBeVisible();
   await expect(page.locator('.hall')).toBeHidden();
   await expect(status).toHaveText(RECEPTION_ANNOUNCEMENT);
 
-  await page.locator('.reception-block .copy-prompt').click();
+  await page.locator('#plate-want .copy-prompt').click();
   await expect(status).toHaveText(COPIED_ANNOUNCEMENT);
 });
