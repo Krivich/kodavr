@@ -8,6 +8,7 @@
  *   declaredDrawers — the drawer paths declared in the diagram
  *   lintDiagram — the pure linter over the diagram text
  *   main — the CLI entry point
+ *   missingScriptDrawers — scripts/* subdirs that are not declared drawers
  *   parseLinks — every [[url]] with its file and #symbol
  *   symbolDeclared — true when a #symbol is declared or called in a file
  * CONSUMES:
@@ -35,6 +36,8 @@
 //   (F) a brick's stereotype equals its drawer's stereotype
 //   (G) T3 idiom — a numbered call to a module brick carries a [[file#symbol]]
 //       link; a numbered return carries none
+//   (H) every immediate subdirectory of scripts/ is a declared drawer, so a new
+//       role subfolder cannot be added without drawing it (KDV-STRUCT-09)
 //
 // lintDiagram() is pure over `text`; it reads the filesystem only to resolve
 // links and list drawer files. An empty array means clean. The CLI exits 1 on
@@ -120,6 +123,14 @@ export function parseLinks(text) {
   return out;
 }
 
+// missingScriptDrawers(subdirNames, declaredDrawers) → `scripts/<name>` paths still
+// missing a drawer declaration. Keeps a new scripts role subfolder from escaping.
+export function missingScriptDrawers(subdirNames, declaredDrawers) {
+  return subdirNames
+    .map((n) => `scripts/${n}`)
+    .filter((p) => !declaredDrawers.includes(p));
+}
+
 // bricks(text) → the components with their enclosing drawer: [{ alias, st, pkg, file }].
 // A simple brace-depth scan keeps the innermost open `package "..."` frame;
 // `skinparam package { ... }` carries no quoted name and is skipped. `file` is
@@ -165,6 +176,13 @@ export function lintDiagram({ text, pumlDir, repoRoot }) {
   const declared = declaredDrawers(text);
   for (const d of DRAWERS) if (!declared.includes(d.path)) problems.push(`drawer ${d.path} not drawn`);
   for (const p of declared) if (!DRAWERS.some((d) => d.path === p)) problems.push(`phantom drawer ${p}`);
+
+  // (H) every immediate subdirectory of scripts/ must be a declared drawer
+  const scriptsDir = path.join(repoRoot, 'scripts');
+  const scriptSubdirs = fs.existsSync(scriptsDir)
+    ? fs.readdirSync(scriptsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
+    : [];
+  for (const p of missingScriptDrawers(scriptSubdirs, declared)) problems.push(`drawer ${p} not drawn`);
 
   // (B) file coverage for code drawers, both directions + no double-draw
   for (const d of DRAWERS) {

@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { lintDiagram, DRIFT_GUIDANCE } from '../../scripts/workflow-arrows-lint.mjs';
+import { lintDiagram, DRIFT_GUIDANCE, missingScriptDrawers } from '../../scripts/workflow-arrows-lint.mjs';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const pumlDir = fileURLToPath(new URL('../../docs', import.meta.url));
@@ -20,5 +20,10 @@ describe('workflow-arrows map (§8.1)', () => {
       /file scripts\/lib\/copy\.mjs not drawn/,
     );
     expect(DRIFT_GUIDANCE).toContain('AGENTS/workflow-arrows.md');
+  });
+
+  it('KDV-CI-12, KDV-STRUCT-09: every scripts/* subfolder must be a declared drawer', () => {
+    expect(missingScriptDrawers(['lib'], ['scripts', 'scripts/lib'])).toEqual([]);
+    expect(missingScriptDrawers(['lib', 'map'], ['scripts', 'scripts/lib'])).toEqual(['scripts/map']);
   });
 });

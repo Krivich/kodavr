@@ -31,9 +31,9 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/build.mjs** — the npm run build entry point
   consumes: ./lib/build.mjs, node:url
 - **scripts/contract.mjs** — contract-header validator + module-index generator for AGENTS/code-map.md
-  exports: MARK_BEGIN, MARK_END, actualExports, actualImports, contractFiles, generateIndex, parseHeader, rewriteIndex, validate, validateAll
+  exports: MARK_BEGIN, MARK_END, actualExports, actualImports, contractFiles, generateIndex, parseHeader, rewriteIndex, validate, validateAll, walkTrees
   consumes: node:fs, node:path, node:url
-  invariants: — the map cannot lie: a header must equal the code's exports/imports both ways; — scripts is read non-recursively so scripts/lib is never indexed twice
+  invariants: — the map cannot lie: a header must equal the code's exports/imports both ways; — scripts is walked recursively (role subfolders included); the set is deduped
 - **scripts/generate-og-image.mjs** — rasterizes the 1200x630 OG card from the wordmark + OG tagline
   consumes: ./lib/pages.mjs, @playwright/test, node:fs/promises, node:path, node:url
   invariants: — the card is generated, never hand-edited
@@ -179,7 +179,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   consumes: ./lib/machine.mjs, node:fs/promises, node:path, node:url
   invariants: — a BLOCK finding exits non-zero; nothing is published on a red gate
 - **scripts/workflow-arrows-lint.mjs** — the drift alarm for docs/workflow-arrows.puml against the code tree
-  exports: DRIFT_GUIDANCE, bricks, declaredDrawers, lintDiagram, main, parseLinks, symbolDeclared
+  exports: DRIFT_GUIDANCE, bricks, declaredDrawers, lintDiagram, main, missingScriptDrawers, parseLinks, symbolDeclared
   consumes: node:fs, node:path, node:url
   invariants: — a red lint names the drift and exits 1; it is never weakened to pass
 - **scripts/workflow-arrows-svg.mjs** — post-processes the rendered docs/workflow-arrows.svg to add the hover highlight

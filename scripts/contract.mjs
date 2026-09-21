@@ -13,13 +13,14 @@
  *   rewriteIndex — regenerates that section in place (true on change)
  *   validate — compares a header with the module's real exports/imports
  *   validateAll — header problems across every module
+ *   walkTrees — the recursive module discovery for a set of trees
  * CONSUMES:
  *   node:fs — read modules, rewrite the map
  *   node:path — resolve the trees and the map
  *   node:url — find the repo root and detect the entry point
  * INVARIANTS:
  *   — the map cannot lie: a header must equal the code's exports/imports both ways
- *   — scripts is read non-recursively so scripts/lib is never indexed twice
+ *   — scripts is walked recursively (role subfolders included); the set is deduped
  */
 // Contract-header validator + module-index generator (AGENTS/code-map.md).
 //
@@ -49,11 +50,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ARCH = path.join(ROOT, 'AGENTS', 'code-map.md');
 
-// The first-party module trees. `scripts` is read non-recursively because it
-// contains `scripts/lib` (walked as its own tree) — no module is indexed twice.
+// The first-party module trees. `scripts` is walked recursively so a module in a
+// role subfolder (KDV-STRUCT-09) is indexed too; the walk dedupes by path.
 const TREES = [
-  { dir: 'scripts/lib', recursive: true },
-  { dir: 'scripts', recursive: false },
+  { dir: 'scripts', recursive: true },
   { dir: 'input/controllers', recursive: false },
 ];
 
@@ -138,9 +138,10 @@ export function validate(name, src) {
   return problems;
 }
 
-// contractFiles() → sorted repo-relative posix paths of every first-party module
-export function contractFiles() {
-  const out = [];
+// walkTrees(trees, root) → sorted repo-relative posix paths of every .mjs/.js under
+// the trees; recursive per tree and deduped, so no module is listed twice.
+export function walkTrees(trees, root) {
+  const out = new Set();
   const walk = (dir, rel, recursive) => {
     if (!fs.existsSync(dir)) return;
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -149,11 +150,16 @@ export function contractFiles() {
         if (recursive) walk(path.join(dir, e.name), r, recursive);
         continue;
       }
-      if (/\.(mjs|js)$/.test(e.name)) out.push(r);
+      if (/\.(mjs|js)$/.test(e.name)) out.add(r);
     }
   };
-  for (const t of TREES) walk(path.join(ROOT, t.dir), t.dir.split(path.sep).join('/'), t.recursive);
-  return [...new Set(out)].sort();
+  for (const t of trees) walk(path.join(root, t.dir), t.dir.split(path.sep).join('/'), t.recursive);
+  return [...out].sort();
+}
+
+// contractFiles() → sorted repo-relative posix paths of every first-party module
+export function contractFiles() {
+  return walkTrees(TREES, ROOT);
 }
 
 // generateIndex() → the AGENTS/code-map.md section text between the markers

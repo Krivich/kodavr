@@ -4,7 +4,9 @@
 // the MODULE-INDEX markers in AGENTS/code-map.md. The generator is pinned here
 // so `npm test` covers the alarm the same way CI does.
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   MARK_BEGIN,
@@ -13,6 +15,7 @@ import {
   parseHeader,
   validate,
   validateAll,
+  walkTrees,
 } from '../../scripts/contract.mjs';
 
 const buildSrc = readFileSync(
@@ -46,5 +49,21 @@ describe('contract module index (§8.1)', () => {
     expect(index).toContain('**scripts/lib/build.mjs**');
     expect(index).toContain('**input/controllers/dumps.js**');
     expect(parseHeader(buildSrc).contract).toBe('scripts/lib/build.mjs');
+  });
+
+  it('KDV-CI-13, KDV-STRUCT-09: module discovery is recursive, so a scripts role subfolder is covered', () => {
+    const root = mkdtempSync(join(tmpdir(), 'kdv-contract-'));
+    try {
+      mkdirSync(join(root, 'scripts', 'map'), { recursive: true });
+      writeFileSync(join(root, 'scripts', 'a.mjs'), '');
+      writeFileSync(join(root, 'scripts', 'map', 'b.mjs'), '');
+      writeFileSync(join(root, 'scripts', 'map', 'skip.txt'), '');
+      expect(walkTrees([{ dir: 'scripts', recursive: true }], root)).toEqual([
+        'scripts/a.mjs',
+        'scripts/map/b.mjs',
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

@@ -80,6 +80,15 @@ changing a part so you extend the flow that already exists instead of adding a p
 path around it. How to read / maintain / lint / render — **AGENTS/workflow-arrows.md**;
 the drift alarm is `npm run workflow-arrows:lint` (silent, exit 0 when clean).
 
+### Scripts layout — group by role, never a flat dump
+
+New dev scripts live in a semantic subfolder of `scripts/` named for the business
+process or role they serve (`scripts/<role>/`), never flat in `scripts/`. The flat
+scripts are legacy; a one-session cleanup will regroup them. This is enforced, not
+asked: `npm run contract` walks `scripts/` recursively (every module needs a CONTRACT
+header) and the map requires each `scripts/*` subfolder to be a declared drawer
+(`scripts/lib` is the current one) — a new subfolder cannot slip past the alarms.
+
 ## Tools (dev) — AGENTS/tools.md
 
 Full rules, protocols and hard caveats for every development tool live in

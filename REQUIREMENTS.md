@@ -28,6 +28,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-STRUCT-06**: A slug matches `YYYY-MM-DD-<short-name>`, is unique, and equals both its directory name and `manifest.slug`. *(§3)*
 - 🟧 **KDV-STRUCT-07**: Author attribution (`author.github`, `author.pr_url`, `author.merged_at`) is extracted from the merged PR and never filled in manually. *(§3, §7.7; PR-payload extraction tested — live merged-PR metadata needs a remote)*
 - ✅ **KDV-STRUCT-08**: Root carries `README.md`, `LICENSE` (MIT), `LICENSE-CONTENT.md` (CC-BY-4.0), `CONTRIBUTING.md`, `docs/SPEC.md` and `docs/decisions.md`; `static/` is published as-is. *(§3)*
+- ✅ **KDV-STRUCT-09**: New dev scripts live in a semantic subfolder of `scripts/` grouped by the business process or role they serve (`scripts/<role>/`), never flat in `scripts/`; the flat scripts are legacy pending a one-session regroup. Enforced, not asked: `contract.mjs` walks `scripts/` recursively (every module needs a CONTRACT header) and the workflow map requires each `scripts/*` subfolder to be a declared drawer. *(§3, §8.1; tests/unit/contract.test.js, tests/unit/workflow-arrows.test.js)*
 
 ## KDV-MANIFEST — Dump manifest (§4)
 
@@ -133,8 +134,8 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CI-09**: `deploy.yml` builds and publishes per the Ignition README via GitHub Pages, deploying `output/public` in full including generated `index.json`, feeds, `humans.txt`, `robots.txt`, `/.well-known/kodavr.json` and each dump's `manifest.json`. *(§8.3)*
 - 🟧 **KDV-CI-10**: Deployment binds `kodavr.xyz` (CNAME), redirects `www` to apex, enforces HTTPS, uses apex A records `185.199.108-111.153` and CNAME `www → <owner>.github.io`, with Cloudflare grey cloud only. *(§8.3; config + runbook tested — live DNS/HTTPS unverifiable locally)*
 - 🟧 **KDV-CI-11**: Heavy artifacts follow the release convention: tag `dump-<slug>-v<N>` with `pack.zip` and manifest `artifacts[].kind="release"` URLs; the domain runbook (renewal reminders, WHOIS privacy, 2FA, 60-day transfer lock) lives in `docs/decisions.md`. *(§8.4–8.5; convention + runbook documented — tagging is manual)*
-- ✅ **KDV-CI-12**: `validate.yml` runs `npm run workflow-arrows:lint`, so `docs/workflow-arrows.puml` cannot drift from the tree — drawers, code-dir file coverage, links/symbols, stereotypes and step numbers are checked in CI. *(§8.1)*
-- ✅ **KDV-CI-13**: `validate.yml` runs `npm run contract`, so every first-party module (`scripts/lib`, `scripts`, `input/controllers`) must open with a `CONTRACT` header whose `EXPORTS`/`CONSUMES` equal the module's real exports/imports both ways, and the generated index in `AGENTS/code-map.md` cannot drift from the code. *(§8.1)*
+- ✅ **KDV-CI-12**: `validate.yml` runs `npm run workflow-arrows:lint`, so `docs/workflow-arrows.puml` cannot drift from the tree — drawers, code-dir file coverage, links/symbols, stereotypes and step numbers are checked in CI, and every `scripts/*` subfolder must be a declared drawer (so a new role subfolder cannot slip past). *(§8.1)*
+- ✅ **KDV-CI-13**: `validate.yml` runs `npm run contract`, so every first-party module (`scripts/lib`, `scripts` — walked recursively, so any `scripts/<role>/` subfolder is covered — and `input/controllers`) must open with a `CONTRACT` header whose `EXPORTS`/`CONSUMES` equal the module's real exports/imports both ways, and the generated index in `AGENTS/code-map.md` cannot drift from the code. *(§8.1)*
 - ✅ **KDV-CI-14**: A `pull_request` workflow (`dump-manifest.yml`) posts/updates a sticky comment rendering the changed dump's `manifest.json` fields for the reviewer, so the PR template carries no duplicated manifest data; same-repo PRs only (fork tokens are read-only and are skipped). *(§8.1; tests/unit/manifest-card.test.js)*
 - ✅ **KDV-CI-15**: The manifest card leads with the dump's `manifest.summary` hook and folds the `summary.md` brief into a collapsible section, so a reviewer grasps the dump at a glance; both are omitted when absent. *(§8.1; tests/unit/manifest-card.test.js)*
 - ✅ **KDV-CI-16**: The `@kodavr_xyz` Telegram mirror renders a published dump as a `parse_mode=HTML` post — `manifest.tags` as a leading hashtag line (hyphens become underscores) before the title, then the title, the `summary.md` brief converted to Telegram's HTML subset (tables/headings/list markers rebuilt, text escaped; the brief's leading level-1 heading is dropped because the manifest title already leads, unless the title is empty) and the dump link — falling back to an escaped `manifest.summary` when the brief is absent or contains a table, and truncating on block boundaries within the visible-text cap while always keeping the footer. *(§8.3; tests/unit/telegram-mirror.test.js)*
@@ -269,7 +270,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | Group | Total | ✅ | 🟧 | ⬜ | ❓ |
 |---|---|---|---|---|---|
 | KDV-ARCH | 7 | 5 | 2 | 0 | 0 |
-| KDV-STRUCT | 8 | 7 | 1 | 0 | 0 |
+| KDV-STRUCT | 9 | 8 | 1 | 0 | 0 |
 | KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
 | KDV-CONTRACT | 10 | 10 | 0 | 0 | 0 |
 | KDV-SURFACE | 24 | 24 | 0 | 0 | 0 |
@@ -285,4 +286,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **204** | **163** | **14** | **26** | **1** |
+| **Total** | **205** | **164** | **14** | **26** | **1** |
