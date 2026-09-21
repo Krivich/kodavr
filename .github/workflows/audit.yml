@@ -1,0 +1,33 @@
+name: audit
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  audit:
+    # Same-repo PRs only: a fork PR gets a read-only token and cannot comment,
+    # and forks are always MANUAL anyway (KDV-CI-14, KDV-AUDIT-07).
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # The content gate runs first; its outcome becomes the audit's content gate.
+      # It is advisory here (continue-on-error) so the audit still posts a verdict.
+      - name: content gate
+        id: validate
+        continue-on-error: true
+        run: node scripts/validate.mjs
+      - name: audit
+        run: node scripts/audit-pr.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUDIT_CONTENT_GATE_OK: ${{ steps.validate.outcome == 'success' && '1' || '0' }}

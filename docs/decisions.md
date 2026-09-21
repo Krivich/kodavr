@@ -171,3 +171,50 @@ unconditionally. Two layers:
 
 If GitHub's branch-protection/auto-merge model changes, or moderation moves off
 GitHub Issues.
+
+---
+
+## PR security audit — shadow mode (KDV-REVIEW-12/19/22)
+
+The `audit` workflow (`.github/workflows/audit.yml`) runs the deterministic PR
+audit (`scripts/audit-pr.mjs`) on every same-repo `pull_request`. It fetches the
+diff and the author signals through the GitHub REST API — **no checkout** — and
+publishes two advisory surfaces:
+
+- a **sticky comment** marked `<!-- pr-audit -->`, updated in place on every push;
+- a **status check** with the context `pr-audit`.
+
+**Phase 0 is advisory by design.** `runAudit` forces the rendered action class to
+`MANUAL` even when the policy recommends `MERGE`: a human decides, nothing is
+merged automatically, and this workflow carries no model key. The status is
+`success` only when the envelope passes *and* the policy recommends `MERGE`; any
+other outcome is `failure`. No numeric score is printed to the comment or the
+status description (KDV-SCAN-15 stays open for the privacy phase).
+
+The content gate reuses `scripts/validate.mjs`: the sibling step runs it with
+`continue-on-error`, and its outcome is handed to the audit as
+`AUDIT_CONTENT_GATE_OK` (`1` only on success), so a red content gate can never be
+turned green from the PR text. Without a checkout the manifest body is not read
+here — `facts` stays empty and the content gate is the only content signal.
+
+**Fork PRs are skipped** — the job-level `if:` requires
+`head.repo.full_name == github.repository`, and the CLI exits early on a fork
+(KDV-CI-14, KDV-AUDIT-07). A fork's token is read-only and cannot comment.
+
+Thresholds are the module defaults (`DEFAULT_MIN_ACCOUNT_AGE_DAYS`,
+`DEFAULT_MAX_PRS_PER_DAY` in `scripts/lib/audit-envelope.mjs`); the §13.2
+configuration is not wired yet.
+
+### Enabling the status as a required check (not done)
+
+Once Phase 0 has accumulated evidence, add `pr-audit` to the `main`
+branch-protection required status checks (Settings → Branches). That — not the
+comment — is what would gate a merge; it is deliberately **not** enabled now.
+The "Branch protection (KDV-MOD-04)" section above lists `validate` as the
+current required check.
+
+### Trigger to revisit
+
+When Phase 1 opens the first auto-class (KDV-REVIEW-13): the status becomes a
+required check, the action class may leave `MANUAL`, and numeric scores must be
+privatized (KDV-REVIEW-14, KDV-SCAN-15).

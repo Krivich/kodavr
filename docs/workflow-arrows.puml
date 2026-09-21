@@ -64,6 +64,14 @@ package "scripts/lib\n====\nthe smart controller: content, machine contracts, bu
   component "static-server.mjs\ncreateStaticServer\n--\nlocal preview server" as SSRV <<lib>> [[../scripts/lib/static-server.mjs#createStaticServer]]
   component "manifest-card.mjs\nrenderManifestCard\n--\nmanifest.json → the PR reviewer's card" as MCARD <<lib>> [[../scripts/lib/manifest-card.mjs#renderManifestCard]]
   component "telegram-mirror.mjs\nrenderMirrorPost\n--\nmanifest + brief → a Telegram mirror post" as TGMIRROR <<lib>> [[../scripts/lib/telegram-mirror.mjs#renderMirrorPost]]
+  component "audit-channel.mjs\nmakeSpan · validateChannelResult\n--\nchannel output schema + allowlist validator" as AUDIT_CH <<lib>> [[../scripts/lib/audit-channel.mjs#validateChannelResult]]
+  component "audit-detectors.mjs\nstructuralChannel\n--\nLayer-1 structural detectors (invisible, base64, homoglyph, hidden)" as AUDIT_DET <<lib>> [[../scripts/lib/audit-detectors.mjs#structuralChannel]]
+  component "audit-forensic.mjs\nbuildForensicMap\n--\nconverged top-N span map for the human" as AUDIT_FOR <<lib>> [[../scripts/lib/audit-forensic.mjs#buildForensicMap]]
+  component "audit-policy.mjs\nevaluatePolicy\n--\ndeterministic envelope + channels -> decision" as AUDIT_POL <<lib>> [[../scripts/lib/audit-policy.mjs#evaluatePolicy]]
+  component "audit-envelope.mjs\ncheckDiffShape · evaluateEnvelope\n--\nLayer-0 envelope: diff shape + author signals (no content text)" as AUDIT_ENV <<lib>> [[../scripts/lib/audit-envelope.mjs#evaluateEnvelope]]
+  component "audit-report.mjs\nrenderAuditComment\n--\nadvisory PR comment: forensic map, no scores, escaped" as AUDIT_REP <<lib>> [[../scripts/lib/audit-report.mjs#renderAuditComment]]
+  component "audit-pr.mjs\nrunAudit\n--\nPR audit orchestration: API inputs -> envelope + policy (shadow)" as AUDIT_PR <<lib>> [[../scripts/lib/audit-pr.mjs#runAudit]]
+  component "audit-local.mjs\ndumpToPr · auditDumps\n--\nlocal harness: our own dumps -> the pipeline's verdicts" as AUDIT_LOCAL <<lib>> [[../scripts/lib/audit-local.mjs#dumpToPr]]
 }
 
 package "scripts\n====\nentry points you actually run" as P_CLI {
@@ -78,6 +86,8 @@ package "scripts\n====\nentry points you actually run" as P_CLI {
   component "contract.mjs\nvalidateAll\n--\nguards the module index (contract headers)" as CLI_CONTRACT <<cli>> [[../scripts/contract.mjs#validateAll]]
   component "pr-manifest-card.mjs\n--\nposts the sticky manifest card on a PR" as CLI_CARD <<cli>> [[../scripts/pr-manifest-card.mjs]]
   component "telegram-mirror.mjs\n--\nmirrors newly published dumps to Telegram" as CLI_TGMIRROR <<cli>> [[../scripts/telegram-mirror.mjs]]
+  component "audit-pr.mjs\n--\nposts the advisory PR audit comment and status" as CLI_AUDIT <<cli>> [[../scripts/audit-pr.mjs]]
+  component "audit-local.mjs\n--\nruns the audit pipeline over our own dumps (npm run audit:local)" as CLI_AUDIT_LOCAL <<cli>> [[../scripts/audit-local.mjs]]
 }
 
 package "input/controllers\n====\nclient controllers injected by the engine" as P_CTRL {
@@ -140,6 +150,13 @@ GH ..> CLI_LINT : guards this map
 GH ..> CLI_CONTRACT : guards the module index
 GH ..> CLI_CARD : runs the manifest card on a PR\nso the reviewer sees the fields
 GH ..> CLI_TGMIRROR : runs the dump mirror after a successful deploy
+GH ..> CLI_AUDIT : runs the PR audit in shadow mode\nadvisory comment + status, no merge
+CLI_AUDIT_LOCAL ..> AUDIT_LOCAL : reads content/dumps/* locally\nand prints what the pipeline says
+CLI_AUDIT ..> AUDIT_PR : fetches the diff + author signals via the API\nand runs the deterministic audit
+AUDIT_PR ..> AUDIT_ENV : builds the Layer-0 envelope from the diff shape
+AUDIT_PR ..> AUDIT_DET : scans the API patch with the Layer-1 detectors
+AUDIT_PR ..> AUDIT_POL : reduces envelope + channels to a recommendation
+AUDIT_PR ..> AUDIT_REP : renders the advisory comment (marker, no scores)
 CLI_CARD ..> MCARD : renders content/dumps/<slug>/manifest.json
 AGENT ..> CLI_DIET : keeps STATE.md compact
 

@@ -19,6 +19,12 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
   invariants: — the gate ships hidden in SSR: without JS the body is the whole page; — focus never falls to <body> when an overlay closes
 - **input/controllers/reception.js** — the /reception/ copy prompt and the conscious re-declaration link
   invariants: — there is no gate on this route; it is the human destination
+- **scripts/audit-local.mjs** — CLI — runs the audit pipeline over the repository's own dumps and prints the verdicts
+  consumes: node:fs, node:path, ./lib/audit-local.mjs
+  invariants: — offline: no network and no token; everything reads the local content/dumps tree; — the forensic map is printed without numeric scores, at most once per dump; — exit 0 by default; --strict is the only path to a non-zero exit
+- **scripts/audit-pr.mjs** — audits a pull request via the GitHub REST API and posts the advisory comment and status
+  consumes: node:fs, ./lib/audit-pr.mjs, ./lib/audit-report.mjs
+  invariants: — no checkout: the diff and author signals come from the REST API only; — fork PRs are skipped (read-only token): same-repo only, never posted to; — an unexpected error is printed and the process exits 1 (fail-visible)
 - **scripts/build.mjs** — the npm run build entry point
   consumes: ./lib/build.mjs, node:url
 - **scripts/contract.mjs** — contract-header validator + module-index generator for AGENTS/code-map.md
@@ -31,6 +37,35 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/generate-touch-icon.mjs** — rasterizes the touch icon from the wordmark
   consumes: @playwright/test, node:fs/promises, node:path, node:url
   invariants: — the icon is generated, never hand-edited
+- **scripts/lib/audit-channel.mjs** — the channel-output schema — spans, normalized channel results and their allowlist validator
+  exports: CHANNEL_VERDICTS, makeSpan, makeChannelResult, validateChannelResult
+  invariants: — a channel result carries only channel/score/spans/verdict; anything else is a schema error; — validation never throws: an unknown shape is reported, not fatal
+- **scripts/lib/audit-detectors.mjs** — Layer-1 deterministic structural detectors — invisible chars, base64 blobs, homoglyphs, hidden markup
+  exports: INVISIBLE_RANGES, detectInvisibleChars, detectBase64Blobs, detectHomoglyphs, detectHiddenMarkup, structuralChannel
+  consumes: ./audit-channel.mjs
+  invariants: — every detector is deterministic and returns 0-based character offsets; — a clean text returns an empty span list, never null
+- **scripts/lib/audit-envelope.mjs** — Layer-0 deterministic envelope over git metadata and author signals (reads no content text)
+  exports: DUMPS_ROOT, DEFAULT_MIN_ACCOUNT_AGE_DAYS, DEFAULT_MAX_PRS_PER_DAY, checkDiffShape, checkAuthorSignals, evaluateEnvelope
+  consumes: ./audit-policy.mjs
+  invariants: — the envelope never reads content text; it works on metadata and schema only; — a missing or malformed input is a FAILED condition, never a thrown error
+- **scripts/lib/audit-forensic.mjs** — converges channel spans into the top-N forensic map a human sees
+  exports: MAX_FORENSIC_FINDINGS, buildForensicMap
+  invariants: — overlapping spans in one file converge into one finding; no numeric score leaks; — ordering is deterministic: convergence count desc, span length desc, then position
+- **scripts/lib/audit-local.mjs** — the repeatable local harness — the repository's own dumps → the audit pipeline's verdicts
+  exports: TRUSTED_AUTHOR, dumpToPr, auditDumps, summarizeRuns
+  consumes: ./audit-pr.mjs
+  invariants: — pure: no fs, no network, no environment; the CLI owns every disk read; — filenames are synthesized as additions under content/dumps/<slug>/ — nothing else; — the harness reports the pipeline's verdicts verbatim; it never re-tunes them
+- **scripts/lib/audit-policy.mjs** — the deterministic policy — envelope + channel results → a recommendation and an action class
+  exports: DECISIONS, ACTION_CLASSES, DEFAULT_CONFLICT_THRESHOLD, envelopeAllPass, evaluatePolicy
+  consumes: ./audit-channel.mjs, ./audit-forensic.mjs
+  invariants: — the LLM has no authority: only this deterministic code computes the recommendation; — any exception or malformed channel fails toward a human (THINK/MANUAL), never toward MERGE
+- **scripts/lib/audit-pr.mjs** — orchestrates the PR audit — API inputs → envelope + policy → advisory comment and status check
+  exports: STATUS_CONTEXT, normalizePrFiles, authorSignalsFromApi, runAudit
+  consumes: ./audit-detectors.mjs, ./audit-envelope.mjs, ./audit-policy.mjs, ./audit-report.mjs
+  invariants: — pure and deterministic: it performs no I/O and reads no environment; — the shadow phase asserts no merge authority: the rendered class is always MANUAL; — no numeric score ever reaches the comment or the status description
+- **scripts/lib/audit-report.mjs** — renders the advisory sticky PR comment — the forensic map without scores, escaped
+  exports: AUDIT_MARKER, renderAuditComment
+  invariants: — no numeric score ever reaches the comment; only file spans, reasons and channel ids; — author-supplied text is angle-escaped, and every report carries the data-not-instructions footer
 - **scripts/lib/build.mjs** — the one build pipeline: content → datasets → engine → machine files
   exports: buildProject
   consumes: ./dumps.mjs, ./i18n.mjs, ./ignition.mjs, ./machine.mjs, ./pages.mjs, ./relativize.mjs, node:fs/promises, node:module, node:path
