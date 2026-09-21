@@ -113,6 +113,10 @@ The linter prints this file's path in the guidance for exactly this reason.
 
 ## Maintaining & rendering
 
+**Editing the `.puml` is not finished until `docs/workflow-arrows.svg` is re-rendered
+and committed in the SAME change** — source and render are one artifact; an
+unrendered `.puml` edit is an incomplete edit.
+
 Render (Smetana layout — no GraphViz needed):
 
 ```
@@ -128,4 +132,7 @@ Then confirm the `.svg` holds no `Syntax Error`.
 - `====` draws a divider inside a `package` title; `--` draws one inside a
   `component` body.
 - **Add a module → add a brick** — otherwise a code drawer fails file coverage.
+- The rendered SVG carries a **native hover highlight** (`skinparam pathHoverColor`
+  → `path:hover`): a hovered arrow line recolors. It shows only in a CSS-capable
+  viewer (a browser), never in PNG or a static IDE preview.
 - **Commit `.puml` and `.svg` together** — source and render are one artifact.

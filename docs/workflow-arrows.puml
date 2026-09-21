@@ -4,6 +4,9 @@
 ' Never edit the .svg. scripts/workflow-arrows-lint.mjs fails on any drift:
 ' drawers, file coverage of code dirs, links, symbols, stereotypes, step numbers.
 !pragma layout smetana
+' Native SVG hover: hovering an arrow path recolors it (QA-5453). Only shows in a
+' CSS-capable SVG viewer (a browser), not PlantUML's PNG or static previews.
+skinparam pathHoverColor #C62828
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam componentStyle rectangle
@@ -40,7 +43,16 @@ actor "Author\n(opening a PR)" as AUTHOR
 actor "AI agent\n(the reader)" as AGENT
 actor "Human\n(a visitor)" as HUMAN
 component "Ignition engine\nvendor/ignition-ssg\n--\nHandlebars SSG: input/ + data → output/public" as ENGINE <<ext>>
-component "GitHub\nPages + Actions\n--\nserves the artifact, runs validate on a PR" as GH <<ext>>
+' GitHub = Actions (the workflows) + Pages (the served artifact). Drawn as a
+' rectangle, not a package: a package would read as a first-party drawer.
+rectangle "GitHub" as GH {
+  component "Pages\n--\nserves output/public at kodavr.xyz" as GH_PAGES <<ext>>
+  component "validate.yml\nPR + push main\n--\nnpm ci · validate · test · contract · arrows-lint" as WF_VALIDATE <<ext>>
+  component "deploy.yml\npush main\n--\nvalidate · build → upload-pages-artifact → Pages" as WF_DEPLOY <<ext>>
+  component "audit.yml\npull_request (same-repo)\n--\nvalidate + the advisory audit (model key = a repo secret)" as WF_AUDIT <<ext>>
+  component "dump-manifest.yml\npull_request (same-repo)\n--\nposts the sticky manifest card" as WF_MANIFEST <<ext>>
+  component "publish-telegram.yml\nworkflow_run ⇐ deploy (success)\n--\nmirrors newly published dumps" as WF_TG <<ext>>
+}
 component "Playwright (dev)\n--\nrasterizes the OG card and the touch icon" as PW <<ext>>
 
 ' ── drawers ────────────────────────────────────────────────────────────────────
@@ -129,13 +141,14 @@ IGN -[#9E9E9E]-> ENGINE : 9 · engine build\nthe SSG renders output/public
 BUILD -[#1E88E5]-> REL : [[../scripts/lib/relativize.mjs#relativizeSite 10 · relativizeSite()]]\nrewrite internal links per page depth
 BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeMachineFiles 11 · writeMachineFiles()]]\nindex.json, well-known, feeds, tags
 BUILD -[#1E88E5]-> MACHINE : [[../scripts/lib/machine.mjs#writeSitemap 12 · writeSitemap()]]\nsitemap.xml over the pretty URLs
-MACHINE ..> GH : 13 ⟵ output/public\nthe artifact GitHub Pages serves
+MACHINE ..> GH_PAGES : 13 ⟵ output/public\nthe artifact GitHub Pages serves
 
 ' The consumption loop: machines first, humans at the reception.
 AGENT -[#43A047]-> MACHINE : [[../scripts/lib/machine.mjs 14 · GET /index.json]]\nthe agent picks dumps by field
 AGENT -[#43A047]-> DUMP1 : [[../content/dumps/2026-09-14-kodavr-manifesto/manifest.json 15 · GET manifest.json + raw]]\nfetch the contract and the body
 HUMAN -[#43A047]-> CTRL_DUMPS : [[../input/controllers/dumps.js 16 · gate → reception]]\ncheck in, or hand the dump to an agent
 AUTHOR -[#00897B]-> CLI_VAL : [[../scripts/validate.mjs#validateContent 17 · PR → validate]]\nevery dump arrives as a validated PR
+AUTHOR ..> WF_AUDIT : the same PR also triggers the audit\n(same-repo only)
 
 ' Structural edges (dashed, unnumbered): imports, assets and dev tools —
 ' the glue that anchors every brick to the flow.
@@ -151,12 +164,18 @@ MACHINE ..> VERB : writes robots.txt / humans.txt verbatim
 CLI_SERVE ..> SSRV : serves output/public locally
 CLI_OG ..> PW : rasterizes the OG card
 CLI_TI ..> PW : rasterizes the touch icon
-GH ..> CLI_REQ : runs the coverage check
-GH ..> CLI_LINT : guards this map
-GH ..> CLI_CONTRACT : guards the module index
-GH ..> CLI_CARD : runs the manifest card on a PR\nso the reviewer sees the fields
-GH ..> CLI_TGMIRROR : runs the dump mirror after a successful deploy
-GH ..> CLI_AUDIT : runs the PR audit in shadow mode\nadvisory comment + status, no merge
+' GitHub Actions: each workflow and the chain it runs (dashed, unnumbered).
+WF_VALIDATE ..> CLI_VAL : npm ci · validate · test on every PR / push main
+WF_VALIDATE ..> CLI_CONTRACT : guards the module index
+WF_VALIDATE ..> CLI_LINT : guards this map
+WF_DEPLOY ..> CLI_VAL : the same gate before the build
+WF_DEPLOY ..> CLI_BUILD : push main → npm run build
+WF_DEPLOY ..> GH_PAGES : uploads the pages artifact Pages serves
+WF_DEPLOY ..> WF_TG : on completion (workflow_run) → the mutual invocation
+WF_AUDIT ..> CLI_VAL : content gate (advisory, continue-on-error)
+WF_AUDIT ..> CLI_AUDIT : runs the advisory audit (LLM key = a repo secret)
+WF_MANIFEST ..> CLI_CARD : posts the sticky manifest card
+WF_TG ..> CLI_TGMIRROR : mirrors newly published dumps
 CLI_AUDIT_LOCAL ..> AUDIT_LOCAL : reads content/dumps/* locally\nand prints what the pipeline says
 CLI_AUDIT_JUDGE ..> AUDIT_JUDGE : frames our own dumps as data\nand runs the Layer-4 judge locally
 CLI_AUDIT_JUDGE ..> AUDIT_LLM : resolves the provider from env, auth or a work-flow config\n(never a hardcoded key)
