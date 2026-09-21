@@ -31,11 +31,15 @@ across it is the bug.
 
 ## How to read it
 
-- **Drawers** = first-party code directories, drawn as a `package "<dir>\n====\n<why>"`
+- **Drawers** = first-party code directories, drawn as a `package "<dir>\n<why>"`
   block; the header says why the directory exists. Externals (actors, the engine,
   GitHub, dev tools) are top-level bricks stereotyped `<<ext>>`.
-- A **brick** = one file: it reads `file` / `symbol` / `role`, carries its drawer's
-  stereotype, and links its file (`[[../<path>#symbol <label>]]`, symbol optional).
+- A **brick** = one file, drawn with one label grammar (check J below):
+  `NAME` → one or more lines of **what it does** (business meaning) → `--` →
+  **members** (its exported symbols). The `--` exists **only** when there are
+  members; a brick whose meaning line already names its one method needs no
+  members line. It carries its drawer's stereotype and links its file
+  (`[[../<path>#symbol <label>]]`, symbol optional).
 - **Numbered arrows** = the flow order `1..N`. Label line 1 is
   `N · callee.method()` — the API method **of the target brick** (the callee).
   Label line 2 (plain text) is **why** the call happens.
@@ -104,6 +108,10 @@ The linter pins these; every new brick or arrow must obey them.
   `N ⟵` for a return.
 - **T5** — a link's `#symbol` must be declared in the target file.
 - **T6** — returns use `..>` and `⟵`.
+- **T7** — one label grammar for every brick and drawer: `NAME`, then the business
+  meaning, then `--` and the members — the `--` only when members exist. Members
+  never sit above the line, and a linked `#symbol` must be one of the members
+  (enforced by check J, KDV-CI-26).
 
 ## The linter
 
@@ -136,6 +144,11 @@ Checks:
   `input/controllers/*` by path) or a **dynamic** call is a legitimate false
   positive — mask it with `@lint-ignore`. Non-modules (`.css`/`.svg`/`.png`/`.hbs`/
   `.json`) and unresolved links are other checks' business.
+- **(J)** every brick/drawer label follows one grammar (KDV-CI-26, T7): at most
+  one `--`; the lines above it (besides the NAME) are business meaning, never
+  members; a `--` has a meaning line above it and members below it; and a brick
+  whose link carries a `#symbol` must list that symbol among the members below
+  the line. The old `NAME / members / -- / meaning` shape is drift.
 - **(P1)** every arrow carries a process colour from the palette, or the
   structural grey (no colour, or an unknown colour, is drift).
 - **(P2)** a numbered step carries a process colour (never the structural grey)
@@ -217,8 +230,9 @@ npm run workflow-arrows:svg
   `[[../scripts/lib/build.mjs#buildProject <label>]]`. The label follows the URL
   after a **space** — not `{}`. No absolute paths, no `file://` (the IntelliJ plugin
   opens neither).
-- `====` draws a divider inside a `package` title; `--` draws one inside a
-  `component` body.
+- `====` is gone from drawers: one grammar everywhere — `NAME` → what it does →
+  `--` → members; `--` draws the divider inside a brick and exists only when
+  members follow (T7, check J).
 - **Add a module → add a brick** — otherwise a code drawer fails file coverage.
 - `npm run workflow-arrows:svg` injects the **hover block**: the whole arrow lights up
   (line, head, label) in the `.puml`'s `skinparam pathHoverColor` colour, and lingers

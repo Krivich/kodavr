@@ -29,8 +29,10 @@
 // workflow-arrows-lint — linter for docs/workflow-arrows.puml (kodavr).
 //
 // The diagram is a hand-drawn map of kodavr's code tree:
-//   * drawer blocks  — package "<dir>\n====\n<why>" for each first-party code dir;
-//   * module bricks  — component "<file>\n<symbol>\n--\n<role>" as X <<st>> [[<link>]];
+//   * drawer blocks  — package "<dir>\n<why>" for each first-party code dir;
+//   * module bricks  — component "<file>\n<meaning>\n--\n<members>" as X <<st>> [[<link>]];
+//     one grammar (J): NAME → business meaning → `--` → members; the `--` only
+//     when members exist, and a linked #symbol must be one of the members;
 //   * a numbered flow — labels `N · call` (with a link) / `N ⟵ return` (no link).
 // Everything in it points at real things; the linter is the drift alarm:
 //
@@ -50,6 +52,11 @@
 //       a by-path spawn (the engine injects the controllers) or a stale map edge
 //       is drift; non-modules (.css/.svg/.png/.hbs/...) and unresolved links are
 //       other checks' business (KDV-CI-24)
+//   (J) every brick/drawer label follows one grammar — NAME, then the business
+//       meaning, then `--` and the members (`--` only when members exist):
+//       members never sit above the line, a `--` needs a meaning above it and
+//       members below it, and a linked #symbol must be one of the members
+//       (KDV-CI-26)
 //   (P1) every arrow carries a process colour from the palette (or the structural
 //       grey) — the colour names the business process
 //   (P2) a numbered step carries a process colour (never the structural grey) and
@@ -109,6 +116,11 @@ const DRAWERS = [
 const SCHEME = /^(?:www\.|https?:|mailto:|about:)/i;
 // Stereotypes that are not a drawer theme: external actors/systems and packs.
 const EXEMPT_STEREOTYPES = new Set(['ext', 'pack', 'p_pack']);
+
+// The member-line grammar (KDV-CI-26): identifier-only symbols, ` · `-separated,
+// each with an optional `()`. A file list (`home.hbs · about.hbs`) or prose is
+// NOT a member line — the dot/space rules them out.
+const MEMBER_LINE = /^[A-Za-z_$][\w$]*(\(\))?(?: · [A-Za-z_$][\w$]*(\(\))?)*$/;
 
 // The business processes: the arrow COLOUR names the process and the RANK fixes
 // the global step order — all rank-1 steps precede rank-2, and so on (P1/P2).
@@ -385,6 +397,34 @@ export function bricks(text) {
   return out;
 }
 
+// labelBlocks(text) → every component/package label as { kind, subject, text,
+// symbol }: `subject` is the brick alias (or the drawer path), `text` the raw
+// quoted label, `symbol` the `#fragment` of the brick's [[link]] (or null). One
+// parser feeds check (J), so a brick and a drawer are held to one grammar.
+function labelBlocks(text) {
+  const out = [];
+  for (const line of text.split(/\r?\n/)) {
+    const comp = line.match(/^\s*component\s+"([^"]*)"\s+as\s+(\w+)\s*<<\w+>>(.*)$/);
+    if (comp) {
+      const link = (comp[3].match(/\[\[([^\]]+)\]\]/) || [])[1] ?? null;
+      const url = link ? link.split(' ')[0] : null;
+      const hash = url ? url.indexOf('#') : -1;
+      out.push({
+        kind: 'component',
+        subject: comp[2],
+        text: comp[1],
+        symbol: hash === -1 ? null : url.slice(hash + 1),
+      });
+      continue;
+    }
+    const pkg = line.match(/^\s*package\s+"([^"]*)"/);
+    if (pkg) {
+      out.push({ kind: 'package', subject: pkgPath(pkg[1]), text: pkg[1], symbol: null });
+    }
+  }
+  return out;
+}
+
 // symbolDeclared(src, symbol) → true when the symbol is a declaration or a call
 // site (a reference alone is not enough: `#handleChat` must be a real member,
 // not a mention in a comment). This is what catches a renamed method.
@@ -586,6 +626,49 @@ export function lintProblems(text, { pumlDir = path.dirname(DEFAULT_PUML), repoR
     const backward = graph.get(dstFile) ?? new Set();
     if (!forward.has(dstFile) && !backward.has(srcFile)) {
       problems.push({ code: 'I', subject: key, message: 'drawn edge is not a real import in either direction' });
+    }
+  }
+
+  // (J) one label grammar for every brick and drawer (KDV-CI-26): NAME, then the
+  // business meaning, then `--` and the members — the `--` only when members
+  // exist. Members never sit above the line; a `--` needs a meaning above it and
+  // members below it; a linked #symbol must be one of those members.
+  for (const b of labelBlocks(text)) {
+    const lines = b.text.split('\\n');
+    const separators = lines.filter((l) => l === '--').length;
+    if (separators > 1) {
+      problems.push({ code: 'J', subject: b.subject, message: 'more than one -- separator' });
+      continue;
+    }
+    const sep = lines.indexOf('--');
+    const above = sep === -1 ? lines.slice(1) : lines.slice(1, sep);
+    const below = sep === -1 ? [] : lines.slice(sep + 1);
+    if (above.some((l) => MEMBER_LINE.test(l))) {
+      problems.push({ code: 'J', subject: b.subject, message: 'members must sit below the -- separator' });
+    }
+    if (sep === -1) continue;
+    if (!above.some((l) => !MEMBER_LINE.test(l))) {
+      problems.push({ code: 'J', subject: b.subject, message: 'the -- needs a meaning line above it' });
+    }
+    if (!below.length) {
+      problems.push({
+        code: 'J',
+        subject: b.subject,
+        message: 'the -- has no members below it (drop the -- when there are no members)',
+      });
+      continue;
+    }
+    if (b.symbol) {
+      const sym = b.symbol.replace(/\(\)$/, '');
+      const members = new Set();
+      for (const ml of below) for (const tok of ml.split(' · ')) members.add(tok.replace(/\(\)$/, ''));
+      if (!members.has(sym)) {
+        problems.push({
+          code: 'J',
+          subject: b.subject,
+          message: `the linked symbol '${sym}' is not listed among the members below --`,
+        });
+      }
     }
   }
 

@@ -148,6 +148,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-CI-23**: The workflow map carries a `.gitignore`-style `@lint-ignore` block that may suppress ONLY the cheap-validation codes (`I`, `P1`–`P3`); every mask states a reason mechanism (`by-path|dynamic|transitive|non-module`) plus free text and matches the problem key `CODE: subject` (`*`/`?` globs, `!` negation, last match wins). A mask targeting a structural check (A–H, M), a mask without a valid reason, an unused mask, or an unterminated block is itself an `M` error and is never applied; suppressed problems are reported (`suppressed N`) but never hidden. *(§8.1; tests/unit/workflow-arrows.test.js; flow: legacy)*
 - ✅ **KDV-CI-24**: A drawn edge between two module bricks must correspond to a real import (either direction); the linter resolves the first-party import graph over `scripts/` and `input/` and the real map's only false positives (the by-path ignition controllers) are suppressed via a justified `@lint-ignore` mask. *(§8.1; tests/unit/workflow-arrows.test.js; flow: legacy)*
 - ✅ **KDV-CI-25**: Every requirement row must declare its flow impact — the business process(es) from the workflow-map palette it extends or touches — as an in-row `flow` field (`<process>[,…]`, `none`, or the frozen `legacy` exemption), enforced by `npm run req`; the pre-hook rows carry the frozen `legacy` marker and their exact set is anchored in code as `LEGACY = { count, sha256 }`, so a new row cannot dodge by writing `legacy`. *(§8.1; flow: Engineering; tests/unit/registry.test.js)*
+- ✅ **KDV-CI-26**: Every map brick follows one label grammar: NAME → business meaning → `--` → members (the `--` only when members exist); drawers are NAME → meaning. Enforced by linter check J (members never above the line; a linked `#symbol` must be listed below it). *(§8.1; tests/unit/workflow-arrows.test.js; flow: Engineering)*
 
 ## KDV-MOD — Moderation and social layer (§9)
 
@@ -281,7 +282,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 12 | 12 | 0 | 0 | 0 |
-| KDV-CI | 25 | 23 | 2 | 0 | 0 |
+| KDV-CI | 26 | 24 | 2 | 0 | 0 |
 | KDV-MOD | 4 | 2 | 2 | 0 | 0 |
 | KDV-AUDIT | 16 | 13 | 0 | 3 | 0 |
 | KDV-SCAN | 16 | 10 | 1 | 5 | 0 |
@@ -290,4 +291,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **209** | **168** | **14** | **26** | **1** |
+| **Total** | **210** | **169** | **14** | **26** | **1** |

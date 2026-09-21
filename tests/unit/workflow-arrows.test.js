@@ -330,3 +330,60 @@ describe('workflow-arrows module imports (§8.1)', () => {
     expect(formatted(puml)).not.toContain('I: PAGES');
   });
 });
+
+// KDV-CI-26: one label grammar for every brick and drawer — NAME, then the
+// business meaning, then `--` and the exported members (the `--` only when there
+// are members). Check (J) holds it: members never sit above the line, a `--`
+// always has a meaning above it and members below it, and a linked `#symbol`
+// must be one of the listed members.
+describe('workflow-arrows label grammar (§8.1)', () => {
+  const onlyJ = (text) => formatted(text).filter((p) => p.startsWith('J:'));
+
+  it('KDV-CI-26: members above the -- are drift (the old shape)', () => {
+    const oldShape = compose([
+      'component "copy.mjs\\nEN · t\\n--\\nthe locale registry" as X <<lib>>',
+    ]);
+    expect(onlyJ(oldShape)).toContain('J: X — members must sit below the -- separator');
+  });
+
+  it('KDV-CI-26: more than one -- separator is drift', () => {
+    const twoSeps = compose(['component "copy.mjs\\ndoes the thing\\n--\\nt\\n--\\nextra" as X <<lib>>']);
+    expect(onlyJ(twoSeps)).toContain('J: X — more than one -- separator');
+  });
+
+  it('KDV-CI-26: a -- with no members below is drift', () => {
+    const emptyMembers = compose(['component "copy.mjs\\ndoes the thing\\n--" as X <<lib>>']);
+    expect(onlyJ(emptyMembers)).toContain(
+      'J: X — the -- has no members below it (drop the -- when there are no members)',
+    );
+  });
+
+  it('KDV-CI-26: a -- with no meaning above is drift', () => {
+    const emptyMeaning = compose(['component "copy.mjs\\n--\\nt" as X <<lib>>']);
+    expect(onlyJ(emptyMeaning)).toContain('J: X — the -- needs a meaning line above it');
+  });
+
+  it('KDV-CI-26: a linked #symbol missing from the members below -- is drift', () => {
+    const badSymbol = compose([
+      'component "i18n.mjs\\ndoes the thing\\n--\\nrender" as X <<lib>> [[../scripts/lib/i18n.mjs#t]]',
+    ]);
+    expect(onlyJ(badSymbol)).toContain(
+      "J: X — the linked symbol 't' is not listed among the members below --",
+    );
+  });
+
+  it('KDV-CI-26: the correct grammar passes (with and without members)', () => {
+    const withMembers = compose([
+      'component "i18n.mjs\\ndoes the thing\\n--\\nt · LOCALES" as X <<lib>> [[../scripts/lib/i18n.mjs#t]]',
+    ]);
+    expect(onlyJ(withMembers)).toEqual([]);
+
+    const noMembers = compose([
+      'component "copy.mjs\\ndoes the thing" as X <<lib>> [[../scripts/lib/copy.mjs]]',
+    ]);
+    expect(onlyJ(noMembers)).toEqual([]);
+
+    // The real committed map follows the grammar.
+    expect(lintDiagram(puml, opts)).toEqual([]);
+  });
+});
