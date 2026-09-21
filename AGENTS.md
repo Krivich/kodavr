@@ -79,8 +79,6 @@ The linted map of the code tree and the numbered cross-cutting flow. Read it bef
 changing a part so you extend the flow that already exists instead of adding a parallel
 path around it. How to read / maintain / lint / render — **AGENTS/workflow-arrows.md**;
 the drift alarm is `npm run workflow-arrows:lint` (silent, exit 0 when clean).
-Editing the `.puml` means re-rendering and committing `docs/workflow-arrows.svg` in the
-same change (AGENTS/workflow-arrows.md).
 
 ## Tools (dev) — AGENTS/tools.md
 
