@@ -28,6 +28,7 @@ const BINDINGS = {
     // lead composed from its parts (the term `a dump` emphasized); HOME_TITLE
     // stays the plain SEO string.
     ['<p class="home-lead">{{home_title.lead}}<strong>{{home_title.term}}</strong>{{home_title.tail}}</p>', "Writers share raw experience — a dump — the reader's agent adapts it to their needs.", 'HOME_TITLE_LEAD', 'Writers share raw experience — '],
+    ['<p>{{copy.home_explainer}}</p>', '<p>Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.</p>', 'HOME_EXPLAINER', 'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.'],
     ['href="{{locale_prefix}}/about/">{{copy.home_about_cta}}</a>', 'href="/about/">Read the manifesto</a>', 'HOME_ABOUT_CTA', 'About the platform'],
     ['href="{{locale_prefix}}/contribute/">{{copy.home_contribute_cta}}</a>', 'href="/contribute/">Publish a dump</a>', 'HOME_CONTRIBUTE_CTA', 'How to contribute'],
     ['<h2>{{copy.home_for_machines}}</h2>', '<h2>For machines</h2>', 'HOME_FOR_MACHINES', 'For machines'],
@@ -193,6 +194,9 @@ describe('i18n surface: datasets carry lang/rtl and the frame copy (KDV-I18N-01)
     );
     expect(routes.home.copy.home_about_cta).toBe('About the platform');
     expect(routes.home.copy.home_contribute_cta).toBe('How to contribute');
+    expect(routes.home.copy.home_explainer).toBe(
+      'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.',
+    );
     expect(routes.home.copy.pagination_label).toBe('Pagination');
     expect(routes.home.copy.pagination_prev).toBe('Previous page');
     expect(routes.home.copy.pagination_next).toBe('Next page');

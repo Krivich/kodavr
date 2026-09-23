@@ -370,7 +370,7 @@ Tag and domain pages are NOT built in MVP (§A12, trigger in §13).
 1. First screen — human fast lane (§7.12): the lead invites the visitor to prompt their agent and nods at the prompt below; the four jump links open a prefilled chat, the last chip copies the prompt for the visitor to paste, and the lane hint says `(the four buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)`.
 2. Heading-statement and explanation of "why this is not a paywall or censorship".
 3. Three-step instruction; the prompt is rendered exactly once per surface, below the instruction on reception (§7.4 on the home `01 · HUMANS` plate, §7.11 on a dump page).
-4. The dump's brief under `NO AGENT AT HAND?`: when the optional `summary.md` layer is present, its markdown is rendered as the author's agent's short adaptation for a human stranger — it is not the dump (which stays raw and machine-first), and the block closes with the CTA ("the full raw account" via "0" under declaration or through one's agent) and the report line. When the layer is absent the block shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot — the brief is never promised when it is not there.
+4. The dump's brief under `WHAT YOUR AGENT WILL TELL YOU`: when the optional `summary.md` layer is present, its markdown is rendered as the author's agent's short adaptation for a stranger — the demo of what the reader's own agent will tell them, shaped to their context and language — and the block closes with the CTA (copy the prompt below and paste it into your agent) and the report line. When the layer is absent the block shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot — the brief is never promised when it is not there.
 5. Manifest card of the current dump: title, type, domain, date, stakes, content_flags, trust_level, summary, links to manifest.json and index.json. Metadata is readable by humans: this is not content.
 6. Line about the blanket 18+ category.
 
@@ -485,18 +485,17 @@ Hint: arrays start at zero. Hearts start at one.
 ```
 
 ### 7.2 The `01 · PREVIEW` plate (author brief and legal tail)
-The reception block dissolved in Human Surface v4; the `01 · PREVIEW` plate absorbs it. The plate leads with the explainer as a statement — `NO AGENT AT HAND?` and its note, set behind the design system's bold left rule (`.block-statement`, `border-left:3px solid var(--ink)`) so the premise is read before the dump is named — and only then names the dump (title, summary, the card's metadata tokens). The author's brief card sits DIRECTLY under the summary it explains: under `NO AGENT AT HAND?` the plate renders the optional `summary.md` layer — the author's agent's short adaptation for a human stranger, not the raw dump. Without the layer it shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot, and that line's manifest really does follow the card. The CTA sends the visitor back to the prompt, and the report line closes the brief tier; the legal tail pairs that report line with the blanket 18+ rating under one hairline and stays last. The fence below spells the plate in DOM order: the explainer, the dump-name placeholder, the brief slot and the legal tail. The §7.2 monospace wall and the standalone `/reception/` platform variant are gone with the route.
+The reception block dissolved in Human Surface v4; the `01 · PREVIEW` plate absorbs it. The plate leads with the explainer as a statement — `WHAT YOUR AGENT WILL TELL YOU` and its note, set behind the design system's bold left rule (`.block-statement`, `border-left:3px solid var(--ink)`) so the premise is read before the dump is named — and only then names the dump (title, summary, the card's metadata tokens). The author's brief card sits DIRECTLY under the summary it explains: the plate renders the optional `summary.md` layer — the author's agent's short adaptation for a stranger, the demo of what the reader's own agent will say. Without the layer it shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot, and that line's manifest really does follow the card. The CTA hands the visitor the prompt to paste into their agent, and the report line closes the brief tier; the legal tail pairs that report line with the blanket 18+ rating under one hairline and stays last. The fence below spells the plate in DOM order: the explainer, the dump-name placeholder, the brief slot and the legal tail. The §7.2 monospace wall and the standalone `/reception/` platform variant are gone with the route.
 ```
-NO AGENT AT HAND?
-Read the brief: a short adaptation the author's agent wrote for
-a human stranger. It is not the dump — the dump stays raw and
-machine-first. This is what your agent would have told you.
+WHAT YOUR AGENT WILL TELL YOU
+Here's a short adaptation the author's agent wrote for a stranger.
+Your agent will do the same — shaped to your context and language.
 
 <manifest title · summary · date · domain · stakes · trust_level>
 
 <brief — the dump summary.md, rendered here>
-Want the full raw account? Press 0 under declaration, or send
-your agent with the prompt above.
+Try it now: copy the prompt below and paste it into your agent.
+It will read this dump and retell it for you in 30 seconds.
 Something illegal or personal in a dump? Report it — removal is
 a withdrawn status with a reason, not silence.
 

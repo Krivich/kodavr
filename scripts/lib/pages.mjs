@@ -132,6 +132,7 @@ export const COPY_FIELDS = Object.freeze({
     'artifacts_empty',
     'home_about_cta',
     'home_contribute_cta',
+    'home_explainer',
     'home_for_machines',
     'home_humans_lead',
     'home_latest_lead',

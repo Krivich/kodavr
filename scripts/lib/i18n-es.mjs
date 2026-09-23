@@ -79,17 +79,15 @@ const GATE_TEXT = [
 ].join('\n\n');
 
 // §7.2 v2: the reception wall and the brief tier.
-const BRIEF_HEADING = '¿SIN AGENTE A MANO?';
+const BRIEF_HEADING = 'LO QUE TE DIRÁ TU AGENTE';
 const BRIEF_NOTE = [
-  'Lee el resumen: una adaptación breve que el agente del autor',
-  'escribió para un humano desconocido. No es el dump — el dump',
-  'sigue siendo crudo y orientado a máquinas. Esto es lo que tu',
-  'agente te habría dicho.',
+  'Aquí tienes una adaptación breve que el agente del autor escribió para un desconocido.',
+  'Tu agente hará lo mismo, adaptado a tu contexto y a tu idioma.',
 ].join('\n');
 const BRIEF_SLOT = '<brief — el summary.md del dump, renderizado aquí>';
 const BRIEF_CTA = [
-  '¿Quieres el relato crudo completo? Pulsa 0 bajo declaración, o',
-  'envía a tu agente con el prompt de arriba.',
+  'Pruébalo ahora: copia el prompt de abajo y pégaselo a tu agente.',
+  'Leerá este dump y te lo contará en 30 segundos.',
 ].join('\n');
 const BRIEF_REPORT = [
   '¿Algo ilegal o personal en un dump? Infórmalo — la retirada es',
@@ -402,6 +400,8 @@ export const ES = Object.freeze({
   HOME_TITLE_LEAD: 'Los autores comparten experiencia cruda — ',
   HOME_TITLE_TERM: 'un dump',
   HOME_TITLE_TAIL: ' — y el agente del lector lo adapta a sus necesidades.',
+  HOME_EXPLAINER:
+    'Kodavr es un registro de informes de campo sin pulir: código, flujos de trabajo y lecciones aprendidas, empaquetados para que tu agente de IA los lea y los adapte para ti. Construir algo cuesta 1x; empaquetarlo para otros cuesta 10x. Arreglamos esa asimetría.',
   HOME_HUMANS_LEAD:
     'Lee Kodavr a través de tu propio agente: para eso está diseñado. Este es el prompt:',
   HOME_TAGLINE:

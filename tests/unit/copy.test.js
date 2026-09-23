@@ -175,7 +175,19 @@ describe('copydeck', () => {
     expect(BRIEF_BLOCK).toBe(
       [BRIEF_HEADING, BRIEF_NOTE, BRIEF_SLOT, BRIEF_CTA, BRIEF_REPORT].join('\n'),
     );
-    expect(BRIEF_HEADING).toBe('NO AGENT AT HAND?');
+    expect(BRIEF_HEADING).toBe('WHAT YOUR AGENT WILL TELL YOU');
+    expect(BRIEF_NOTE).toBe(
+      [
+        "Here's a short adaptation the author's agent wrote for a stranger.",
+        'Your agent will do the same — shaped to your context and language.',
+      ].join('\n'),
+    );
+    expect(BRIEF_CTA).toBe(
+      [
+        'Try it now: copy the prompt below and paste it into your agent.',
+        'It will read this dump and retell it for you in 30 seconds.',
+      ].join('\n'),
+    );
     expect(BRIEF_SLOT).toBe('<brief — the dump summary.md, rendered here>');
     expect(BRIEF_FALLBACK).toBe('brief not attached for this dump — manifest below');
     for (const value of [BRIEF_HEADING, BRIEF_NOTE, BRIEF_SLOT, BRIEF_CTA, BRIEF_REPORT]) {
@@ -190,6 +202,14 @@ describe('copydeck', () => {
     expect(blockFor('7.2')).not.toContain(PROMPT_TEXT);
     expect(PROMPT_TEXT).toBe(blockFor('7.4'));
     expect(LANE_COPY_LABEL).toBe('Or copy & paste it yourself');
+  });
+
+  it('KDV-SURFACE-24: home_explainer is the storefront hero explainer verbatim (feedback-marketing item 3)', () => {
+    expect(copydeck.HOME_EXPLAINER).toBe(
+      'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.',
+    );
+    expect(copydeck.HOME_EXPLAINER).toContain('1x effort');
+    expect(copydeck.HOME_EXPLAINER).toContain('10x');
   });
 
   it('KDV-COPY-03: footer text is verbatim from §7.3 and carries the report line', () => {

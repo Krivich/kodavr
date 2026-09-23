@@ -10,10 +10,10 @@
  *   BRAND_SLOGANS — the three §7.15 brand slogans in §1.4 order
  *   BRAND_SLOGANS_MUTED — the §7.15 non-lead slogans joined for the muted tail
  *   BRIEF_BLOCK — the §7.2 v2 brief section (heading → report line) as one composition
- *   BRIEF_CTA — the brief block's "full raw account" call to action
+ *   BRIEF_CTA — the brief block's try-it-now CTA (hand the prompt to your agent)
  *   BRIEF_FALLBACK — the honest line shown when the optional summary.md layer is absent
- *   BRIEF_HEADING — the §7.2 v2 "NO AGENT AT HAND?" heading
- *   BRIEF_NOTE — the note that the brief is not the dump (which stays machine-first)
+ *   BRIEF_HEADING — the §7.2 brief-tier heading (what your agent will tell you)
+ *   BRIEF_NOTE — the note: the author's agent wrote this; yours will do the same for you
  *   BRIEF_REPORT — the report/takedown line closing the brief block
  *   BRIEF_SLOT — the §7.2 fence placeholder where the rendered brief appears
  *   CHIP_HUMAN_LABEL — the §7.13 status chip label for a human declaration
@@ -53,6 +53,7 @@
  *   GATE_TITLE — the gate heading (the modal's accessible name)
  *   HALL_ANNOUNCEMENT — the live-region note when the hall opens
  *   HIGH_STAKES_DISCLAIMER — the stakes=high disclaimer
+ *   HOME_EXPLAINER — the home storefront hero's one-paragraph explainer (definition + 1x/10x)
  *   HOME_HUMANS_LEAD — the §7.12 lane lead on the home storefront (no single article there)
  *   HOME_TITLE — the home hero sentence, plain (SEO <title> and JSON-LD name)
  *   HOME_TITLE_LEAD — the home hero up to the emphasized term
@@ -252,24 +253,23 @@ export function chipTitle(declaredAt) {
   return CHIP_TITLE_TEMPLATE.replace('<declared-at>', declaredAt == null ? '' : String(declaredAt));
 }
 
-// §6.3/§7.2 v4: the `01 · PREVIEW` plate's author-brief tier — the author's
-// agent brief for a human stranger ("NO AGENT AT HAND?"). The optional
+// §6.3/§7.2: the `01 · PREVIEW` plate's author-brief tier — the author's
+// agent brief for a stranger (the demo of what your own agent will tell you). The optional
 // `summary.md` layer is rendered where the fence carries BRIEF_SLOT; without the
 // layer BRIEF_FALLBACK is the honest line (a manifest card really follows).
 // BRIEF_BLOCK is the brief tier's copy parts (the §7.2 fence interleaves the
 // manifest-name placeholder between the explainer and the card, so it is no
 // longer a contiguous fence substring; BRIEF_SLOT is a fence placeholder, not a
 // rendered constant).
-export const BRIEF_HEADING = 'NO AGENT AT HAND?';
+export const BRIEF_HEADING = 'WHAT YOUR AGENT WILL TELL YOU';
 export const BRIEF_NOTE = [
-  "Read the brief: a short adaptation the author's agent wrote for",
-  'a human stranger. It is not the dump — the dump stays raw and',
-  'machine-first. This is what your agent would have told you.',
+  "Here's a short adaptation the author's agent wrote for a stranger.",
+  'Your agent will do the same — shaped to your context and language.',
 ].join('\n');
 export const BRIEF_SLOT = '<brief — the dump summary.md, rendered here>';
 export const BRIEF_CTA = [
-  'Want the full raw account? Press 0 under declaration, or send',
-  'your agent with the prompt above.',
+  'Try it now: copy the prompt below and paste it into your agent.',
+  'It will read this dump and retell it for you in 30 seconds.',
 ].join('\n');
 export const BRIEF_REPORT = [
   'Something illegal or personal in a dump? Report it — removal is',
@@ -331,6 +331,9 @@ export const HOME_TITLE_LEAD = 'Writers share raw experience — ';
 export const HOME_TITLE_TERM = 'a dump';
 export const HOME_TITLE_TAIL = " — the reader's agent adapts it to their needs.";
 export const HOME_TITLE = HOME_TITLE_LEAD + HOME_TITLE_TERM + HOME_TITLE_TAIL;
+
+export const HOME_EXPLAINER =
+  'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.';
 
 // §7.12: on the home storefront there is no single article — the universal
 // prompt is the invitation — so the lane lead names the ritual itself.

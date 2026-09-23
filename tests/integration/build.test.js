@@ -671,10 +671,13 @@ describe('build controller (integration)', () => {
     expect(about).toContain('class="slogan-muted"');
   });
 
-  it('KDV-SURFACE-24: the home hero is the KODAVR wordmark over a lead — no kicker, no plate label, no §7.10 card — with two CTAs', async () => {
+  it('KDV-SURFACE-24: the home hero is the KODAVR wordmark over a lead and the home_explainer explainer — no kicker, no plate label, no §7.10 card — with two CTAs', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
-    const home = decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'));
+    // The explainer is a pure text binding, so the engine stamps it with a
+    // data-ignition-text sticker and the inlined boot dataset repeats the raw
+    // copy — strip both so pins and the DOM order describe the visible page.
+    const home = stripStickers(stripInlineBoot(decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'))));
     // §6.1 v4: the literal brand wordmark over the positioning sentence as a
     // lead, with the term `a dump` emphasized. The plain HOME_TITLE feeds
     // <title>/JSON-LD.
@@ -682,6 +685,11 @@ describe('build controller (integration)', () => {
     expect(home).toMatch(
       /<p class="home-lead"[^>]*>Writers share raw experience — <strong[^>]*>a dump<\/strong> — the reader's agent adapts it to their needs\.<\/p>/,
     );
+    // feedback-marketing item 3: one explainer paragraph sits between the lead
+    // and the CTAs, spelling out what a dump is plus the 1x/10x thesis.
+    const explainer =
+      'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.';
+    expect(home).toContain(`<p>${explainer}</p>`);
     expect(home).not.toContain('class="kicker"');
     // The storefront hero plate carries no numbered label.
     expect(home).not.toContain('data-plate="01 · KODAVR"');
@@ -690,6 +698,15 @@ describe('build controller (integration)', () => {
     // Two design system CTAs: understand it, or publish.
     expect(home).toMatch(/<a class="cta" href="about\/"[^>]*>About the platform<\/a>/);
     expect(home).toMatch(/<a class="cta" href="contribute\/"[^>]*>How to contribute<\/a>/);
+    // DOM order: wordmark → lead → explainer → CTAs.
+    const wordmark = home.indexOf('class="home-wordmark"');
+    const lead = home.indexOf('class="home-lead"');
+    const body = home.indexOf(explainer);
+    const cta = home.indexOf('class="cta"');
+    expect(wordmark).toBeGreaterThanOrEqual(0);
+    expect(lead).toBeGreaterThan(wordmark);
+    expect(body).toBeGreaterThan(lead);
+    expect(cta).toBeGreaterThan(body);
   });
 
   it('KDV-SURFACE-27: the home 01 · HUMANS plate carries the universal prompt and the agent lane above the feed', async () => {

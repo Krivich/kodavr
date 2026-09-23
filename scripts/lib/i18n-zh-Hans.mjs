@@ -78,16 +78,15 @@ const GATE_TEXT = [
 ].join('\n\n');
 
 // §7.2 v2: the reception wall and the brief tier.
-const BRIEF_HEADING = '手边没有代理？';
+const BRIEF_HEADING = '你的代理会告诉你什么';
 const BRIEF_NOTE = [
-  '阅读摘要：这是作者的代理为一位陌生人类',
-  '写的一段简短适配。它不是转储——转储仍然是原始的，',
-  '以机器为先。这就是你的代理本会告诉你的话。',
+  '这是作者的代理为一个陌生人写的简短适配。',
+  '你的代理也会这样做——契合你的语境和语言。',
 ].join('\n');
 const BRIEF_SLOT = '<brief — 转储的 summary.md，在此渲染>';
 const BRIEF_CTA = [
-  '想要完整的原始叙述？在声明下按 0，',
-  '或者带着上面的提示词派出你的代理。',
+  '现在就试试：把下面的提示词复制下来，粘贴给你的代理。',
+  '它会读完这个转储，30 秒内讲给你听。',
 ].join('\n');
 const BRIEF_REPORT = [
   '转储中有违法或个人内容？请举报——移除是一个',
@@ -397,6 +396,8 @@ export const ZH_HANS = Object.freeze({
   HOME_TITLE_LEAD: '作者分享原始经验——',
   HOME_TITLE_TERM: '转储',
   HOME_TITLE_TAIL: '——读者的代理会根据自身需求加以改写。',
+  HOME_EXPLAINER:
+    'Kodavr 是未加修饰的现场报告的登记处：代码、工作流和经验教训，打包好供你的 AI 代理阅读并为你改编。做出一件事只需 1x 的努力，为他人打包则要 10x。我们消除这种不对称。',
   HOME_HUMANS_LEAD: '通过你自己的代理阅读 Kodavr——这正是它的设计初衷。这是提示词：',
   HOME_TAGLINE:
     'Kodavr 是转储——未加修饰的现场报告、脚本和工作流——的登记处，配有机器可读的契约。做出一件事只需 1x 的努力，为他人打包则要 10x。我们消除这种不对称。',
