@@ -132,6 +132,7 @@ package "scripts/tooling\nthe development tooling: quality gates, the map, dev t
   package "scripts/tooling/dev-tools\nlocal developer conveniences" as P_DEV {
     component "serve.mjs\nlocal static server" as CLI_SERVE <<cli>> [[../scripts/tooling/dev-tools/serve.mjs]]
     component "state-diet.mjs\nSTATE.md chronicle → docs/history" as CLI_DIET <<cli>> [[../scripts/tooling/dev-tools/state-diet.mjs]]
+    component "prompt-reason-probe.mjs\nreasoning X-ray: prompt → model → reasoning dump\n--\npromptOnce · saveRun" as CLI_PROBE <<cli>> [[../scripts/tooling/dev-tools/prompt-reason-probe.mjs#promptOnce]]
   }
 }
 
@@ -225,6 +226,7 @@ DEVELOPER -[#6D4C41]-> CLI_TI : [[../scripts/product/brand-media/generate-touch-
 DEVELOPER -[#6D4C41]-> CLI_AUDIT_LOCAL : [[../scripts/product/pr-review/local.mjs 35 · local.mjs]]\nnpm run audit:local
 DEVELOPER -[#6D4C41]-> CLI_AUDIT_JUDGE : [[../scripts/product/pr-review/judge.mjs 36 · judge.mjs]]\nnpm run audit:judge
 DEVELOPER -[#6D4C41]-> CLI_SVGHOVER : [[../scripts/tooling/workflow-map/workflow-arrows-svg.mjs#injectHover 37 · injectHover()]]\nnpm run workflow-arrows:svg
+DEVELOPER -[#6D4C41]-> CLI_PROBE : [[../scripts/tooling/dev-tools/prompt-reason-probe.mjs#promptOnce 38 · promptOnce()]]\nreasoning X-ray for a prompt
 CLI_SERVE -[#6D4C41]..> SSRV : serves output/public locally
 CLI_OG -[#6D4C41]..> PW : rasterizes the OG card
 CLI_TI -[#6D4C41]..> PW : rasterizes the touch icon
@@ -252,7 +254,7 @@ I18N_EN -[#9E9E9E]..> COPY : re-exports the copydeck (the single source)
 legend right
   **how to read an arrow**
   line 1 (colored link):  N · callee.method()  — the API method
-  of the TARGET brick this arrow calls (the callee), N = global order 1 to 37
+  of the TARGET brick this arrow calls (the callee), N = global order 1 to 38
   line 2 (plain text):    why the call happens (business intent)
   solid = call · dashed = return · dashed to an actor = a push
   click a brick → its file · click a call → the method's source

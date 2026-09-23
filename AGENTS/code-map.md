@@ -160,6 +160,10 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **scripts/product/telegram/telegram-mirror.mjs** — posts every newly published dump to the Telegram channel after a deploy
   consumes: node:child_process, node:fs, ../../lib/manifest-card.mjs, ../../lib/telegram-mirror.mjs
   invariants: — the bot token is read from the environment only, never source; — the entry point always exits 0; a missing token/event/diff is a logged skip
+- **scripts/tooling/dev-tools/prompt-reason-probe.mjs** — the reusable reasoning X-ray — send a prompt to a reasoning model and dump reasoning_content to diagnose prompt problems
+  exports: ENDPOINT, MODEL, chat, getKey, promptOnce, renderLog, saveRun
+  consumes: node:fs, node:os, node:path, node:url
+  invariants: — the key is read from auth.json only; it is never logged and never written into a dump; — every dump keeps the raw reasoning_content beside the final content (the feedback surface); — import has no side effects: the demo runs only when this file is the process entry
 - **scripts/tooling/dev-tools/serve.mjs** — the npm run serve local preview server
   consumes: ../../lib/static-server.mjs, node:path, node:url
 - **scripts/tooling/dev-tools/state-diet.mjs** — moves the STATE.md chronicle into docs/history/state.md
@@ -212,7 +216,7 @@ scripts/
   tooling/
     quality-gates/             validate.mjs (content gate), contract.mjs (module index), req-coverage.js
     workflow-map/              workflow-arrows-lint.mjs (drift alarm), workflow-arrows-svg.mjs (hover)
-    dev-tools/                 serve.mjs (preview), state-diet.mjs (STATE.md chronicle)
+    dev-tools/                 serve.mjs (preview), state-diet.mjs (STATE.md chronicle), prompt-reason-probe.mjs (reasoning X-ray)
   lib/
     build.mjs                the one build pipeline
     copy.mjs                 every human string (§7)
