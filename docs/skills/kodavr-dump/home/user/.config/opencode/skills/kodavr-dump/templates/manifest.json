@@ -12,7 +12,7 @@
   "human_review": "attested",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "One to three sentences: the problem, the reusable core, who benefits.",
+  "summary": "One to three sentences: essence in plain words — the problem or change — plus the code/format/schema the reader’s agent can take.",
   "sources": ["chat-log"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

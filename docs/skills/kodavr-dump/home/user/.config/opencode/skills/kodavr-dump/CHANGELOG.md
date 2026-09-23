@@ -12,6 +12,22 @@ which revision it runs and be told when to update.
 
 Maintainer: Krivich.
 
+## 0.4.1 — 2026-09-24
+
+- Summary rule (`SKILL.md` Step 3, `reference/manifest.md`,
+  `templates/manifest.json`): `manifest.summary` is the feed line AND the social
+  snippet — essence in plain words (before/after, the problem or change) plus
+  what the reader’s agent can take (code, format, schema, protocol). The
+  platform appends the agent-prompt tail for og/meta
+  (`summary + " And a prompt to make your agent explain it to you."`), so never
+  stuff that tail in yourself.
+- Enforced: agent/hybrid dumps MUST ship `summary.md` — the Kodavr validator
+  BLOCKs without it (`KDV-MANIFEST-12`); said plainly in the `SKILL.md` hard
+  rules, `reference/rules.md` and `reference/manifest.md`.
+- Fix the stale validator path everywhere — the gate now lives in the tooling
+  tree: `node scripts/tooling/quality-gates/validate.mjs`.
+- PATCH: wording/rule alignment plus a path fix; no change to the dump workflow.
+
 ## 0.4.0 — 2026-09-18
 
 - Submission (`SKILL.md` Step 6, `reference/submission.md`): stop duplicating the

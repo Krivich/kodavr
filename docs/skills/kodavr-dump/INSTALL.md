@@ -50,7 +50,7 @@ cp home/user/.config/opencode/command/dump.md ~/.config/opencode/command/
 - opencode — global skills are scanned at `~/.config/opencode/skills/<name>/SKILL.md`.
 - `git` — for the submission flow.
 - Optional: `gh` and/or a `GITHUB_TOKEN` to open the pull request automatically.
-- Optional: Node.js — to run Kodavr's own `scripts/validate.mjs` before submitting.
+- Optional: Node.js — to run Kodavr's own `scripts/tooling/quality-gates/validate.mjs` before submitting.
 
 ## Verify integrity
 

@@ -43,6 +43,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-MANIFEST-09**: `layers` and `artifacts` entries carry the §4.1 fields, with the `raw` layer always listed and each layer carrying its published `url` in the build output; the published manifest additionally carries its own JSON Schema inline (`$schema` URL + `schema`), the same object served at `/schemas/manifest.schema.json`, so the shared-article path orients the agent exactly as index.json does, and that schema's root `description` carries the FIRST REPLY TEMPLATE guidance (the first reply states the dump's title and a one-sentence summary, asks "What part of this is most relevant to you right now?", then waits for the user's answer before details). *(§4.1, §5.1, §5.2, §7.11; docs/ideas/feedback-marketing.md item 10; flow: legacy)*
 - 🟧 **KDV-MANIFEST-10**: `commit_sha` plus `author.*` fields are injected at build time. *(§4.1, §8.2; flow: legacy)*
 - ✅ **KDV-MANIFEST-11**: The §4.2 (note/case) and §4.3 (pack) example manifests validate against the schema. *(§4.2–4.3; flow: legacy)*
+- ✅ **KDV-MANIFEST-12**: Dumps authored by an agent or hybrid process (`generated_by: agent` or `hybrid`) must ship the `summary` layer (`summary.md`) beside the manifest, so the human preview's brief never falls back to the bare manifest. *(§4.1; docs/ideas/feedback-marketing.md item 1; flow: Consume)*
 
 ## KDV-CONTRACT — Machine endpoints (§5)
 
@@ -280,7 +281,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 |---|---|---|---|---|---|
 | KDV-ARCH | 7 | 5 | 2 | 0 | 0 |
 | KDV-STRUCT | 9 | 8 | 1 | 0 | 0 |
-| KDV-MANIFEST | 11 | 10 | 1 | 0 | 0 |
+| KDV-MANIFEST | 12 | 11 | 1 | 0 | 0 |
 | KDV-CONTRACT | 11 | 11 | 0 | 0 | 0 |
 | KDV-SURFACE | 24 | 24 | 0 | 0 | 0 |
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
@@ -295,4 +296,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **209** | **168** | **14** | **26** | **1** |
+| **Total** | **210** | **169** | **14** | **26** | **1** |

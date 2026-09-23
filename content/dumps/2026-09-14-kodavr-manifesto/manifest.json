@@ -11,7 +11,11 @@
   "generated_by": "hybrid",
   "human_review": "attested",
   "license": "CC-BY-4.0",
-  "summary": "Kodavr publishes raw experience as machine-readable dumps: the author documents what worked without polishing it, and the reader's agent adapts it. This first dump is the platform's own case study — the problem, the contract, the naming traps and the artifacts.",
+  "summary": "Kodavr publishes raw experience as machine-readable dumps: the author documents what worked without polishing it, and the reader's agent adapts it. This first dump is the platform's own case study — the problem, the machine-readable manifest contract, the naming traps, with the spec and schema listed as artifacts.",
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
   "artifacts": [
     {
       "kind": "file",

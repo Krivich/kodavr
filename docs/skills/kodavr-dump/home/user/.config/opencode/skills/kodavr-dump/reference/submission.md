@@ -8,7 +8,7 @@ touching anything else and without leaking anything.
 Resolution order:
 
 1. **Current project is already a Kodavr clone** — if the working directory has
-   `content/dumps/` and `scripts/validate.mjs`, use it as the working copy.
+   `content/dumps/` and `scripts/tooling/quality-gates/validate.mjs`, use it as the working copy.
 2. **`KODAVR_REPO_DIR`** (env) — if set and it looks like a Kodavr clone, use it.
 3. **A dedicated clone** — otherwise clone/update one:
    - Defaults come from `config.json` in this skill; env overrides:
@@ -35,7 +35,7 @@ Copy the prepared dump into `<workdir>/content/dumps/<slug>/`, then run the
 repo's own gate from the workdir:
 
 ```
-node scripts/validate.mjs
+node scripts/tooling/quality-gates/validate.mjs
 ```
 
 - Must print `0 error(s), ...`. Every `ERROR` is a BLOCK — fix and re-run.

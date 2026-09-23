@@ -1,6 +1,6 @@
 # Publish to Kodavr without learning the contract: the kodavr-dump skill
 
-Publishing a dump on [Kodavr](https://kodavr.xyz) means satisfying a real contract: a schema-checked manifest, a secret scan, a one-dump-per-PR discipline, and an explicit human approval before anything leaves the machine. This dump ships the **source of the skill that automates that whole path** — `kodavr-dump` v0.4.0 for [opencode](https://opencode.ai) — inlined below so a reader's agent can install it in one pass. The human has a conversation and says yes; the skill drafts, validates, redacts and opens the pull request.
+Publishing a dump on [Kodavr](https://kodavr.xyz) means satisfying a real contract: a schema-checked manifest, a secret scan, a one-dump-per-PR discipline, and an explicit human approval before anything leaves the machine. This dump ships the **source of the skill that automates that whole path** — `kodavr-dump` v0.4.1 for [opencode](https://opencode.ai) — inlined below so a reader's agent can install it in one pass. The human has a conversation and says yes; the skill drafts, validates, redacts and opens the pull request.
 
 ## Problem / context
 
@@ -10,7 +10,7 @@ The friction is not the writing. It is the contract, and it is exactly the kind 
 
 ## What it is
 
-A global opencode skill, versioned `0.4.0`, that owns the whole publication path:
+A global opencode skill, versioned `0.4.1`, that owns the whole publication path:
 
 - `SKILL.md` — the seven-step loop and the hard rules.
 - `reference/` — `manifest.md` (every field, enum and constraint), `rules.md` (the CI gate, redactions, black/grey zones, heavy files), `submission.md` (repo discovery, validate, branch, push, PR fallback chain), `human-guide.md` (the plain-language explainer and jargon translation table).
@@ -32,7 +32,7 @@ The payoff for the reader's agent is the same: the skill encodes the contract as
 1. **Scope & consent** — pin down what is being shared and where it goes.
 2. **Collect** — gather facts from the best available source (the human, the session, the repo, past sessions), keeping secrets out.
 3. **Draft** — write `manifest.json`, `raw.md` and `summary.md` (`REDACTIONS.md` when the source was a conversation), inlining reusable non-binary sources as fenced sections instead of proliferating files.
-4. **Validate** — run `node scripts/validate.mjs` until `0 error(s)`.
+4. **Validate** — run `node scripts/tooling/quality-gates/validate.mjs` until `0 error(s)`.
 5. **Propose** — show a compact, plain-language proposal and **wait** for explicit approval.
 6. **Submit** — fresh branch `dump/<slug>`, stage only `content/dumps/<slug>/`, one commit, push, open the PR (`gh` → GitHub API → plain compare URL).
 7. **Report** — hand back the PR link and the residual risks.
@@ -68,9 +68,9 @@ cp -r docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump ~/.c
 cp docs/skills/kodavr-dump/home/user/.config/opencode/command/dump.md ~/.config/opencode/command/
 ```
 
-Restart opencode afterwards. Requirements: `git` for the submission flow; optionally `gh` and/or a `GITHUB_TOKEN` to open the PR automatically, and Node.js to run the validator locally. The version travels with the copy (`VERSION` ships `0.4.0` here), so you can always tell which revision an installed copy runs.
+Restart opencode afterwards. Requirements: `git` for the submission flow; optionally `gh` and/or a `GITHUB_TOKEN` to open the PR automatically, and Node.js to run the validator locally. The version travels with the copy (`VERSION` ships `0.4.1` here), so you can always tell which revision an installed copy runs.
 
-## Source — kodavr-dump v0.4.0 (full payload)
+## Source — kodavr-dump v0.4.1 (full payload)
 
 ### skills/kodavr-dump/SKILL.md
 
@@ -85,13 +85,13 @@ description: Use this FIRST whenever the human mentions Kodavr (kodavr.xyz, in a
 Kodavr (https://kodavr.xyz) is a registry of **raw experience dumps**. A dump is a
 field report: the author does not polish it, the reader's agent adapts it. The
 publication contract lives in the repo (`CONTRIBUTING.md`, `docs/SPEC.md`,
-`scripts/validate.mjs`). This skill turns a conversation into a valid dump PR.
+`scripts/tooling/quality-gates/validate.mjs`). This skill turns a conversation into a valid dump PR.
 
 **One dump = one PR = one directory `content/dumps/<slug>/`.** Never bundle
 unrelated edits.
 
 The rules are enforced by the repo's own validator, not by wording — `node
-scripts/validate.mjs` is the source of truth. This skill's job is to produce
+scripts/tooling/quality-gates/validate.mjs` is the source of truth. This skill's job is to produce
 something that passes it and then submit it cleanly.
 
 ## If this was the wrong trigger
@@ -201,19 +201,24 @@ Two summaries ship, and both must answer a stranger's first question: *why would
 I want to read this?* Lead with the change the reader gets; never just list
 fields or features.
 
-- **`manifest.summary`** (the feed line, 1–3 sentences): sentence one is the
-  hook — the before/after, the pain removed, the surprising result. Then say what
-  it is and what the reader can do with it. Plain, concrete, honest. If a
-  stranger would not click it, rewrite it.
+- **`manifest.summary`** (the feed line AND the social snippet, 1–3 sentences):
+  the platform composes it into og/meta as
+  `summary + " And a prompt to make your agent explain it to you."` — never
+  stuff that tail in yourself. Shape it in two moves: sentence one is the
+  essence in plain words — the before/after, the problem or change the reader
+  gets; then what the reader’s agent can take from the dump (code, format,
+  schema, protocol). Plain, concrete, honest. If a stranger would not click it,
+  rewrite it.
 - **`summary.md`** (the human door): **What it is** (one short paragraph in plain
   words), **Why you would want it** (the benefit for the reader, not the feature
   list), **What to watch out for** (limits, prerequisites, risks, honesty labels).
   Keep it short; the raw body stays raw.
 
 A bad summary describes the artifact ("an opencode skill that runs a seven-step
-loop"). A good one sells the outcome ("publishing used to need the schema and
-git; now it is one conversation and one yes"). Adapt the tone to the human, but
-never oversell — `stakes` and `content_flags` still have to say the truth.
+loop"). A good one sells the outcome and names the take ("publishing used to
+need the schema and git; now it is one conversation and one yes — your agent
+gets the skill sources inline"). Adapt the tone to the human, but never
+oversell — `stakes` and `content_flags` still have to say the truth.
 
 Manifest field guidance:
 
@@ -240,7 +245,7 @@ In a working copy of the Kodavr repo (see `reference/submission.md`), place the
 dump under `content/dumps/<slug>/`, then run:
 
 ```
-node scripts/validate.mjs
+node scripts/tooling/quality-gates/validate.mjs
 ```
 
 Fix every `ERROR` (they are BLOCK). Re-run until `0 error(s)`. `WARN`s (duplicate
@@ -338,7 +343,7 @@ files only if useful. Leave the working copy clean.
 - No black-zone content (the §2.5 categories in `config/black-zone.json`) —
   the heuristic blocks it and owner review decides; a miss is not permission.
 - No underestimating `stakes`/`content_flags`.
-- No papering over an agent-written dump by dropping `summary.md`.
+- No papering over an agent-written dump by dropping `summary.md` — the validator BLOCKs without it (KDV-MANIFEST-12).
 - No push/PR without explicit human approval of the shown content.
 
 ## Version
@@ -367,7 +372,7 @@ history and the bump rules are in `CHANGELOG.md`.
 ### skills/kodavr-dump/VERSION
 
 ````
-0.4.0
+0.4.1
 ````
 
 ### skills/kodavr-dump/CHANGELOG.md
@@ -386,6 +391,22 @@ on top.** The version travels with the installed copy, so any project can state
 which revision it runs and be told when to update.
 
 Maintainer: Krivich.
+
+## 0.4.1 — 2026-09-24
+
+- Summary rule (`SKILL.md` Step 3, `reference/manifest.md`,
+  `templates/manifest.json`): `manifest.summary` is the feed line AND the social
+  snippet — essence in plain words (before/after, the problem or change) plus
+  what the reader’s agent can take (code, format, schema, protocol). The
+  platform appends the agent-prompt tail for og/meta
+  (`summary + " And a prompt to make your agent explain it to you."`), so never
+  stuff that tail in yourself.
+- Enforced: agent/hybrid dumps MUST ship `summary.md` — the Kodavr validator
+  BLOCKs without it (`KDV-MANIFEST-12`); said plainly in the `SKILL.md` hard
+  rules, `reference/rules.md` and `reference/manifest.md`.
+- Fix the stale validator path everywhere — the gate now lives in the tooling
+  tree: `node scripts/tooling/quality-gates/validate.mjs`.
+- PATCH: wording/rule alignment plus a path fix; no change to the dump workflow.
 
 ## 0.4.0 — 2026-09-18
 
@@ -552,7 +573,7 @@ No account to create, no database, no server.
 ````
 # Manifest reference — `content/dumps/<slug>/manifest.json`
 
-Authoritative source: `docs/SPEC.md` §4.1 and `scripts/validate.mjs` in the
+Authoritative source: `docs/SPEC.md` §4.1 and `scripts/tooling/quality-gates/validate.mjs` in the
 Kodavr repo. This file mirrors the rules so the skill works without the repo
 present; the repo validator is still the gate.
 
@@ -571,7 +592,7 @@ present; the repo validator is still the gate.
 | `trust_level` | enum | `raw` \| `self-tested` \| `community-tested` \| `adapted` \| `library` |
 | `generated_by` | enum | `human` \| `agent` \| `hybrid` |
 | `human_review` | enum | `none` \| `minimal` \| `attested` |
-| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed — lead with why it matters, not a feature list (the validator counts sentence terminators) |
+| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed AND the social snippet — essence in plain words (before/after, the problem or change) plus what the reader’s agent can take (code, format, schema, protocol); the platform appends the agent-prompt tail for og/meta, so never stuff it in yourself (the validator counts sentence terminators) |
 
 ## Optional fields
 
@@ -601,8 +622,8 @@ present; the repo validator is still the gate.
 - `stakes: high` ⇒ `content_flags` must be non-empty; the §7.9 disclaimer is
   inserted into the rendered body automatically.
 - `sources` contains `chat-log` ⇒ `REDACTIONS.md` required in the dump dir.
-- An agent-written dump (`generated_by: agent|hybrid`) ⇒ attach `summary.md`
-  (CONTRIBUTING rule 12). Treat it as mandatory in practice.
+- An agent-written dump (`generated_by: agent|hybrid`) ⇒ MUST ship `summary.md`
+  (CONTRIBUTING rule 12) — the validator BLOCKs without it (KDV-MANIFEST-12).
 - Personal data detected (emails, phones, document numbers) ⇒ `REDACTIONS.md`
   or `personal_data_justification`, otherwise BLOCK.
 
@@ -661,7 +682,7 @@ present; the repo validator is still the gate.
 # Publication rules and CI gate
 
 Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
-§8.1, §8.4, and `scripts/validate.mjs`.
+§8.1, §8.4, and `scripts/tooling/quality-gates/validate.mjs`.
 
 ## The twelve publication rules (condensed)
 
@@ -676,9 +697,9 @@ Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
 9. Heavy files → a Release (§8.4), never committed.
 10. A new author's first PR is reviewed manually by the owner.
 11. `author` is injected automatically — do not fill it.
-12. Agent-written dump ⇒ attach `summary.md` (brief for a human stranger).
+12. Agent/hybrid dump ⇒ MUST ship `summary.md` (brief for a human stranger) — the validator BLOCKs without it (KDV-MANIFEST-12).
 
-## CI gate — what `node scripts/validate.mjs` checks
+## CI gate — what `node scripts/tooling/quality-gates/validate.mjs` checks
 
 BLOCK (ERROR, exit 1):
 
@@ -694,6 +715,7 @@ BLOCK (ERROR, exit 1):
 - size: file ≤ 1 MB, dump ≤ 20 MB; binaries only `assets/*.png|svg|puml`.
 - `type: pack` structure (`SETUP_AGENT.md`, `START_HERE.md`, `files/`, `checks/`).
 - `chat-log` source ⇒ `REDACTIONS.md`.
+- `generated_by: agent|hybrid` without `summary.md` (KDV-MANIFEST-12).
 - `content_flags` present (may be `[]`); `stakes: high` ⇒ non-empty.
 - licence specified (manifest `license` or a root `LICENSE*`/`CONTENT-LICENSE*`).
 - black-zone heuristics (§2.5) — always handed to the owner for manual review.
@@ -759,7 +781,7 @@ touching anything else and without leaking anything.
 Resolution order:
 
 1. **Current project is already a Kodavr clone** — if the working directory has
-   `content/dumps/` and `scripts/validate.mjs`, use it as the working copy.
+   `content/dumps/` and `scripts/tooling/quality-gates/validate.mjs`, use it as the working copy.
 2. **`KODAVR_REPO_DIR`** (env) — if set and it looks like a Kodavr clone, use it.
 3. **A dedicated clone** — otherwise clone/update one:
    - Defaults come from `config.json` in this skill; env overrides:
@@ -786,7 +808,7 @@ Copy the prepared dump into `<workdir>/content/dumps/<slug>/`, then run the
 repo's own gate from the workdir:
 
 ```
-node scripts/validate.mjs
+node scripts/tooling/quality-gates/validate.mjs
 ```
 
 - Must print `0 error(s), ...`. Every `ERROR` is a BLOCK — fix and re-run.
@@ -915,7 +937,7 @@ field values.
   "human_review": "attested",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "One to three sentences: the problem, the reusable core, who benefits.",
+  "summary": "One to three sentences: essence in plain words — the problem or change — plus the code/format/schema the reader’s agent can take.",
   "sources": ["chat-log"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

@@ -1,7 +1,7 @@
 # Publication rules and CI gate
 
 Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
-§8.1, §8.4, and `scripts/validate.mjs`.
+§8.1, §8.4, and `scripts/tooling/quality-gates/validate.mjs`.
 
 ## The twelve publication rules (condensed)
 
@@ -16,9 +16,9 @@ Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
 9. Heavy files → a Release (§8.4), never committed.
 10. A new author's first PR is reviewed manually by the owner.
 11. `author` is injected automatically — do not fill it.
-12. Agent-written dump ⇒ attach `summary.md` (brief for a human stranger).
+12. Agent/hybrid dump ⇒ MUST ship `summary.md` (brief for a human stranger) — the validator BLOCKs without it (KDV-MANIFEST-12).
 
-## CI gate — what `node scripts/validate.mjs` checks
+## CI gate — what `node scripts/tooling/quality-gates/validate.mjs` checks
 
 BLOCK (ERROR, exit 1):
 
@@ -34,6 +34,7 @@ BLOCK (ERROR, exit 1):
 - size: file ≤ 1 MB, dump ≤ 20 MB; binaries only `assets/*.png|svg|puml`.
 - `type: pack` structure (`SETUP_AGENT.md`, `START_HERE.md`, `files/`, `checks/`).
 - `chat-log` source ⇒ `REDACTIONS.md`.
+- `generated_by: agent|hybrid` without `summary.md` (KDV-MANIFEST-12).
 - `content_flags` present (may be `[]`); `stakes: high` ⇒ non-empty.
 - licence specified (manifest `license` or a root `LICENSE*`/`CONTENT-LICENSE*`).
 - black-zone heuristics (§2.5) — always handed to the owner for manual review.

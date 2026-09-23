@@ -54,7 +54,7 @@ project used to leave no trace of who runs which revision or whom to tell on a
 breaking change. The cure is a version that travels with the installed copy:
 
 - **`VERSION`** (in the payload, beside `SKILL.md`) is the single source: now
-  `0.4.0`.
+  `0.4.1`.
 - **Bump it on every change.** PATCH = wording/fix; MINOR = new capability,
   backward compatible; MAJOR = can surprise an existing user. Record the bump in
   `CHANGELOG.md` (newest on top). Never edit the skill without bumping.

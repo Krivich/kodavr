@@ -69,6 +69,15 @@ describe('starter content (§10)', () => {
     }
   });
 
+  it('KDV-MANIFEST-12: the manifesto (hybrid) ships both layers — summary.md on disk and listed in manifest.layers', () => {
+    expect(exists(`${MANIFESTO}/summary.md`)).toBe(true);
+    const man = manifestOf(MANIFESTO);
+    expect(man.layers).toEqual([
+      { name: 'raw', file: 'raw.md', fact_checked: false, author_voice: true },
+      { name: 'summary', file: 'summary.md', fact_checked: false, author_voice: true },
+    ]);
+  });
+
   it('KDV-CONTENT-03: no fabricated filler — the manifesto is present and every shipped dump is a real, §4.1-valid dump (§10.2)', () => {
     const slugs = readdirSync(fileURLToPath(new URL('content/dumps', ROOT_URL)), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())

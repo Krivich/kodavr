@@ -12,7 +12,7 @@
   "human_review": "minimal",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "Publishing to Kodavr used to mean learning a schema, a secret scan and a one-dump PR discipline before writing a word. The kodavr-dump skill turns that into one conversation: it drafts the dump, runs Kodavr's own validator, and opens the PR only after you say yes. The full skill source is inlined below, so a reader's agent can install it in one pass.",
+  "summary": "Publishing to Kodavr used to mean learning a schema, a secret scan and a one-dump PR discipline before writing a word. The kodavr-dump skill turns that into one conversation: it drafts the dump, runs Kodavr's own validator, and opens the PR only after you say yes. The full skill source ships in the dump itself, so a reader's agent can install it in one pass.",
   "sources": ["chat-log", "source-code"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
@@ -22,7 +22,7 @@
     { "kind": "file", "path_or_url": "docs/skills/kodavr-dump/INSTALL.md", "note": "human install instructions and the bundle layout" },
     { "kind": "file", "path_or_url": "docs/skills/kodavr-dump/install.json", "note": "source-to-destination install map as a machine-readable contract" },
     { "kind": "file", "path_or_url": "docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump/SKILL.md", "note": "the skill root as tracked in the repository" },
-    { "kind": "file", "path_or_url": "docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump/VERSION", "note": "the version the snapshot carries (0.4.0)" },
+    { "kind": "file", "path_or_url": "docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump/VERSION", "note": "the version the snapshot carries (0.4.1)" },
     { "kind": "file", "path_or_url": "docs/skills/kodavr-dump/home/user/.config/opencode/command/dump.md", "note": "the optional /dump command" }
   ],
   "derived_from": null

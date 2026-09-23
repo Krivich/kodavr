@@ -1,6 +1,6 @@
 # Manifest reference — `content/dumps/<slug>/manifest.json`
 
-Authoritative source: `docs/SPEC.md` §4.1 and `scripts/validate.mjs` in the
+Authoritative source: `docs/SPEC.md` §4.1 and `scripts/tooling/quality-gates/validate.mjs` in the
 Kodavr repo. This file mirrors the rules so the skill works without the repo
 present; the repo validator is still the gate.
 
@@ -19,7 +19,7 @@ present; the repo validator is still the gate.
 | `trust_level` | enum | `raw` \| `self-tested` \| `community-tested` \| `adapted` \| `library` |
 | `generated_by` | enum | `human` \| `agent` \| `hybrid` |
 | `human_review` | enum | `none` \| `minimal` \| `attested` |
-| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed — lead with why it matters, not a feature list (the validator counts sentence terminators) |
+| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed AND the social snippet — essence in plain words (before/after, the problem or change) plus what the reader’s agent can take (code, format, schema, protocol); the platform appends the agent-prompt tail for og/meta, so never stuff it in yourself (the validator counts sentence terminators) |
 
 ## Optional fields
 
@@ -49,8 +49,8 @@ present; the repo validator is still the gate.
 - `stakes: high` ⇒ `content_flags` must be non-empty; the §7.9 disclaimer is
   inserted into the rendered body automatically.
 - `sources` contains `chat-log` ⇒ `REDACTIONS.md` required in the dump dir.
-- An agent-written dump (`generated_by: agent|hybrid`) ⇒ attach `summary.md`
-  (CONTRIBUTING rule 12). Treat it as mandatory in practice.
+- An agent-written dump (`generated_by: agent|hybrid`) ⇒ MUST ship `summary.md`
+  (CONTRIBUTING rule 12) — the validator BLOCKs without it (KDV-MANIFEST-12).
 - Personal data detected (emails, phones, document numbers) ⇒ `REDACTIONS.md`
   or `personal_data_justification`, otherwise BLOCK.
 

@@ -163,6 +163,8 @@ Rules:
 }
 ```
 
+`manifest.summary` is the door: essence in plain words — the before/after, the problem or change the reader gets — plus what the reader’s agent can take from the dump (code, format, schema, protocol). The platform appends the agent-prompt tail to it for the social snippet (§6.4), so never stuff the tail yourself (`docs/ideas/feedback-marketing.md` item 1).
+
 The published manifest embeds its JSON Schema inline (`schema`, the same object served at `/schemas/manifest.schema.json`), and that schema's root `description` is a contract in its own right: the shared platform BIOS plus the single-dump landscape plus the FIRST REPLY TEMPLATE — when the user opens the conversation, the agent's first reply states the dump's title and a one-sentence summary, asks "What part of this is most relevant to you right now?", and waits for the user's answer before diving into details, so the first experience is useful without overwhelming the reader (`docs/ideas/feedback-marketing.md` item 10). The description is machine-facing English and is never translated.
 
 ### 4.2 Example: note/case

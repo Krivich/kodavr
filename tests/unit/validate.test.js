@@ -353,6 +353,24 @@ describe('content validator', () => {
     expect(res.errors.some((e) => e.includes('2026-01-05-short'))).toBe(false);
   });
 
+  it('KDV-MANIFEST-12: agent/hybrid dumps require summary.md beside the manifest; human dumps need none', async () => {
+    root = await mkdtemp(join(tmpdir(), 'kodavr-validate-'));
+    await writeDump(root, '2026-01-05-agent-nobrief', {}, {
+      manifest: manifest('2026-01-05-agent-nobrief', { generated_by: 'agent' }),
+    });
+    await writeDump(root, '2026-01-05-hybrid-brief', { 'summary.md': '# Brief\n\nA human brief.\n' }, {
+      manifest: manifest('2026-01-05-hybrid-brief', { generated_by: 'hybrid' }),
+    });
+    await writeDump(root, '2026-01-05-human-nobrief', {}, {
+      manifest: manifest('2026-01-05-human-nobrief', { generated_by: 'human' }),
+    });
+    const res = await validateContent({ root });
+    expect(hasError(res, 'KDV-MANIFEST-12')).toBe(true);
+    expect(res.errors.some((e) => e.includes('2026-01-05-agent-nobrief'))).toBe(true);
+    expect(res.errors.some((e) => e.includes('2026-01-05-hybrid-brief'))).toBe(false);
+    expect(res.errors.some((e) => e.includes('2026-01-05-human-nobrief'))).toBe(false);
+  });
+
   it('KDV-MANIFEST-08: derived_from and consumption_contract.see are schema-checked', async () => {
     root = await mkdtemp(join(tmpdir(), 'kodavr-validate-'));
     await writeDump(root, '2026-01-05-derived', {}, {

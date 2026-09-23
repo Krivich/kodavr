@@ -413,6 +413,17 @@ async function validateDump({ root, contentDir, name, rootHasLicense, slugOwners
 
   validateManifest(manifest, rel, errors);
 
+  // KDV-MANIFEST-12/§4.1: agent/hybrid dumps must ship summary.md — the human
+  // preview's brief must never fall back to the bare manifest.
+  if (
+    (manifest.generated_by === 'agent' || manifest.generated_by === 'hybrid') &&
+    !(await pathExists(join(absDir, 'summary.md')))
+  ) {
+    errors.push(
+      `KDV-MANIFEST-12 ${rel}/manifest.json: \`generated_by\` ${manifest.generated_by} requires summary.md next to the manifest (§4.1)`,
+    );
+  }
+
   // KDV-CI-02: licence — manifest field or a root LICENSE*/CONTENT-LICENSE* file.
   const licenseField = manifest.license ?? manifest.licence;
   if (typeof licenseField !== 'string' || licenseField.trim() === '') {

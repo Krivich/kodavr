@@ -8,13 +8,13 @@ description: Use this FIRST whenever the human mentions Kodavr (kodavr.xyz, in a
 Kodavr (https://kodavr.xyz) is a registry of **raw experience dumps**. A dump is a
 field report: the author does not polish it, the reader's agent adapts it. The
 publication contract lives in the repo (`CONTRIBUTING.md`, `docs/SPEC.md`,
-`scripts/validate.mjs`). This skill turns a conversation into a valid dump PR.
+`scripts/tooling/quality-gates/validate.mjs`). This skill turns a conversation into a valid dump PR.
 
 **One dump = one PR = one directory `content/dumps/<slug>/`.** Never bundle
 unrelated edits.
 
 The rules are enforced by the repo's own validator, not by wording — `node
-scripts/validate.mjs` is the source of truth. This skill's job is to produce
+scripts/tooling/quality-gates/validate.mjs` is the source of truth. This skill's job is to produce
 something that passes it and then submit it cleanly.
 
 ## If this was the wrong trigger
@@ -124,19 +124,24 @@ Two summaries ship, and both must answer a stranger's first question: *why would
 I want to read this?* Lead with the change the reader gets; never just list
 fields or features.
 
-- **`manifest.summary`** (the feed line, 1–3 sentences): sentence one is the
-  hook — the before/after, the pain removed, the surprising result. Then say what
-  it is and what the reader can do with it. Plain, concrete, honest. If a
-  stranger would not click it, rewrite it.
+- **`manifest.summary`** (the feed line AND the social snippet, 1–3 sentences):
+  the platform composes it into og/meta as
+  `summary + " And a prompt to make your agent explain it to you."` — never
+  stuff that tail in yourself. Shape it in two moves: sentence one is the
+  essence in plain words — the before/after, the problem or change the reader
+  gets; then what the reader’s agent can take from the dump (code, format,
+  schema, protocol). Plain, concrete, honest. If a stranger would not click it,
+  rewrite it.
 - **`summary.md`** (the human door): **What it is** (one short paragraph in plain
   words), **Why you would want it** (the benefit for the reader, not the feature
   list), **What to watch out for** (limits, prerequisites, risks, honesty labels).
   Keep it short; the raw body stays raw.
 
 A bad summary describes the artifact ("an opencode skill that runs a seven-step
-loop"). A good one sells the outcome ("publishing used to need the schema and
-git; now it is one conversation and one yes"). Adapt the tone to the human, but
-never oversell — `stakes` and `content_flags` still have to say the truth.
+loop"). A good one sells the outcome and names the take ("publishing used to
+need the schema and git; now it is one conversation and one yes — your agent
+gets the skill sources inline"). Adapt the tone to the human, but never
+oversell — `stakes` and `content_flags` still have to say the truth.
 
 Manifest field guidance:
 
@@ -163,7 +168,7 @@ In a working copy of the Kodavr repo (see `reference/submission.md`), place the
 dump under `content/dumps/<slug>/`, then run:
 
 ```
-node scripts/validate.mjs
+node scripts/tooling/quality-gates/validate.mjs
 ```
 
 Fix every `ERROR` (they are BLOCK). Re-run until `0 error(s)`. `WARN`s (duplicate
@@ -261,7 +266,7 @@ files only if useful. Leave the working copy clean.
 - No black-zone content (the §2.5 categories in `config/black-zone.json`) —
   the heuristic blocks it and owner review decides; a miss is not permission.
 - No underestimating `stakes`/`content_flags`.
-- No papering over an agent-written dump by dropping `summary.md`.
+- No papering over an agent-written dump by dropping `summary.md` — the validator BLOCKs without it (KDV-MANIFEST-12).
 - No push/PR without explicit human approval of the shown content.
 
 ## Version
