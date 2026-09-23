@@ -163,6 +163,8 @@ Rules:
 }
 ```
 
+The published manifest embeds its JSON Schema inline (`schema`, the same object served at `/schemas/manifest.schema.json`), and that schema's root `description` is a contract in its own right: the shared platform BIOS plus the single-dump landscape plus the FIRST REPLY TEMPLATE — when the user opens the conversation, the agent's first reply states the dump's title and a one-sentence summary, asks "What part of this is most relevant to you right now?", and waits for the user's answer before diving into details, so the first experience is useful without overwhelming the reader (`docs/ideas/feedback-marketing.md` item 10). The description is machine-facing English and is never translated.
+
 ### 4.2 Example: note/case
 ```json
 {
@@ -620,6 +622,7 @@ A shared dump link must hand the agent THAT dump's `manifest.json`, never the wh
 ```
 Study <manifest-url> and follow its schema. Read articles to me and act like a magazine I can talk to.
 ```
+The prompt is only the boot address — the manifest's embedded schema (§4.1, its BIOS with the FIRST REPLY TEMPLATE) controls what the agent says in its first reply.
 
 ### 7.12 Agent lane (human fast lane)
 Lead line: `Prompt your agent to open this article for you:` · copy control label: `Or copy & paste it yourself` · lane hint: `(the four buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)`. The four jump links come first — one press opens a prefilled chat — and the copy chip is the last control in the row (same style, ≥44px), the fallback for any other agent. The row sits on the first screen of the article page's `02 · INTERESTING?` plate. The prompt itself renders below the lane on its surface — monospace, muted and a notch smaller than the prose, glanceable rather than meant to be read — exactly once per surface (the article page's `02 · INTERESTING?` plate, the home `01 · HUMANS` plate and the machine panel). Prefill via `?q=` is best-effort; the clipboard always carries the prompt. A machine-declared visitor keeps the lane in the hall's machine panel (§6.2); its reset link label is `I changed my mind, I am human` — it clears the stored species and re-opens the gate.

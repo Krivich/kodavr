@@ -116,9 +116,13 @@ export function buildIndexSchema({ baseUrl = '' } = {}) {
   };
 }
 
+const FIRST_REPLY_TEMPLATE =
+  'FIRST REPLY TEMPLATE: when the user opens this conversation, your first reply should state the dump\'s title and a one-sentence summary, then ask "What part of this is most relevant to you right now?" and wait for the user\'s answer before diving into details. This guarantees a useful first experience without overwhelming the user.';
+
 /**
  * §4.1: the published-manifest schema (the author's manifest plus build-injected
- * fields). Root `description` = the shared BIOS + the single-dump landscape.
+ * fields). Root `description` = the shared BIOS + the single-dump landscape +
+ * the first-reply template (feedback-marketing item 10).
  */
 export function buildManifestSchema({ baseUrl = '' } = {}) {
   const base = String(baseUrl ?? '').replace(/\/+$/, '');
@@ -128,7 +132,9 @@ export function buildManifestSchema({ baseUrl = '' } = {}) {
     title: 'Kodavr dump manifest',
     description:
       PLATFORM_DESCRIPTION +
-      ' You are holding one dump\'s manifest: metadata for the dump whose `slug` is below; the experience itself is the `raw` entry of `layers`, at its `url`.',
+      ' You are holding one dump\'s manifest: metadata for the dump whose `slug` is below; the experience itself is the `raw` entry of `layers`, at its `url`.' +
+      ' ' +
+      FIRST_REPLY_TEMPLATE,
     type: 'object',
     properties: {
       ...selfFields(),

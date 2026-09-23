@@ -368,6 +368,20 @@ describe('machine BIOS (self-describing schemas)', () => {
     expect(item.manifest_url.description).toMatch(/chosen/i);
   });
 
+  it('KDV-MANIFEST-09: the manifest schema root description carries the FIRST REPLY TEMPLATE guidance', () => {
+    // feedback-marketing item 10: the §7.11 prompt is only the boot address —
+    // the embedded schema scripts the agent's first reply on the manifest door.
+    const { description } = buildManifestSchema({ baseUrl: BASE_URL });
+    expect(description).toContain(
+      'FIRST REPLY TEMPLATE: when the user opens this conversation, your first reply should state the dump\'s title and a one-sentence summary, then ask "What part of this is most relevant to you right now?" and wait for the user\'s answer before diving into details. This guarantees a useful first experience without overwhelming the user.',
+    );
+    // The guidance rides the manifest-specific landscape, not the shared
+    // PLATFORM_DESCRIPTION: the index door opens a catalog, not a conversation
+    // about one dump.
+    expect(PLATFORM_DESCRIPTION).not.toContain('FIRST REPLY TEMPLATE');
+    expect(buildIndexSchema({ baseUrl: BASE_URL }).description).not.toContain('FIRST REPLY TEMPLATE');
+  });
+
   it('KDV-CONTRACT-10: the authored-data boundary rides every door and marks author free-text fields', () => {
     const AUTHOR_SUPPLIED = /^Author-supplied data: /;
     // One notice reaches the BIOS door and both schema root descriptions.
