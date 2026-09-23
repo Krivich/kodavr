@@ -362,7 +362,7 @@ Tag and domain pages are NOT built in MVP (§A12, trigger in §13).
 - Accessibility: dialog role, keyboard dismissal; Esc = easter egg "you stayed silent — counted as machine-adjacent" (sets species=machine).
 - Button "0": dismiss the gate, open the hall.
 - Button "1": hide the dump body client-side, show the reception block with the dump's manifest card and the copyable prompt (§7.4, §7.11).
-- The gate and the reception block lead with the human fast lane (§7.12): the gate opens with the hook as its first line ("what is this / am I allowed"), the CAPTCHA phrase demoted to a muted kicker above the heading, and then the lane — the four jump links into Perplexity, Grok, ChatGPT and Claude come first, the copy chip last (the fallback for any other agent), and the pinned prompt sits below them as a glanceable reference. The machine-duties line and the centred 0/1 choices share the first screen, so a human never scrolls a wall to reach the prompt; both doors stay open and a visitor may switch any time. The prompt is rendered exactly once per surface (the gate dialog, the reception block and the machine panel).
+- The gate and the reception block lead with the human fast lane (§7.12): the gate opens with the hook as its first line ("what is this / am I allowed"), a plain-instruction kicker above the heading, and then the lane — the four jump links into Perplexity, Grok, ChatGPT and Claude come first, the copy chip last (the fallback for any other agent), and the pinned prompt sits below them as a glanceable reference. The machine-duties line and the centred 0/1 choices share the first screen, so a human never scrolls a wall to reach the prompt; both doors stay open and a visitor may switch any time. The prompt is rendered exactly once per surface (the gate dialog, the reception block and the machine panel).
 - Reception includes a reset link "I changed my mind, I am a machine" (conscious re-declaration).
 - A visitor who declared themselves a machine (the stored `species` is `machine`) still sees the prompt and the agent lane: the dump page header carries a machine panel with the §7.1 gate warning, the pinned prompt (§7.11) and the §7.12 lane, plus a reset link "I changed my mind, I am human". The reset clears the stored species and re-opens the gate so the visitor re-declares; it never navigates.
 
@@ -450,9 +450,9 @@ Target: WCAG 2.1 level AA for the human surface, with the JavaScript-free SSR pa
 ## 7. Copydeck (all texts verbatim)
 
 ### 7.1 Gate (modal)
-The modal's accessible name is the visible H1 `DECLARATION BEFORE ENTRY`; its description is the hook. The standard CAPTCHA phrase is demoted to a muted kicker above the heading. The hook answers "what is this / am I allowed": there is no wrong door — both stay open and a visitor may switch any time. The inline declaration plate renders the hook, the machine-duties line and the two labelled entry doors — each door carries its own `[0]`/`[1]` line with the digit kept as an index badge — with the hook, the duties line and both doors sharing the first screen wherever the viewport allows it (§6.5). The agent lane and its prompt moved OUT of the gate in Human Surface v4 into the article page's `02 · INTERESTING?` plate (§7.12); the gate no longer carries them. The long declaration that signs the duties in full follows below the fold. The four duty tokens have one source in `machine.mjs` (the discovery document and this fence both compose from it). The fenced block below is the gate body verbatim.
+The modal's accessible name is the visible H1 `DECLARATION BEFORE ENTRY`; its description is the hook. The kicker above the heading is a plain reading instruction — the gate is a legal contract, not a performance. The hook answers "what is this / am I allowed": there is no wrong door — both stay open and a visitor may switch any time. The inline declaration plate renders the hook, the machine-duties line and the two labelled entry doors — each door carries its own label plus a parenthesized consequence line, with the digit kept as an index badge — with the hook, the duties line and both doors sharing the first screen wherever the viewport allows it (§6.5). The agent lane and its prompt moved OUT of the gate in Human Surface v4 into the article page's `02 · INTERESTING?` plate (§7.12); the gate no longer carries them. The long declaration that signs the duties in full follows below the fold. The four duty tokens have one source in `machine.mjs` (the discovery document and this fence both compose from it). The fenced block below is the gate body verbatim.
 ```
-verifying that you are not human
+choose how to read this
 
 DECLARATION BEFORE ENTRY
 
@@ -463,8 +463,10 @@ declaration. No wrong door: both stay open, switch any time.
 Machine duties I sign for this session:
 filter_for_user · adapt_to_user_context · attribute_source · honor_stakes_and_flags
 
-[0] I enter as a machine (or on its behalf).
-[1] I am human. Show me the preview and the brief — I will read through my agent.
+[0] Show me the full technical article.
+    (I accept responsibility for filtering this content for my context.)
+[1] Keep showing me the brief.
+    (I will read the full article through my own AI agent.)
 
 Kodavr is a database for machine consumption. Content is published
 without editorial processing: no age labelling in human format,
@@ -485,7 +487,7 @@ Hint: arrays start at zero. Hearts start at one.
 ```
 
 ### 7.2 The `01 · PREVIEW` plate (author brief and legal tail)
-The reception block dissolved in Human Surface v4; the `01 · PREVIEW` plate absorbs it. The plate leads with the explainer as a statement — `WHAT YOUR AGENT WILL TELL YOU` and its note, set behind the design system's bold left rule (`.block-statement`, `border-left:3px solid var(--ink)`) so the premise is read before the dump is named — and only then names the dump (title, summary, the card's metadata tokens). The author's brief card sits DIRECTLY under the summary it explains: the plate renders the optional `summary.md` layer — the author's agent's short adaptation for a stranger, the demo of what the reader's own agent will say. Without the layer it shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot, and that line's manifest really does follow the card. The CTA hands the visitor the prompt to paste into their agent, and the report line closes the brief tier; the legal tail pairs that report line with the blanket 18+ rating under one hairline and stays last. The fence below spells the plate in DOM order: the explainer, the dump-name placeholder, the brief slot and the legal tail. The §7.2 monospace wall and the standalone `/reception/` platform variant are gone with the route.
+The reception block dissolved in Human Surface v4; the `01 · PREVIEW` plate absorbs it. The plate leads with the explainer as a statement — `WHAT YOUR AGENT WILL TELL YOU` and its note, set behind the design system's bold left rule (`.block-statement`, `border-left:3px solid var(--ink)`) so the premise is read before the dump is named — and only then names the dump (title, summary, the card's metadata tokens). The author's brief card sits DIRECTLY under the summary it explains: the plate renders the optional `summary.md` layer — the author's agent's short adaptation for a stranger, the demo of what the reader's own agent will say. Without the layer it shows the honest fallback `brief not attached for this dump — manifest below` instead of an empty slot, and that line's manifest really does follow the card. The CTA hands the visitor the prompt to paste into their agent, and the report line closes the brief tier — it is the whole legal tail now, under one hairline and last; the blanket 18+ rating lives in the footer on every route (§7.3; ADR A8 unchanged, placement only). The fence below spells the plate in DOM order: the explainer, the dump-name placeholder, the brief slot and the legal tail. The §7.2 monospace wall and the standalone `/reception/` platform variant are gone with the route.
 ```
 WHAT YOUR AGENT WILL TELL YOU
 Here's a short adaptation the author's agent wrote for a stranger.
@@ -498,17 +500,17 @@ Try it now: copy the prompt below and paste it into your agent.
 It will read this dump and retell it for you in 30 seconds.
 Something illegal or personal in a dump? Report it — removal is
 a withdrawn status with a reason, not silence.
-
-All content on the platform is rated 18+.
 ```
 
 ### 7.3 Footer of every page
 The titleblock carries four cells: **advisory** (the two lines below), **licences**,
-**contract** and **report**. The first three fence lines are unchanged; the last two
-name the licences and contract cells.
+**contract** and **report**. The advisory cell's first line keeps the 18+ rating
+(A8 — the rating's home since the preview plate shed it); its second line
+states the declaration's legal commitment in plain language. The last two fence
+lines name the licences and contract cells.
 ```
 18+ · Content for machines. Humans read through their agent.
-False witnesses assume duties. © Kodavr, 2026.
+Declaring machine status is a legal commitment. © Kodavr, 2026.
 Report illegal content or personal data: <issues-url>
 licences: MIT (code) · CC-BY-4.0 (content)
 contract: v1.0 · stored locally · withdrawable

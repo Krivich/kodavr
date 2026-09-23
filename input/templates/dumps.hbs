@@ -43,11 +43,11 @@
          really follows). --}}
     {{#if brief_html}}<div class="reception-brief">{{{brief_html}}}</div>{{else}}<div class="reception-brief"><p class="reception-brief-missing">{{copy.brief_fallback}}</p></div>{{/if}}
     <p class="reception-brief-cta">{{copy.brief_cta}}</p>
-    {{!-- §6.5 v2: the legal tail is the demo `.legal-group` — the report line
-         and the 18+ rating together under one hairline. --}}
+    {{!-- §6.5 v2/item 8: the legal tail is the demo `.legal-group` — the report
+         line under one hairline, last; the blanket 18+ rating lives in the
+         footer (§7.3), not on the first screen. --}}
     <div class="legal-group">
       <p class="reception-brief-report">{{copy.brief_report}}</p>
-      <p class="reception-rating">{{copy.reception_rating}}</p>
     </div>
   </section>
   <section class="plate" id="plate-want" data-plate="{{copy.dumps_plate_want}}" hidden>

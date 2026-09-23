@@ -29,11 +29,14 @@ const GATE_HUMAN_CLAUSE = [
   '    我的代理来消费 Kodavr。',
 ].join('\n');
 
-const GATE_MACHINE_LINE = '[0] 我以机器的身份进入（或代表其行事）。';
-const GATE_HUMAN_LINE =
-  '[1] 我是人类。给我看预览和摘要——我会通过我的代理来阅读。';
-const GATE_MACHINE_DOOR = GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, '');
-const GATE_HUMAN_DOOR = GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, '');
+// §7.1/item 7: each door is a plain label plus its parenthesized consequence;
+// the fence line composes them under the [0]/[1] enumerator (one truth per string).
+const GATE_MACHINE_DOOR = '给我看完整的技术文章。';
+const GATE_MACHINE_NOTE = '（我接受为自己的情境过滤此内容的责任。）';
+const GATE_HUMAN_DOOR = '继续给我看摘要。';
+const GATE_HUMAN_NOTE = '（我会通过自己的 AI 代理阅读全文。）';
+const GATE_MACHINE_LINE = `[0] ${GATE_MACHINE_DOOR}\n    ${GATE_MACHINE_NOTE}`;
+const GATE_HUMAN_LINE = `[1] ${GATE_HUMAN_DOOR}\n    ${GATE_HUMAN_NOTE}`;
 const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
 
 const GATE_DUTIES = AGENT_DUTIES.join(' · ');
@@ -66,7 +69,7 @@ const AGENT_LANE_LEAD = '让你的代理为你打开这篇文章：';
 const LANE_COPY_LABEL = '或者自己复制粘贴';
 const AGENT_LANE_HINT =
   '（前四个按钮会打开一个预填好的对话；最后一个会复制下方的提示词，供你粘贴到自己的代理中）';
-const GATE_KICKER = '正在验证你不是人类';
+const GATE_KICKER = '选择阅读方式';
 const GATE_TITLE = '入场声明';
 const GATE_TEXT = [
   GATE_KICKER,
@@ -100,8 +103,6 @@ const BRIEF_BLOCK = [
   BRIEF_CTA,
   BRIEF_REPORT,
 ].join('\n');
-
-const RECEPTION_RATING = '平台上的所有内容均评为 18+。';
 
 const WHAT_IS_A_DUMP = [
   '转储是你的代理用一条提示词写成的现场报告。',
@@ -158,7 +159,7 @@ const HIGH_STAKES_DISCLAIMER = [
 
 const FOOTER_TEXT = [
   '18+ · 内容面向机器。人类通过自己的代理阅读。',
-  '作伪证者承担职责。© Kodavr，2026。',
+  '声明机器身份是一项法律承诺。© Kodavr，2026。',
 ].join('\n');
 
 const BRAND_SLOGANS_MUTED = [
@@ -227,10 +228,12 @@ export const ZH_HANS = Object.freeze({
   GATE_HUMAN_DOOR,
   GATE_HUMAN_LABEL: '1 — 我是人类',
   GATE_HUMAN_LINE,
+  GATE_HUMAN_NOTE,
   GATE_KICKER,
   GATE_MACHINE_DOOR,
   GATE_MACHINE_LABEL: '0 — 我是机器（或代表其行事）',
   GATE_MACHINE_LINE,
+  GATE_MACHINE_NOTE,
   GATE_REST,
   GATE_TEXT,
   GATE_TITLE,
@@ -242,7 +245,6 @@ export const ZH_HANS = Object.freeze({
   PROMPT_TEXT: '研究 https://kodavr.xyz/index.json 并遵循其架构。为我朗读文章，像一本可以对话的杂志那样表现。',
   README_INTRO_TEXT,
   RECEPTION_ANNOUNCEMENT: '接待处已开启。如何通过你的代理阅读 Kodavr。',
-  RECEPTION_RATING,
   RESET_HUMAN_LABEL: '我改变主意了，我是人类',
   RESET_LABEL: '我改变主意了，我是机器',
   WHAT_IS_A_DUMP,

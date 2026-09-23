@@ -16,8 +16,9 @@ import {
   GATE_HUMAN_LINE,
   GATE_MACHINE_DOOR,
   GATE_HUMAN_DOOR,
+  GATE_MACHINE_NOTE,
+  GATE_HUMAN_NOTE,
   DECLARATION_TOAST,
-  RECEPTION_RATING,
   BRIEF_HEADING,
   BRIEF_NOTE,
   BRIEF_SLOT,
@@ -125,28 +126,30 @@ describe('copydeck', () => {
         GATE_REST,
       ].join('\n\n'),
     );
-    // §7.1 v2: the heading is the declaration itself; the standard CAPTCHA
-    // phrase is demoted to the muted kicker above it.
+    // §7.1 v2/items 6-7: the heading is the declaration itself; the kicker is a
+    // plain reading instruction, never a performance.
     expect(GATE_TITLE).toBe('DECLARATION BEFORE ENTRY');
-    expect(GATE_KICKER).toBe('verifying that you are not human');
+    expect(GATE_KICKER).toBe('choose how to read this');
     // §7.1: the duties block and its four tokens have one source (machine.mjs),
     // so the gate can never drift from the discovery document.
     expect(GATE_DUTIES).toBe(AGENT_DUTIES.join(' · '));
     expect(GATE_DUTIES_BLOCK).toBe(`${GATE_DUTIES_LEAD}\n${GATE_DUTIES}`);
     expect(GATE_BUTTONS.map((b) => b.label)).toEqual(['0', '1']);
     for (const button of GATE_BUTTONS) expect(GATE_TEXT).toContain(button.text);
-    // §6.5 P0-1: the two doors render the §7.1 choice lines as their visible
-    // labels, with the [0]/[1] enumerator split off into a separate badge. Pin
-    // the derivation and the literals to the fence line so they cannot drift.
+    // §6.5 P0-1/item 7: each door is a plain label plus its parenthesized
+    // consequence; the fence line composes them under the [0]/[1] enumerator,
+    // so the label/note are the source and nothing prints twice.
     expect(blockFor('7.1')).toContain(GATE_MACHINE_LINE);
     expect(blockFor('7.1')).toContain(GATE_HUMAN_LINE);
-    expect(GATE_MACHINE_DOOR).toBe(GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, ''));
-    expect(GATE_HUMAN_DOOR).toBe(GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, ''));
-    expect(GATE_MACHINE_DOOR).toBe('I enter as a machine (or on its behalf).');
-    expect(GATE_HUMAN_DOOR).toBe(
-      'I am human. Show me the preview and the brief — I will read through my agent.',
+    expect(GATE_MACHINE_LINE).toBe(`[0] ${GATE_MACHINE_DOOR}\n    ${GATE_MACHINE_NOTE}`);
+    expect(GATE_HUMAN_LINE).toBe(`[1] ${GATE_HUMAN_DOOR}\n    ${GATE_HUMAN_NOTE}`);
+    expect(GATE_MACHINE_DOOR).toBe('Show me the full technical article.');
+    expect(GATE_MACHINE_NOTE).toBe(
+      '(I accept responsibility for filtering this content for my context.)',
     );
-    // The marker lives on the fence line only; the door label starts at the prose.
+    expect(GATE_HUMAN_DOOR).toBe('Keep showing me the brief.');
+    expect(GATE_HUMAN_NOTE).toBe('(I will read the full article through my own AI agent.)');
+    // The enumerator lives on the fence line only; the door label starts at the prose.
     expect(GATE_MACHINE_DOOR).not.toMatch(/^\[/);
     expect(GATE_HUMAN_DOOR).not.toMatch(/^\[/);
     // The gate no longer ships a literal fake key affordance (§7.12).
@@ -166,10 +169,8 @@ describe('copydeck', () => {
         [BRIEF_HEADING, BRIEF_NOTE].join('\n'),
         manifestSlot,
         [BRIEF_SLOT, BRIEF_CTA, BRIEF_REPORT].join('\n'),
-        RECEPTION_RATING,
       ].join('\n\n'),
     );
-    expect(RECEPTION_RATING).toBe('All content on the platform is rated 18+.');
     // §7.2 v4: the brief tier is built from its own parts so the plate and the
     // fence can never drift apart; the report line closes the tier.
     expect(BRIEF_BLOCK).toBe(
@@ -193,9 +194,17 @@ describe('copydeck', () => {
     for (const value of [BRIEF_HEADING, BRIEF_NOTE, BRIEF_SLOT, BRIEF_CTA, BRIEF_REPORT]) {
       expect(fence, `§7.2 carries "${value}"`).toContain(value);
     }
-    // The v1 wall and the standalone /reception/ platform variant are gone for
-    // good — the constants leave the copydeck, leaving no dead strings behind.
-    for (const gone of ['RECEPTION_WALL', 'RECEPTION_TEXT', 'RECEPTION_TITLE', 'BRIEF_NOTE_PLATFORM']) {
+    // The v1 wall, the standalone /reception/ platform variant and the preview
+    // plate's rating line are gone for good — the constants leave the copydeck
+    // (item 8: the 18+ rating lives in the footer, §7.3), leaving no dead
+    // strings behind.
+    for (const gone of [
+      'RECEPTION_WALL',
+      'RECEPTION_TEXT',
+      'RECEPTION_TITLE',
+      'BRIEF_NOTE_PLATFORM',
+      'RECEPTION_RATING',
+    ]) {
       expect(copydeck, gone).not.toHaveProperty(gone);
     }
     // The prompt is its own block (§7.4 / §7.11), never embedded in §7.2.
@@ -217,6 +226,14 @@ describe('copydeck', () => {
     // §7.3/§9 report channel, whose `<issues-url>` the controller substitutes.
     const fence = blockFor('7.3').split('\n');
     expect(fence.slice(0, 2).join('\n')).toBe(FOOTER_TEXT);
+    // Item 9: the advisory line 2 states the declaration's legal commitment in
+    // plain language (the theatrical perjury line is gone).
+    expect(FOOTER_TEXT).toBe(
+      [
+        '18+ · Content for machines. Humans read through their agent.',
+        'Declaring machine status is a legal commitment. © Kodavr, 2026.',
+      ].join('\n'),
+    );
     expect(fence[2]).toBe(`${FOOTER_REPORT_LABEL}: <issues-url>`);
     expect(FOOTER_REPORT_LABEL).toBe('Report illegal content or personal data');
     // §7.3 titleblock: the advisory two lines stay first (v1 contract), and the

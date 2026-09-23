@@ -20,7 +20,6 @@ import {
   GATE_HUMAN_DOOR,
   RESET_HUMAN_LABEL,
   DECLARATION_TOAST,
-  RECEPTION_RATING,
   BRIEF_HEADING,
   BRIEF_NOTE,
   BRIEF_CTA,
@@ -875,13 +874,16 @@ describe('build controller (integration)', () => {
     expect(html).toContain('src="../../assets/site.js"');
 
     // §7.2 v4 is absorbed: the reception wall is NOT migrated (its concern
-    // already lives on /about/), while the author brief tier and the 18+ rating
-    // stay in the `01 · PREVIEW` plate. Rendered DOM only — the boot blob
-    // carries the copy.
+    // already lives on /about/), while the author brief tier stays in the
+    // `01 · PREVIEW` plate. Item 8: the 18+ rating line is gone from the
+    // plate — neither the markup nor the boot dataset carries the token (the
+    // rating's home is the footer, pinned by KDV-ARCH-05). Rendered DOM only —
+    // the boot blob carries the copy.
     const dom = decodeEntities(stripInlineBoot(html));
     expect(dom).not.toContain('YOU ARE HUMAN. THIS IS NOT A DIAGNOSIS');
     expect(dom).toContain(BRIEF_HEADING);
-    expect(dom).toContain(RECEPTION_RATING);
+    expect(html).not.toContain('reception_rating');
+    expect(html).not.toContain('class="reception-rating"');
     expect(dom).toContain(dumpPrompt('https://example.test/dumps/sample-dump/manifest.json'));
     expect(html).toContain('class="agent-lane"');
     expect(html).toContain('class="copy-prompt"');
@@ -916,8 +918,8 @@ describe('build controller (integration)', () => {
     expect(html).toMatch(/<p class="gate-kicker" id="gate-kicker">/);
     expect(html).toMatch(/<h2 id="gate-title" class="gate-title">/);
     expect(html).toMatch(/<p class="gate-hook" id="gate-hook">/);
-    // §7.1 v2: the heading is the plain declaration; the CAPTCHA phrase is the
-    // muted kicker above it (the region's accessible name is the declaration).
+    // §7.1 v2/items 6-7: the heading is the plain declaration; the kicker is a
+    // plain reading instruction (the region's accessible name is the declaration).
     expect(text).toContain(GATE_TITLE);
 
     // §6.5 P0-1: the doors are real buttons carrying their visible §7.1 labels
@@ -951,7 +953,9 @@ describe('build controller (integration)', () => {
     const withBrief = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
     const briefText = stripStickers(decodeEntities(withBrief));
     expect(withBrief).toContain('id="plate-preview"');
-    expect(briefText).toContain(`<p class="reception-rating">${RECEPTION_RATING}</p>`);
+    // Item 8: the rating line is not part of the plate's legal group anymore —
+    // the group closes the brief tier with the report line alone.
+    expect(briefText).not.toContain('reception-rating');
     // The brief heading is exactly one DOM element, not one substring of the
     // file: the inlined dataset also carries the raw copy text, so count the
     // rendered element on the boot-stripped markup.

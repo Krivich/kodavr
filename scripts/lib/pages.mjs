@@ -258,11 +258,10 @@ export const COPY_FIELDS = Object.freeze({
     'gate_machine_label',
     'gate_human_label',
     'gate_machine_door',
+    'gate_machine_note',
     'gate_human_door',
+    'gate_human_note',
   ]),
-  // §7.2 v4: the `01 · PREVIEW` plate's legal tail — the blanket 18+ rating
-  // (the brief report line travels with the brief tier above).
-  previewLegal: Object.freeze(['reception_rating']),
   dumpBrief: Object.freeze([
     'brief_heading',
     'brief_note',
@@ -678,9 +677,6 @@ export function dumpCopySlices({ manifestUrl = null, locale = DEFAULT_LOCALE } =
     // prose stays verbatim — kicker, H1, hook and the duties line lead the
     // first screen, the full declaration sits below the fold.
     ...copyFields(COPY_FIELDS.gate, locale),
-    // §7.2 v4: the `01 · PREVIEW` plate's legal tail — the 18+ rating renders
-    // beside the brief report line, both from the copydeck.
-    ...copyFields(COPY_FIELDS.previewLegal, locale),
     // §6.3/§7.2 v4: the `01 · PREVIEW` plate's brief tier — the rendered
     // `summary.md` (`brief_html`, wired by the dump dataset, falsy without the
     // layer) is the real payload; these are the surrounding heading/note/CTA/

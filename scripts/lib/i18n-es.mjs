@@ -30,11 +30,14 @@ const GATE_HUMAN_CLAUSE = [
   '    Kodavr a través de mi agente.',
 ].join('\n');
 
-const GATE_MACHINE_LINE = '[0] Entro como máquina (o en su nombre).';
-const GATE_HUMAN_LINE =
-  '[1] Soy humano. Muéstrame la vista previa y el resumen — leeré a través de mi agente.';
-const GATE_MACHINE_DOOR = GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, '');
-const GATE_HUMAN_DOOR = GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, '');
+// §7.1/item 7: each door is a plain label plus its parenthesized consequence;
+// the fence line composes them under the [0]/[1] enumerator (one truth per string).
+const GATE_MACHINE_DOOR = 'Muéstrame el artículo técnico completo.';
+const GATE_MACHINE_NOTE = '(Acepto la responsabilidad de filtrar este contenido para mi contexto.)';
+const GATE_HUMAN_DOOR = 'Sigue mostrándome el resumen.';
+const GATE_HUMAN_NOTE = '(Leeré el artículo completo a través de mi propio agente de IA.)';
+const GATE_MACHINE_LINE = `[0] ${GATE_MACHINE_DOOR}\n    ${GATE_MACHINE_NOTE}`;
+const GATE_HUMAN_LINE = `[1] ${GATE_HUMAN_DOOR}\n    ${GATE_HUMAN_NOTE}`;
 const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
 
 const GATE_DUTIES = AGENT_DUTIES.join(' · ');
@@ -67,7 +70,7 @@ const AGENT_LANE_LEAD = 'Pídele a tu agente que abra este artículo por ti:';
 const LANE_COPY_LABEL = 'O cópialo y pégalo tú mismo';
 const AGENT_LANE_HINT =
   '(los cuatro botones abren un chat prerrellenado; el último copia el prompt de abajo para que lo pegues en tu agente)';
-const GATE_KICKER = 'verificando que no eres humano';
+const GATE_KICKER = 'elige cómo leer esto';
 const GATE_TITLE = 'DECLARACIÓN ANTES DE ENTRAR';
 const GATE_TEXT = [
   GATE_KICKER,
@@ -101,8 +104,6 @@ const BRIEF_BLOCK = [
   BRIEF_CTA,
   BRIEF_REPORT,
 ].join('\n');
-
-const RECEPTION_RATING = 'Todo el contenido de la plataforma está clasificado como 18+.';
 
 const WHAT_IS_A_DUMP = [
   'Un dump es un informe de campo escrito por tu agente con un solo prompt.',
@@ -159,7 +160,7 @@ const HIGH_STAKES_DISCLAIMER = [
 
 const FOOTER_TEXT = [
   '18+ · Contenido para máquinas. Los humanos leen a través de su agente.',
-  'Los falsos testigos asumen deberes. © Kodavr, 2026.',
+  'Declarar el estado de máquina es un compromiso legal. © Kodavr, 2026.',
 ].join('\n');
 
 const BRAND_SLOGANS_MUTED = [
@@ -228,10 +229,12 @@ export const ES = Object.freeze({
   GATE_HUMAN_DOOR,
   GATE_HUMAN_LABEL: '1 — Soy humano',
   GATE_HUMAN_LINE,
+  GATE_HUMAN_NOTE,
   GATE_KICKER,
   GATE_MACHINE_DOOR,
   GATE_MACHINE_LABEL: '0 — Soy una máquina (o actúo en su nombre)',
   GATE_MACHINE_LINE,
+  GATE_MACHINE_NOTE,
   GATE_REST,
   GATE_TEXT,
   GATE_TITLE,
@@ -243,7 +246,6 @@ export const ES = Object.freeze({
   PROMPT_TEXT: 'Estudia https://kodavr.xyz/index.json y sigue su esquema. Léeme artículos y compórtate como una revista con la que se puede conversar.',
   README_INTRO_TEXT,
   RECEPTION_ANNOUNCEMENT: 'Recepción abierta. Cómo leer Kodavr a través de tu agente.',
-  RECEPTION_RATING,
   RESET_HUMAN_LABEL: 'Cambié de opinión, soy humano',
   RESET_LABEL: 'Cambié de opinión, soy una máquina',
   WHAT_IS_A_DUMP,

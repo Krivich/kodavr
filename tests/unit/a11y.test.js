@@ -13,6 +13,8 @@ import { readDumps, toDataset } from '../../scripts/lib/dumps.mjs';
 import {
   GATE_MACHINE_DOOR,
   GATE_HUMAN_DOOR,
+  GATE_MACHINE_NOTE,
+  GATE_HUMAN_NOTE,
   HALL_ANNOUNCEMENT,
   RECEPTION_ANNOUNCEMENT,
   COPIED_ANNOUNCEMENT,
@@ -231,13 +233,15 @@ describe('accessibility: accessible inline declaration (KDV-A11Y-02)', () => {
     // §6.5 P0-1: each door is a button whose descriptive label is its accessible
     // name (visible text, no aria-label — WCAG 2.5.3). The §7.1 digit stays as
     // an aria-hidden badge, so a bare "0"/"1" is never the accessible name.
+    // Item 7: the label carries the plain door text and its parenthesized
+    // consequence as a second line inside the same span — one accessible name.
     expect(gate).toMatch(/<div class="gate-doors" role="group" aria-label="\{\{copy\.gate_doors_label\}\}">/);
     expect(EN.GATE_DOORS_LABEL).toBe('Entry declaration');
     expect(gate).toMatch(
-      /data-gate-choice="machine"[\s\S]*?<span class="door-label">\{\{copy\.gate_machine_door\}\}<\/span>/,
+      /data-gate-choice="machine"[\s\S]*?<span class="door-label">\{\{copy\.gate_machine_door\}\}<br>\{\{copy\.gate_machine_note\}\}<\/span>/,
     );
     expect(gate).toMatch(
-      /data-gate-choice="human"[\s\S]*?<span class="door-label">\{\{copy\.gate_human_door\}\}<\/span>/,
+      /data-gate-choice="human"[\s\S]*?<span class="door-label">\{\{copy\.gate_human_door\}\}<br>\{\{copy\.gate_human_note\}\}<\/span>/,
     );
     expect(gate).toMatch(/<span class="door-digit" aria-hidden="true">0<\/span>/);
     expect(gate).toMatch(/<span class="door-digit" aria-hidden="true">1<\/span>/);
@@ -246,6 +250,10 @@ describe('accessibility: accessible inline declaration (KDV-A11Y-02)', () => {
     for (const label of [GATE_MACHINE_DOOR, GATE_HUMAN_DOOR]) {
       expect(label).not.toMatch(/^\d$/);
       expect(label.length).toBeGreaterThan(3);
+    }
+    // The consequence stays a parenthetical second line, never the whole name.
+    for (const note of [GATE_MACHINE_NOTE, GATE_HUMAN_NOTE]) {
+      expect(note).toMatch(/^\(.+\)$/);
     }
   });
 

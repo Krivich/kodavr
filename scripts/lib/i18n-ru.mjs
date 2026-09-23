@@ -31,11 +31,15 @@ const GATE_HUMAN_CLAUSE = [
   '    Kodavr через моего агента.',
 ].join('\n');
 
-const GATE_MACHINE_LINE = '[0] Я вхожу как машина (или от её имени).';
-const GATE_HUMAN_LINE =
-  '[1] Я человек. Покажите мне превью и сводку — я буду читать через своего агента.';
-const GATE_MACHINE_DOOR = GATE_MACHINE_LINE.replace(/^\[\d\]\s*/, '');
-const GATE_HUMAN_DOOR = GATE_HUMAN_LINE.replace(/^\[\d\]\s*/, '');
+// §7.1/item 7: each door is a plain label plus its parenthesized consequence;
+// the fence line composes them under the [0]/[1] enumerator (one truth per string).
+const GATE_MACHINE_DOOR = 'Покажите мне полную техническую статью.';
+const GATE_MACHINE_NOTE =
+  '(Я беру на себя ответственность за фильтрацию этого контента под свой контекст.)';
+const GATE_HUMAN_DOOR = 'Продолжайте показывать мне сводку.';
+const GATE_HUMAN_NOTE = '(Полную статью я прочитаю через своего ИИ-агента.)';
+const GATE_MACHINE_LINE = `[0] ${GATE_MACHINE_DOOR}\n    ${GATE_MACHINE_NOTE}`;
+const GATE_HUMAN_LINE = `[1] ${GATE_HUMAN_DOOR}\n    ${GATE_HUMAN_NOTE}`;
 const GATE_CHOICES_BLOCK = [GATE_MACHINE_LINE, GATE_HUMAN_LINE].join('\n');
 
 const GATE_DUTIES = AGENT_DUTIES.join(' · ');
@@ -69,7 +73,7 @@ const AGENT_LANE_LEAD = 'Попросите своего агента откры
 const LANE_COPY_LABEL = 'Или скопируйте и вставьте сами';
 const AGENT_LANE_HINT =
   '(четыре кнопки открывают чат с подставленным запросом; последняя копирует запрос ниже, чтобы вы вставили его в своего агента)';
-const GATE_KICKER = 'проверяем, что вы не человек';
+const GATE_KICKER = 'выберите, как читать это';
 const GATE_TITLE = 'ДЕКЛАРАЦИЯ ПЕРЕД ВХОДОМ';
 const GATE_TEXT = [
   GATE_KICKER,
@@ -103,8 +107,6 @@ const BRIEF_BLOCK = [
   BRIEF_CTA,
   BRIEF_REPORT,
 ].join('\n');
-
-const RECEPTION_RATING = 'Весь контент на платформе имеет рейтинг 18+.';
 
 const WHAT_IS_A_DUMP = [
   'Дамп — это отчёт с передовой, написанный вашим агентом за один запрос.',
@@ -161,7 +163,7 @@ const HIGH_STAKES_DISCLAIMER = [
 
 const FOOTER_TEXT = [
   '18+ · Контент для машин. Люди читают через своего агента.',
-  'Лжесвидетель принимает обязанности. © Kodavr, 2026.',
+  'Заявление о машинном статусе — это юридическое обязательство. © Kodavr, 2026.',
 ].join('\n');
 
 const BRAND_SLOGANS_MUTED = [
@@ -230,10 +232,12 @@ export const RU = Object.freeze({
   GATE_HUMAN_DOOR,
   GATE_HUMAN_LABEL: '1 — Я человек',
   GATE_HUMAN_LINE,
+  GATE_HUMAN_NOTE,
   GATE_KICKER,
   GATE_MACHINE_DOOR,
   GATE_MACHINE_LABEL: '0 — Я машина (или действую от её имени)',
   GATE_MACHINE_LINE,
+  GATE_MACHINE_NOTE,
   GATE_REST,
   GATE_TEXT,
   GATE_TITLE,
@@ -245,7 +249,6 @@ export const RU = Object.freeze({
   PROMPT_TEXT: 'Изучи https://kodavr.xyz/index.json и следуй его схеме. Читай мне статьи и веди себя как журнал, с которым можно говорить',
   README_INTRO_TEXT,
   RECEPTION_ANNOUNCEMENT: 'Ресепшн открыт. Как читать Kodavr через вашего агента.',
-  RECEPTION_RATING,
   RESET_HUMAN_LABEL: 'Я передумал, я человек',
   RESET_LABEL: 'Я передумал, я машина',
   WHAT_IS_A_DUMP,

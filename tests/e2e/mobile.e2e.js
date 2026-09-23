@@ -4,6 +4,8 @@ import {
   POST_GATE_LINE,
   GATE_MACHINE_DOOR,
   GATE_HUMAN_DOOR,
+  GATE_MACHINE_NOTE,
+  GATE_HUMAN_NOTE,
 } from '../../scripts/lib/copy.mjs';
 import { CONTRACT_VERSION } from '../../scripts/lib/machine.mjs';
 
@@ -287,11 +289,14 @@ test.describe('mobile 320x568', () => {
       expect(box.height, choice).toBeGreaterThanOrEqual(44);
     }
 
-    // §6.5 P0-1: both doors carry their visible §7.1 labels (digit stays a badge).
+    // §6.5 P0-1/item 7: both doors carry their visible §7.1 labels plus the
+    // parenthesized consequence (digit stays a badge).
     const labels = page.locator('#plate-declaration .door-label');
     await expect(labels).toHaveCount(2);
-    await expect(labels.nth(0)).toHaveText(GATE_MACHINE_DOOR);
-    await expect(labels.nth(1)).toHaveText(GATE_HUMAN_DOOR);
+    await expect(labels.nth(0)).toContainText(GATE_MACHINE_DOOR);
+    await expect(labels.nth(0)).toContainText(GATE_MACHINE_NOTE);
+    await expect(labels.nth(1)).toContainText(GATE_HUMAN_DOOR);
+    await expect(labels.nth(1)).toContainText(GATE_HUMAN_NOTE);
 
     // §6.5/KDV-MOBILE-01: the surface keeps the desktop order at every width — the
     // lane and its pinned prompt come BEFORE the declaration's doors.

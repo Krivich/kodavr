@@ -3,6 +3,8 @@ import {
   GATE_TITLE,
   GATE_MACHINE_DOOR,
   GATE_HUMAN_DOOR,
+  GATE_MACHINE_NOTE,
+  GATE_HUMAN_NOTE,
   HALL_ANNOUNCEMENT,
   RECEPTION_ANNOUNCEMENT,
   COPIED_ANNOUNCEMENT,
@@ -15,9 +17,10 @@ import {
 const DUMP = '/dumps/sample-dump/';
 
 // §6.5 P0-1: the doors' accessible names come from their visible labels, so the
-// assertion reads the same §7.1 copy the DOM exposes. The human line carries a
-// newline + indent in the fence; HTML collapses it to single spaces, and so does
-// the accessible-name computation — normalize both sides to compare.
+// assertion reads the same §7.1 copy the DOM exposes — the door label and its
+// parenthesized consequence both join the name across the `<br>`; HTML collapses
+// the fence's newline + indent to single spaces, and so does the accessible-name
+// computation — normalize both sides to compare.
 const flat = (label) => label.replace(/\s+/g, ' ').trim();
 
 test('KDV-A11Y-01: Tab from the top reaches the skip link first', async ({ page }) => {
@@ -35,6 +38,9 @@ test('KDV-A11Y-02: the inline declaration region carries its §7.1 name and the 
   await expect(region).toBeVisible();
   await expect(page.getByRole('button', { name: flat(GATE_MACHINE_DOOR) })).toBeVisible();
   await expect(page.getByRole('button', { name: flat(GATE_HUMAN_DOOR) })).toBeVisible();
+  // Item 7: the consequence line is part of each door's accessible name.
+  await expect(page.getByRole('button', { name: flat(GATE_MACHINE_NOTE) })).toBeVisible();
+  await expect(page.getByRole('button', { name: flat(GATE_HUMAN_NOTE) })).toBeVisible();
 
   // A bare digit is not exposed as an accessible name.
   await expect(page.getByRole('button', { name: '0', exact: true })).toHaveCount(0);

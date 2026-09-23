@@ -10,6 +10,8 @@ import {
   CHIP_HUMAN_LABEL,
   GATE_MACHINE_DOOR,
   GATE_HUMAN_DOOR,
+  GATE_MACHINE_NOTE,
+  GATE_HUMAN_NOTE,
   chipMachine,
   chipTitle,
   dumpPrompt,
@@ -403,12 +405,15 @@ test('KDV-SURFACE-13: the 02 · INTERESTING? plate leads with the human fast lan
   await expect(page.locator('#article-prompt')).toHaveCount(1);
   await expect(page.locator('#machine-prompt')).toHaveCount(1);
 
-  // §6.5 P0-1: both doors carry their own visible §7.1 labels (the digit stays a
-  // separate badge), so the declaration names the choices instead of a bare 0/1.
+  // §6.5 P0-1/item 7: both doors carry their own visible §7.1 labels plus the
+  // parenthesized consequence (the digit stays a separate badge), so the
+  // declaration names the choices and their outcomes instead of a bare 0/1.
   const doorLabels = page.locator(`${PLATE_DECLARATION} .door-label`);
   await expect(doorLabels).toHaveCount(2);
-  await expect(doorLabels.nth(0)).toHaveText(GATE_MACHINE_DOOR);
-  await expect(doorLabels.nth(1)).toHaveText(GATE_HUMAN_DOOR);
+  await expect(doorLabels.nth(0)).toContainText(GATE_MACHINE_DOOR);
+  await expect(doorLabels.nth(0)).toContainText(GATE_MACHINE_NOTE);
+  await expect(doorLabels.nth(1)).toContainText(GATE_HUMAN_DOOR);
+  await expect(doorLabels.nth(1)).toContainText(GATE_HUMAN_NOTE);
 
   // The long declaration sits below the doors, not glued to them.
   const doors = await page.locator(`${PLATE_DECLARATION} .gate-doors`).boundingBox();
