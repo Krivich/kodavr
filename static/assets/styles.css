@@ -509,6 +509,13 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
   padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);
   font:400 14px/1 var(--font-prose);text-decoration:none;cursor:pointer;touch-action:manipulation}
 .agent-link:hover,.copy-prompt:hover{border-color:var(--ink)}
+/* feedback-marketing item 11: hovering a lane control lights the prompt below
+   it (accent left rule) — the hand-over taught without a word. The controls sit
+   inside .agent-lane (ul>li), so the document's `button:hover ~ prompt` can't
+   match from the button; :has() on the wrapper reaches the sibling prompt. */
+.agent-lane:has(.agent-link:hover,.copy-prompt:hover) ~ .article-prompt,
+.agent-lane:has(.agent-link:hover,.copy-prompt:hover) ~ .machine-prompt,
+.agent-lane:has(.agent-link:hover,.copy-prompt:hover) ~ .home-prompt{border-left-color:var(--accent)}
 
 /* --- misc leftovers -------------------------------------------------- */
 .not-found-text{margin:0;background:var(--block);border:1px solid var(--line);border-left:3px solid var(--ink);

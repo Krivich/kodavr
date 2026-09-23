@@ -511,4 +511,24 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     // < 1rem, i.e. smaller than the panel's prose (the inherited root size).
     expect(Number(size[1])).toBeLessThan(1);
   });
+
+  it('KDV-SURFACE-13: hovering a lane control lights the prompt below (feedback-marketing item 11)', () => {
+    // item 11: hovering a jump link or the copy chip recolours the prompt's
+    // left rule in the accent colour. The controls sit inside .agent-lane
+    // (ul > li), so the document's `button:hover ~ prompt` can never match from
+    // the button itself — the hover crosses the wrapper via :has() (the §04
+    // species-chip pattern) to the lane's later sibling prompt on every surface
+    // that pairs them (article plate, machine panel, home plate).
+    const rule = css.match(
+      /\.agent-lane:has\([^)]*\)\s*~\s*\.article-prompt,\s*\.agent-lane:has\([^)]*\)\s*~\s*\.machine-prompt,\s*\.agent-lane:has\([^)]*\)\s*~\s*\.home-prompt\s*\{[^}]*\}/,
+    );
+    expect(rule, 'lane-hover → prompt rule').not.toBeNull();
+    expect(rule[0]).toContain('.agent-link:hover');
+    expect(rule[0]).toContain('.copy-prompt:hover');
+    expect(rule[0]).toMatch(/border-left-color:\s*var\(--accent\)/);
+    // The resting state stays the muted 2px rule — the hover only recolours it.
+    expect(css).toMatch(
+      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*border-left:\s*2px solid var\(--line-2\)/,
+    );
+  });
 });
