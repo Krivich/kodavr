@@ -33,7 +33,6 @@ import {
   FOOTER_REPORT_LABEL,
   NOT_FOUND_TEXT,
   HIGH_STAKES_DISCLAIMER,
-  AGENT_HOOK,
   CHIP_MACHINE_TEMPLATE,
   CHIP_HUMAN_LABEL,
   CHIP_TITLE_TEMPLATE,
@@ -812,7 +811,7 @@ describe('build controller (integration)', () => {
     }
   });
 
-  it('KDV-SURFACE-03 + KDV-SURFACE-15 + KDV-COPY-01 + KDV-SURFACE-28: the dump page carries the full body in SSR behind inline plates with the declaration, manifest card and og-tags', async () => {
+  it('KDV-SURFACE-03 + KDV-SURFACE-15 + KDV-COPY-01 + KDV-SURFACE-28 + KDV-SURFACE-08: the dump page carries the full body in SSR behind inline plates with the declaration, manifest card and og-tags', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const html = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
@@ -876,8 +875,9 @@ describe('build controller (integration)', () => {
     expect(html).toContain('href="../../dumps/sample-dump/manifest.json"');
     expect(html).toContain('href="../../index.json"');
 
-    // §6.4 og-tags.
-    expect(html).toContain('<meta property="og:title" content="Sample Dump · low">');
+    // §6.4 og-tags. og:title is the title only — stakes/trust stay in meta tags
+    // and visible cards, never in the title tag or og:title (KDV-SURFACE-08).
+    expect(html).toContain('<meta property="og:title" content="Sample Dump">');
     expect(html).toContain('<meta property="og:image" content="https://example.test/assets/og-default.png">');
     expect(html).toContain('<meta property="og:url" content="https://example.test/dumps/sample-dump/">');
   });
@@ -1140,7 +1140,7 @@ describe('build controller (integration)', () => {
     expect(sitemap).not.toContain('/404</loc>');
   });
 
-  it('KDV-SURFACE-11: every page ships server-rendered JSON-LD (@graph); dump previews carry the platform agent hook', async () => {
+  it('KDV-SURFACE-11: every page ships server-rendered JSON-LD (@graph); dump previews carry the article summary plus the agent suffix', async () => {
     const TAGGED = '2026-09-10-jsonld-dump';
     const summary = 'A summonable fixture dump </script> for JSON-LD.';
     tmpRoot = await setupProject(['sample-dump'], [
@@ -1178,10 +1178,9 @@ describe('build controller (integration)', () => {
     };
     const nodeOf = (graph, type) => graph.find((node) => node['@type'] === type);
 
-    // P5b pins the platform hook verbatim.
-    expect(AGENT_HOOK).toBe(
-      'A raw dump for your agent, not for you. Hand it over — it comes back tailored to your context.',
-    );
+    // The preview line is the manifest summary composed with the agent suffix —
+    // the article's essence plus the agent-onboarding hook (feedback-marketing #1).
+    const composed = `${summary} And a prompt to make your agent explain it to you.`;
 
     // Home: WebSite + WebPage + CollectionPage + ItemList of the feed.
     const homeGraph = graphOf(await readFile(join(publicDir, 'index.html'), 'utf8'));
@@ -1202,11 +1201,12 @@ describe('build controller (integration)', () => {
     for (const type of ['WebSite', 'WebPage', 'Article', 'BreadcrumbList']) {
       expect(nodeOf(dumpGraph, type), type).toBeDefined();
     }
+    expect(nodeOf(dumpGraph, 'WebPage').description).toBe(composed);
     const article = nodeOf(dumpGraph, 'Article');
     expect(article).toMatchObject({
       headline: 'JSON-LD Dump',
       description: summary,
-      abstract: AGENT_HOOK,
+      abstract: composed,
       license: 'CC-BY-4.0',
       articleSection: 'engineering',
       datePublished: '2026-09-10T00:00:00Z',
@@ -1221,10 +1221,12 @@ describe('build controller (integration)', () => {
     const breadcrumb = nodeOf(dumpGraph, 'BreadcrumbList');
     expect(breadcrumb.itemListElement.map((entry) => entry.name)).toEqual(['Home', 'JSON-LD Dump']);
 
-    // Dump previews carry the agent hook, not the article summary.
-    expect(dumpHtml).toContain(`<meta name="description" content="${AGENT_HOOK}">`);
-    expect(dumpHtml).toContain(`<meta property="og:description" content="${AGENT_HOOK}">`);
-    expect(dumpHtml).toContain(`<meta name="twitter:description" content="${AGENT_HOOK}">`);
+    // Dump previews carry the article's essence plus the agent suffix — the
+    // composed description (summary + suffix), never a static hook.
+    const decoded = decodeEntities(dumpHtml);
+    expect(decoded).toContain(`<meta name="description" content="${composed}">`);
+    expect(decoded).toContain(`<meta property="og:description" content="${composed}">`);
+    expect(decoded).toContain(`<meta name="twitter:description" content="${composed}">`);
 
     // The 404 is noindex and carries no JSON-LD.
     const notFound = await readFile(join(publicDir, '404.html'), 'utf8');

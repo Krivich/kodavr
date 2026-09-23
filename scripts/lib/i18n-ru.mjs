@@ -187,9 +187,6 @@ const TRUST_LEVEL_MEANINGS_RU = TRUST_LEVEL_MEANINGS.map(({ level }) => {
 });
 
 export const RU = Object.freeze({
-  // §6.4 platform agent hook.
-  AGENT_HOOK:
-    'Сырой дамп для вашего агента, не для вас. Передайте ему — он вернётся подогнанным под ваш контекст.',
   // §7.12 human fast lane.
   AGENT_LANE_HINT,
   AGENT_LANE_LEAD,

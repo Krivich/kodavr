@@ -186,9 +186,6 @@ const TRUST_LEVEL_MEANINGS_ES = TRUST_LEVEL_MEANINGS.map(({ level }) => {
 });
 
 export const ES = Object.freeze({
-  // §6.4 platform agent hook.
-  AGENT_HOOK:
-    'Un dump crudo para tu agente, no para ti. Entrégalo — volverá adaptado a tu contexto.',
   // §7.12 human fast lane.
   AGENT_LANE_HINT,
   AGENT_LANE_LEAD,

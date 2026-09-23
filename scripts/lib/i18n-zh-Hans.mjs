@@ -184,9 +184,6 @@ const TRUST_LEVEL_MEANINGS_ZH = TRUST_LEVEL_MEANINGS.map(({ level }) => {
 });
 
 export const ZH_HANS = Object.freeze({
-  // §6.4 platform agent hook.
-  AGENT_HOOK:
-    '一份给代理、而非给你的原始转储。把它交出去——它会带着适配你情境的内容返回。',
   // §7.12 human fast lane.
   AGENT_LANE_HINT,
   AGENT_LANE_LEAD,

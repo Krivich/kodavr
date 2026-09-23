@@ -375,7 +375,7 @@ Tag and domain pages are NOT built in MVP (§A12, trigger in §13).
 6. Line about the blanket 18+ category.
 
 ### 6.4 SEO requirements
-Dump content is fully indexed (body in SSR-HTML); gate/reception — dismissible interstitial per age-gate precedent; feed pagination — separate page files; sitemap and robots are generated; og-tags on every dump page (og:image = logo, og:title = title + stakes badge as text).
+Dump content is fully indexed (body in SSR-HTML); gate/reception — dismissible interstitial per age-gate precedent; feed pagination — separate page files; sitemap and robots are generated; og-tags on every dump page: og:image = logo; og:title = title only — stakes/trust stay in meta tags and visible cards, never in the title tag or og:title; og:description and the meta description (the dump previews) = `manifest.summary + " And a prompt to make your agent explain it to you."` — the article's essence plus the agent-onboarding hook, never a static hook.
 
 ### 6.5 Mobile adaptation and the viral-seed scenario
 

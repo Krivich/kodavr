@@ -25,7 +25,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { renderMarkdown } from './markdown.mjs';
 import { DEFAULT_LOCALE, getLocale, t } from './i18n.mjs';
-import { AGENT_HOOK, HIGH_STAKES_DISCLAIMER, withdrawnStub } from './copy.mjs';
+import { HIGH_STAKES_DISCLAIMER, withdrawnStub } from './copy.mjs';
 import { DEFAULT_LICENSE, ISSUES_URL, REPOSITORY_BRANCH } from './machine.mjs';
 import {
   dumpCopySlices,
@@ -55,6 +55,8 @@ const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 export function escapeHtml(value) {
   return String(value).replace(/[&<>"]/g, (char) => HTML_ESCAPES[char]);
 }
+
+const AGENT_SUFFIX = ' And a prompt to make your agent explain it to you.';
 
 // §A11/§4.1 content layers. `raw` is mandatory (§3); `refined`/`summary` are
 // only listed when the file exists on disk — the controller never invents them.
@@ -267,9 +269,10 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
   });
   // §6.4/§A4: the dump page ships a server-rendered JSON-LD `@graph` — the
   // site-wide WebSite + WebPage plus an Article (the dump) and its breadcrumb.
-  // The Article keeps the manifest `summary` as its description while the
-  // preview line (`abstract`) is the platform agent hook; the same hook, not the
-  // summary, is what the page's meta/og/twitter descriptions carry.
+  // The preview line (meta/og/twitter description, WebPage.description and the
+  // Article `abstract`) is the manifest summary composed with the agent suffix —
+  // the article's essence plus the agent-onboarding hook (§6.4/KDV-SURFACE-11).
+  const previewDescription = `${manifest.summary}${AGENT_SUFFIX}`;
   const canonical = `${localizedBase}/dumps/${slug}/`;
   // §5.1/§7.11: the raw layer is the full dump. Its published URL, not the HTML
   // projection, is what a machine is handed — derived exactly as in index.json.
@@ -286,14 +289,14 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     websiteId: website['@id'],
     url: canonical,
     name: manifest.title,
-    description: AGENT_HOOK,
+    description: previewDescription,
     inLanguage: htmlLang,
   });
   const article = jsonldArticle({
     url: canonical,
     title: manifest.title,
     summary: manifest.summary,
-    hook: AGENT_HOOK,
+    hook: previewDescription,
     datePublished: isoTimestamp(manifest.date),
     dateModified: builtAt ?? isoTimestamp(manifest.date),
     authorGithub: manifest.author?.github ?? null,
@@ -334,11 +337,13 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     // the HTML projection.
     body_url: bodyUrl,
     index_url: indexUrl,
-    og_title: `${manifest.title} · ${manifest.stakes}`,
-    // §6.4/P5b: the platform agent hook is the platform-level preview line for
-    // dumps; the dump's own `summary` stays on the manifest card and in the
-    // JSON-LD Article.description.
-    og_description: AGENT_HOOK,
+    og_title: manifest.title,
+    // §6.4/KDV-SURFACE-08: og:title is the title only — stakes/trust stay in
+    // meta tags and visible cards, never in the title tag or og:title.
+    // §6.4/KDV-SURFACE-11: the preview description is the dump's summary plus
+    // the agent suffix; the bare `summary` stays on the manifest card and in
+    // the JSON-LD Article.description.
+    og_description: previewDescription,
     // §6.4: absolute canonical URL; `og:*` stays absolute (consumed out of
     // context, §8.3); the social card is the site-wide 1200x630 PNG.
     canonical_url: canonical,

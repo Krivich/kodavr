@@ -2,7 +2,6 @@
  * CONTRACT: scripts/lib/copy.mjs
  * ROLE: the single source of truth for every human string (§7)
  * EXPORTS:
- *   AGENT_HOOK — the agent-facing meta/og description of a dump
  *   AGENT_LANE_HINT — the §7.12 note that a button passes on the prompt below
  *   AGENT_LANE_LEAD — the §7.12 human fast-lane lead line
  *   AGENT_LINKS — the §7.12 four agent jump targets (prefill capability)
@@ -178,13 +177,6 @@ export const DECLARATION_TOAST = 'Declaration accepted. Duties active: ' + AGENT
 export const HALL_ANNOUNCEMENT = 'Hall opened. The dump body is now visible.';
 export const RECEPTION_ANNOUNCEMENT = 'Reception opened. How to read Kodavr through your agent.';
 export const COPIED_ANNOUNCEMENT = 'Copied to the clipboard.';
-
-// §6.4/§A6 platform agent hook: the preview line shared by a dump page's
-// meta/og/twitter description (search + social cards). It speaks to the agent,
-// not the human — the dump's own `summary` stays on the manifest card and in
-// the JSON-LD `Article.description`.
-export const AGENT_HOOK =
-  'A raw dump for your agent, not for you. Hand it over — it comes back tailored to your context.';
 
 // §7.12: the human fast lane. The agent jump links come first (one press opens a
 // prefilled chat); the copy control is the last, fallback chip ("not listed?
