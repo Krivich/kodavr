@@ -370,7 +370,10 @@ export const ZH_HANS = Object.freeze({
   // the flow plate; the manual path is demoted under its own heading).
   CONTRIBUTE_KICKER: '给作者',
   CONTRIBUTE_LEAD:
-    '一个 pull request = 一个转储。CI 会在合并前拒绝垃圾内容；所有者会亲手读第一个 PR。此后的一切都靠信任。',
+    '90% 的有用经验都死在本地文件夹里——解决了真实问题的脚本、终于跑通的工作流、救急的妙招。Kodavr 把这些留住：用一条提示词发布一个原始转储，读者的代理会把它适配到自己的上下文。',
+  CONTRIBUTE_LEAD_2:
+    '让你的思考被看见。从社区开始起步。为你的作品赢得关注——一切只需一条提示词。',
+  CONTRIBUTE_LEAD_3: '从来没有这么容易过，不是吗？',
   CONTRIBUTE_LANE_LEAD:
     '把你的编码代理指向这个技能——它会阅读源码、构建自己的版本，并带你完成发布：',
   CONTRIBUTE_PROMPT:

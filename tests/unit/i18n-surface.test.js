@@ -165,6 +165,32 @@ describe('i18n surface: catalog (KDV-I18N-01)', () => {
     expect(t('CONTRIBUTE_BRING_HEADING', 'ru')).toBe('Ручной путь (если предпочитаете)');
   });
 
+  it('KDV-I18N-01: the /contribute/ three-paragraph lead resolves in every locale (EN verbatim)', () => {
+    // Owner-dictated platform copy: the lead is three paragraphs —
+    // `CONTRIBUTE_LEAD` carries P1, `CONTRIBUTE_LEAD_2`/`_3` the siblings.
+    const keys = ['CONTRIBUTE_LEAD', 'CONTRIBUTE_LEAD_2', 'CONTRIBUTE_LEAD_3'];
+    for (const locale of LOCALES.map((entry) => entry.code)) {
+      for (const key of keys) {
+        const value = t(key, locale); // throws fail-visible if a locale lags
+        expect(typeof value, `${locale}/${key}`).toBe('string');
+        expect(value.length, `${locale}/${key}`).toBeGreaterThan(0);
+      }
+    }
+    expect(t('CONTRIBUTE_LEAD', 'en')).toBe(
+      "90% of useful experience dies in local folders — scripts that solved a real problem, workflows that finally worked, hacks that saved the day. Kodavr saves it: publish a raw dump in one prompt, and the reader's agent adapts it to their context.",
+    );
+    expect(t('CONTRIBUTE_LEAD_2', 'en')).toBe(
+      'Make your thinking visible. Bootstrap into a community. Gain traction for your work — all in one prompt.',
+    );
+    expect(t('CONTRIBUTE_LEAD_3', 'en')).toBe('It was never this easy before, was it?');
+    // The dataset carries the sibling keys to the route that renders them.
+    const routes = buildRouteDatasets([], { baseUrl: 'https://example.test' });
+    expect(routes.contribute.copy.contribute_lead_2).toBe(t('CONTRIBUTE_LEAD_2', 'en'));
+    expect(routes.contribute.copy.contribute_lead_3).toBe(t('CONTRIBUTE_LEAD_3', 'en'));
+    // The superseded lead is gone from the EN catalog.
+    expect(t('CONTRIBUTE_LEAD', 'en')).not.toContain('One pull request = one dump');
+  });
+
   it('KDV-SURFACE-24: the home hero parts compose HOME_TITLE in every locale', () => {
     // §6.1 v4: the H1 is one sentence composed from three parts (the term in the
     // middle). The plain HOME_TITLE — the SEO <title>/JSON-LD string — must equal

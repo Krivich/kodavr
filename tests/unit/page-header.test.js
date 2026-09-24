@@ -59,6 +59,32 @@ describe('page header: kicker + H1 + lead (KDV-SURFACE-23)', () => {
     });
   }
 
+  it('KDV-SURFACE-23: the /contribute/ plate 01 lead is three paragraphs — P1 keeps the lead role, P2/P3 are plain siblings', () => {
+    // Owner-dictated three-paragraph lead (D1): paragraph 1 keeps the `lead`
+    // role the kicker→H1→lead header contract pins; paragraphs 2–3 render as
+    // plain <p> siblings after it — no new classes, existing prose styling.
+    const tpl = template('contribute.hbs');
+    const start = tpl.indexOf('<main');
+    const header = tpl.slice(start, tpl.indexOf('</section>', start));
+
+    const p1 = '<p class="lead">{{copy.contribute_lead}}</p>';
+    const p2 = '<p>{{copy.contribute_lead_2}}</p>';
+    const p3 = '<p>{{copy.contribute_lead_3}}</p>';
+    expect(header, 'P1 lead binding').toContain(p1);
+    expect(header, 'P2 plain binding').toContain(p2);
+    expect(header, 'P3 plain binding').toContain(p3);
+
+    const h1 = header.indexOf('<h1');
+    expect(h1).toBeGreaterThanOrEqual(0);
+    expect(header.indexOf(p1)).toBeGreaterThan(h1);
+    expect(header.indexOf(p2)).toBeGreaterThan(header.indexOf(p1));
+    expect(header.indexOf(p3)).toBeGreaterThan(header.indexOf(p2));
+    // The plate carries exactly these three paragraphs after the H1 (the kicker
+    // paragraph sits before it): no fourth paragraph, no extra prose.
+    const afterH1 = header.slice(header.indexOf('</h1>'));
+    expect(afterH1.match(/<p\b/g) ?? []).toHaveLength(3);
+  });
+
   it('KDV-SURFACE-23: the 404 shares the kicker and keeps exactly one (sr-only) H1', () => {
     const tpl = template('notfound.hbs');
     expect(tpl).toContain('<p class="kicker">{{copy.not_found_kicker}}</p>');

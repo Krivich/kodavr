@@ -227,7 +227,10 @@ export const COPY_FIELDS = Object.freeze({
   ]),
   contribute: Object.freeze([
     'contribute_kicker',
+    // Owner-dictated three-paragraph lead: P1 (lead role), P2/P3 plain siblings.
     'contribute_lead',
+    'contribute_lead_2',
+    'contribute_lead_3',
     // feedback-contribute_skill item 01: the contribute-lane leads the
     // `02 · flow` plate — lead, the single copy control over the §7.16 prompt,
     // hint and the secondary link to the skill dump page.

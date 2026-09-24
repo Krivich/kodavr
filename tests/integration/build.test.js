@@ -791,6 +791,39 @@ describe('build controller (integration)', () => {
     expect(page).not.toContain('class="agent-lane"');
   });
 
+  it('KDV-SURFACE-23: /contribute/ plate 01 renders the three-paragraph lead in order — P1 with the lead class, P2/P3 plain', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+    const page = stripStickers(
+      stripInlineBoot(decodeEntities(await readFile(join(publicDir, 'contribute', 'index.html'), 'utf8'))),
+    );
+    const authors = page.slice(
+      page.indexOf('data-plate="01 · authors"'),
+      page.indexOf('data-plate="02 · flow"'),
+    );
+
+    // kicker → H1 → three paragraphs, in order; P1 alone carries the lead role.
+    expect(authors).toMatch(/<p class="kicker"[^>]*>for authors<\/p>/);
+    expect(authors).toContain('>Contribute</h1>');
+    const lead1 = t('CONTRIBUTE_LEAD', 'en');
+    const lead2 = t('CONTRIBUTE_LEAD_2', 'en');
+    const lead3 = t('CONTRIBUTE_LEAD_3', 'en');
+    const m = authors.match(
+      /<p class="lead"[^>]*>([\s\S]*?)<\/p>\s*<p[^>]*>([\s\S]*?)<\/p>\s*<p[^>]*>([\s\S]*?)<\/p>/,
+    );
+    expect(m, 'lead + two plain sibling paragraphs').not.toBeNull();
+    expect(m[1]).toBe(lead1);
+    expect(m[2]).toBe(lead2);
+    expect(m[3]).toBe(lead3);
+    // DOM order after the H1: P1 → P2 → P3, exactly three paragraphs.
+    const afterH1 = authors.slice(authors.indexOf('</h1>'));
+    expect(afterH1.match(/<p\b/g) ?? []).toHaveLength(3);
+    expect(afterH1.indexOf(lead1)).toBeLessThan(afterH1.indexOf(lead2));
+    expect(afterH1.indexOf(lead2)).toBeLessThan(afterH1.indexOf(lead3));
+    // The superseded lead is gone from the built page.
+    expect(page).not.toContain('One pull request = one dump');
+  });
+
   it('KDV-SURFACE-26 + KDV-SURFACE-28: the 01 · PREVIEW plate names the dump above the declaration, and a non-dump page carries no dump context', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
