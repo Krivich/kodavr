@@ -89,6 +89,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-27**: The home storefront's `01 · HUMANS` plate carries the human on-ramp above the dumps feed — the storefront-variant §7.12 lane lead with the agent jump links and copy control, and the universal §7.4 prompt rendered exactly once on its own prompt id (`home-prompt`) — so the "read through your agent" ritual comes before the index. *(§6.1, §7.4, §7.12; flow: Consume)*
 - ✅ **KDV-SURFACE-28**: The article page's gate is inline, not a modal: the plates `01 · PREVIEW` (the explainer statement `WHAT YOUR AGENT WILL TELL YOU` + its note + the dump named + the author brief card or its honest fallback, closing with the agent-conversion CTA — copy the prompt below and paste it into your agent) / `02 · INTERESTING?` (the §7.12 lane + prompt) / `03 · DECLARATION` (§7.1 text) sit above the raw-body `01 · DUMP` plate; in state 0 all three are revealed by the controller and the raw body is collapsed, state M collapses to `01 · DUMP` + the machine panel, state H collapses to `01 · PREVIEW` + `02`, and the single bottom "передумал" reset re-opens the declaration in place; SSR ships the three plates hidden so the no-JS page stays the raw body. *(§6.2, §6.3, §6.6; docs/ideas/feedback-marketing.md items 4–5; flow: Consume)*
 - ✅ **KDV-SURFACE-29**: The `/contribute/` `02 · flow` plate leads with the contribute-lane as its FIRST element — the lane lead, ONE primary copy control wired to the §7.16 prompt (its id `contribute-prompt`, carrying the copydeck's copied label/announcement), the coding-agent hint, and a plain secondary link to the skill dump page, with ZERO chat links (publishing is a coding agent's job, §7.12's contribute variant) — and the manual path is demoted under the `Manual path (if you prefer)` heading above its unchanged three steps; hovering or keyboard-focusing the copy button lights the prompt's left rule in the accent (child combinator), and the standard §7.12 lane rule gains the same `:focus-visible` parity. *(§6.1, §7.12, §7.16; docs/ideas/feedback-contribute_skill.md items 01–03, 07; flow: Publish)*
+- ⬜ **KDV-SURFACE-30**: A dump's sitemap entry reports a `lastmod` that reflects the last change to the dump's own content — the later of the manifest `date` and the newest content change among its built files (summary, brief, body, manifest) — instead of the manifest date alone, so a copy or layer edit is no longer advertised to crawlers as "unchanged since publication". NOT IMPLEMENTED YET — registered from a live check (the og/brief refresh of 2026-09-24 still ships `lastmod` = the dump's publication date). *(§6.4; tightens KDV-SURFACE-12's `lastmod` rule; flow: Consume)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -284,7 +285,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-STRUCT | 9 | 8 | 1 | 0 | 0 |
 | KDV-MANIFEST | 12 | 11 | 1 | 0 | 0 |
 | KDV-CONTRACT | 11 | 11 | 0 | 0 | 0 |
-| KDV-SURFACE | 25 | 25 | 0 | 0 | 0 |
+| KDV-SURFACE | 26 | 25 | 0 | 1 | 0 |
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 10 | 10 | 0 | 0 | 0 |
@@ -297,4 +298,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **211** | **170** | **14** | **26** | **1** |
+| **Total** | **212** | **170** | **14** | **27** | **1** |
