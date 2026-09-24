@@ -36,6 +36,9 @@ const UI = Object.freeze({
   HOME_CONTRIBUTE_CTA: 'How to contribute',
   HOME_FOR_MACHINES: 'For machines',
   HOME_HUMANS_HEADING: 'Read through your agent',
+  // §6.2–6.3/KDV-SURFACE-32: the dump page's `02 · INTERESTING?` plate heading —
+  // byte-locked to HOME_HUMANS_HEADING (enforced per locale by the surface test).
+  DUMPS_WANT_HEADING: 'Read through your agent',
   HOME_LATEST_LEAD: 'Latest ',
   HOME_LATEST_TERM: 'dumps',
   HOME_TRUST_LEVELS: 'Trust levels',

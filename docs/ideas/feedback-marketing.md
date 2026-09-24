@@ -76,6 +76,7 @@ Building something is 1x effort; packaging it for others is 10x. We fix that asy
   - ru: Kodavr — это реестр сырого опыта: код, процессы и отчёты с полей. Ваш ИИ-агент читает их и адаптирует под вашу задачу — под вашу работу, ваш стек, ваш стиль.
   - zh-Hans: Kodavr 是一个原始经验的注册表：代码、工作流程和实地报告。您的AI代理阅读它们，并根据您的问题进行调整——您的任务、您的技术栈、您的风格。
   - es: Kodavr es un registro de experiencia cruda: código, flujos de trabajo e informes de campo. Tu agente de IA los lee y los adapta a tu problema: tu tarea, tu stack, tu estilo.
+- **Same update, dump page (owner instruction):** the `02 · INTERESTING?` plate of the dump reading page carries the same heading via the `dumps_want_heading` key (value locked to `home_humans_heading`). Spec: KDV-SURFACE-32.
 
 ---
 

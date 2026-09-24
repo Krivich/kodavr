@@ -103,6 +103,9 @@ const BINDINGS = {
   'dumps.hbs': [
     ['data-plate="{{copy.dumps_plate_preview}}"', 'data-plate="01 · PREVIEW"', 'DUMPS_PLATE_PREVIEW', '01 · PREVIEW'],
     ['data-plate="{{copy.dumps_plate_want}}"', 'data-plate="02 · INTERESTING? WANT MORE?"', 'DUMPS_PLATE_WANT', '02 · INTERESTING?'],
+    // KDV-SURFACE-32 (owner copy 2026-09-24): the 02 · INTERESTING? plate gains
+    // the sibling-grammar <h2>, value-locked to home_humans_heading.
+    ['<h2>{{copy.dumps_want_heading}}</h2>', '<h2>Read through your agent</h2>', 'DUMPS_WANT_HEADING', 'Read through your agent'],
     ['data-plate="{{copy.dumps_plate_declaration}}"', 'data-plate="03 · DECLARATION"', 'DUMPS_PLATE_DECLARATION', '03 · DECLARATION'],
     ['data-plate="{{copy.dumps_plate_dump}}"', 'data-plate="01 · DUMP"', 'DUMPS_PLATE_DUMP', '01 · DUMP'],
   ],
@@ -250,6 +253,35 @@ describe('i18n surface: templates bind from the dataset (KDV-I18N-01)', () => {
     // The heading rides the home route dataset like its sibling plate headings.
     const routes = buildRouteDatasets([], { baseUrl: 'https://example.test' });
     expect(routes.home.copy.home_humans_heading).toBe('Read through your agent');
+  });
+
+  it('KDV-SURFACE-32: the 02 · INTERESTING? plate opens with an <h2> bound to dumps_want_heading, translated in all four locales and locked to home_humans_heading', async () => {
+    const src = template('dumps.hbs');
+    // Same grammar as the home HUMANS plate (KDV-SURFACE-31): the binding sits
+    // right after the plate opens, before the agent lane — inside the section,
+    // so it hides and shows with the plate.
+    const binding = '<h2>{{copy.dumps_want_heading}}</h2>';
+    expect(src).toContain(binding);
+    const plateAt = src.indexOf('data-plate="{{copy.dumps_plate_want}}"');
+    const headingAt = src.indexOf(binding);
+    const laneAt = src.indexOf('{{> site/agent-lane');
+    expect(plateAt).toBeGreaterThanOrEqual(0);
+    expect(headingAt).toBeGreaterThan(plateAt);
+    expect(laneAt).toBeGreaterThan(headingAt);
+    // Owner copy, all four locales, verbatim — the home heading's exact bytes.
+    expect(t('DUMPS_WANT_HEADING', 'en')).toBe('Read through your agent');
+    expect(t('DUMPS_WANT_HEADING', 'ru')).toBe('Читайте через своего агента');
+    expect(t('DUMPS_WANT_HEADING', 'zh-Hans')).toBe('通过您的代理阅读');
+    expect(t('DUMPS_WANT_HEADING', 'es')).toBe('Lee a través de tu agente');
+    // Anti-drift mechanism: per locale the dump heading must equal the home
+    // heading, so the phrase can never diverge between the two surfaces silently.
+    for (const locale of LOCALES.map((entry) => entry.code)) {
+      expect(t('DUMPS_WANT_HEADING', locale), locale).toBe(t('HOME_HUMANS_HEADING', locale));
+    }
+    // The heading rides the dump dataset (COPY_FIELDS.ui) like the plate labels.
+    const dumps = await readDumps(FIXTURES);
+    const dataset = toDataset(dumps.find((entry) => entry.slug === 'sample-dump'), { baseUrl: '' });
+    expect(dataset.copy.dumps_want_heading).toBe('Read through your agent');
   });
 
   it('KDV-I18N-01: head.hbs keeps the human <title> skeleton with the brand literal', () => {

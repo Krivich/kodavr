@@ -266,6 +266,9 @@ export const ZH_HANS = Object.freeze({
   HOME_CONTRIBUTE_CTA: '如何贡献',
   HOME_FOR_MACHINES: '给机器',
   HOME_HUMANS_HEADING: '通过您的代理阅读',
+  // §6.2–6.3/KDV-SURFACE-32：转储页 `02 · 有趣吗？` 板块的标题——与
+  // HOME_HUMANS_HEADING 逐字节一致（表面测试按每个 locale 校验）。
+  DUMPS_WANT_HEADING: '通过您的代理阅读',
   HOME_LATEST_LEAD: '最新',
   HOME_LATEST_TERM: '转储',
   HOME_TRUST_LEVELS: '信任级别',

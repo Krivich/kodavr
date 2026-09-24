@@ -270,6 +270,9 @@ export const RU = Object.freeze({
   HOME_CONTRIBUTE_CTA: 'Как внести вклад',
   HOME_FOR_MACHINES: 'Для машин',
   HOME_HUMANS_HEADING: 'Читайте через своего агента',
+  // §6.2–6.3/KDV-SURFACE-32: заголовок плейта `02 · ИНТЕРЕСНО?` на странице
+  // дампа — байт-в-байт как HOME_HUMANS_HEADING (проверяется по каждому locale).
+  DUMPS_WANT_HEADING: 'Читайте через своего агента',
   HOME_LATEST_LEAD: 'Последние ',
   HOME_LATEST_TERM: 'дампы',
   HOME_TRUST_LEVELS: 'Уровни доверия',

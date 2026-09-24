@@ -267,6 +267,9 @@ export const ES = Object.freeze({
   HOME_CONTRIBUTE_CTA: 'Cómo contribuir',
   HOME_FOR_MACHINES: 'Para máquinas',
   HOME_HUMANS_HEADING: 'Lee a través de tu agente',
+  // §6.2–6.3/KDV-SURFACE-32: el encabezado de la placa `02 · ¿INTERESANTE?` de
+  // la página del dump — byte a byte como HOME_HUMANS_HEADING (verificado por locale).
+  DUMPS_WANT_HEADING: 'Lee a través de tu agente',
   HOME_LATEST_LEAD: 'Últimos ',
   HOME_LATEST_TERM: 'dumps',
   HOME_TRUST_LEVELS: 'Niveles de confianza',

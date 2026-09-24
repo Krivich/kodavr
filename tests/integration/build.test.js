@@ -912,7 +912,7 @@ describe('build controller (integration)', () => {
     }
   });
 
-  it('KDV-SURFACE-03 + KDV-SURFACE-15 + KDV-COPY-01 + KDV-SURFACE-28 + KDV-SURFACE-08: the dump page carries the full body in SSR behind inline plates with the declaration, manifest card and og-tags', async () => {
+  it('KDV-SURFACE-03 + KDV-SURFACE-15 + KDV-COPY-01 + KDV-SURFACE-28 + KDV-SURFACE-08 + KDV-SURFACE-32: the dump page carries the full body in SSR behind inline plates with the declaration, manifest card and og-tags', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
     const html = await readFile(join(publicDir, 'dumps', 'sample-dump', 'index.html'), 'utf8');
@@ -973,6 +973,18 @@ describe('build controller (integration)', () => {
     expect(html).toContain('class="agent-lane"');
     expect(html).toContain('class="copy-prompt"');
     expect(text).not.toContain('[ 0 ]');
+    // KDV-SURFACE-32: the `02 · INTERESTING?` plate opens with the owner's
+    // heading (EN build), between the section open and the §7.12 lane — same
+    // heading grammar as the home HUMANS plate. Sticker-stripped like the
+    // brief-tier assertions above, so the comparison is content, not wiring.
+    const wantDom = stripStickers(dom);
+    const wantStart = wantDom.indexOf('id="plate-want"');
+    const wantEnd = wantDom.indexOf('id="plate-declaration"');
+    expect(wantStart).toBeGreaterThanOrEqual(0);
+    expect(wantEnd).toBeGreaterThan(wantStart);
+    const wantPlate = wantDom.slice(wantStart, wantEnd);
+    expect(wantPlate).toContain('<h2>Read through your agent</h2>');
+    expect(wantPlate.indexOf('<h2')).toBeLessThan(wantPlate.indexOf('class="agent-lane"'));
 
     // Manifest card links to the manifest and to index.json — document-relative
     // after the P2c pass (KDV-SURFACE-09).

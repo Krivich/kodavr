@@ -91,6 +91,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-29**: The `/contribute/` `02 · flow` plate leads with the contribute-lane as its FIRST element — the lane lead, ONE primary copy control wired to the §7.16 prompt (its id `contribute-prompt`, carrying the copydeck's copied label/announcement), the coding-agent hint, and a plain secondary link to the skill dump page, with ZERO chat links (publishing is a coding agent's job, §7.12's contribute variant) — and the manual path is demoted under the `Manual path (if you prefer)` heading above its unchanged three steps; hovering or keyboard-focusing the copy button lights the prompt's left rule in the accent (child combinator), and the standard §7.12 lane rule gains the same `:focus-visible` parity. *(§6.1, §7.12, §7.16; docs/ideas/feedback-contribute_skill.md items 01–03, 07; flow: Publish)*
 - ⬜ **KDV-SURFACE-30**: A dump's sitemap entry reports a `lastmod` that reflects the last change to the dump's own content — the later of the manifest `date` and the newest content change among its built files (summary, brief, body, manifest) — instead of the manifest date alone, so a copy or layer edit is no longer advertised to crawlers as "unchanged since publication". NOT IMPLEMENTED YET — registered from a live check (the og/brief refresh of 2026-09-24 still ships `lastmod` = the dump's publication date). *(§6.4; tightens KDV-SURFACE-12's `lastmod` rule; flow: Consume)*
 - ✅ **KDV-SURFACE-31**: The home storefront's `01 · HUMANS` plate opens with an `<h2>` bound to the `home_humans_heading` copy key (present and translated in all four locales), matching the heading grammar of the sibling plates so the plate no longer reads as headless. *(§6.1; docs/ideas/feedback-marketing.md item 3 update 2026-09-24; flow: Consume)*
+- ✅ **KDV-SURFACE-32**: The dump reading page's `02 · INTERESTING?` plate opens with an `<h2>` bound to the `dumps_want_heading` copy key (present and translated in all four locales, value pinned in lockstep with the home `home_humans_heading`), giving the agent lane the same heading grammar as the storefront plates. *(§6.2–6.3, §7.12; docs/ideas/feedback-marketing.md item 3 update 2026-09-24; flow: Consume)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -286,7 +287,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-STRUCT | 9 | 8 | 1 | 0 | 0 |
 | KDV-MANIFEST | 12 | 11 | 1 | 0 | 0 |
 | KDV-CONTRACT | 11 | 11 | 0 | 0 | 0 |
-| KDV-SURFACE | 27 | 26 | 0 | 1 | 0 |
+| KDV-SURFACE | 28 | 27 | 0 | 1 | 0 |
 | KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 10 | 10 | 0 | 0 | 0 |
@@ -299,4 +300,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **213** | **171** | **14** | **27** | **1** |
+| **Total** | **214** | **172** | **14** | **27** | **1** |

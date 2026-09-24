@@ -134,6 +134,9 @@ export const COPY_FIELDS = Object.freeze({
     'home_contribute_cta',
     'home_explainer',
     'home_humans_heading',
+    // §6.2–6.3/KDV-SURFACE-32: the dump `02 · INTERESTING?` plate heading —
+    // value-locked to home_humans_heading (the surface test pins the pair).
+    'dumps_want_heading',
     'home_for_machines',
     'home_humans_lead',
     'home_latest_lead',
