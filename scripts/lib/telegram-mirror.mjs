@@ -3,6 +3,8 @@
  * ROLE: renders a dump manifest + human brief as a Telegram post and sends the batch
  * EXPORTS:
  *   MIRROR_LIMIT — the soft cap on the post's visible length, under Telegram's 4096
+ *   ADDED_MANIFEST_PATHSPEC — git pathspec matching only a dump's ADDED manifest.json
+ *   addedManifestDiffArgv — base/head SHAs → the git diff argv for ADDED manifests only
  *   toTelegramHtml — sanitized dump HTML → the Telegram HTML subset (reports tables)
  *   renderMirrorPost — manifest + summary.md brief (+ site option) → a mirror post
  *   sendTelegram — POST one parse_mode=HTML message via the Bot API (retries once)
@@ -12,6 +14,7 @@
  *   ./markdown.mjs — the sanitized markdown → HTML renderer
  * INVARIANTS:
  *   — the result is valid Telegram HTML: balanced tags, no tables/headings, escaped text
+ *   — a dump is announced only when its manifest.json was ADDED between the two SHAs; a file gained by an existing dump never re-announces it
  *   — renderMirrorPost, sendTelegram, previousDeploySha and mirrorDumps never throw
  */
 
@@ -426,6 +429,22 @@ export function renderMirrorPost(manifest, brief, options = {}) {
       return '';
     }
   }
+}
+
+// --- new-dump detection -------------------------------------------------------
+
+// The class rule, as data: a dump is NEW iff its manifest.json was ADDED between
+// the two SHAs. A file gained by an existing dump (summary.md, redactions, a new
+// layer, artifacts) must never re-announce that dump. The :(glob) magic pins `*`
+// to a single path segment, so only content/dumps/<slug>/manifest.json matches
+// (verified against git 2.43; a plain `content/dumps/*/manifest.json` also works
+// at this depth but would let `*` cross a slash without the magic).
+export const ADDED_MANIFEST_PATHSPEC = [':(glob)content/dumps/*/manifest.json'];
+
+// addedManifestDiffArgv(baseSha, headSha) → the git argv listing only ADDED
+// manifests: --diff-filter=A keeps additions only, the pathspec keeps manifests.
+export function addedManifestDiffArgv(baseSha, headSha) {
+  return ['diff', '--diff-filter=A', '--name-only', baseSha, headSha, '--', ...ADDED_MANIFEST_PATHSPEC];
 }
 
 // --- sending layer ------------------------------------------------------------

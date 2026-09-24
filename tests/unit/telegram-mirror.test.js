@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   MIRROR_LIMIT,
+  ADDED_MANIFEST_PATHSPEC,
+  addedManifestDiffArgv,
   toTelegramHtml,
   renderMirrorPost,
   sendTelegram,
@@ -208,6 +210,25 @@ describe('KDV-CI-17: the publish trigger and the previous-deploy lookup', () => 
     await expect(previousDeploySha({ event, repo: '', token: 'tok', fetchImpl: mustNotFetch })).resolves.toBeNull();
     await expect(previousDeploySha({ event, repo: 'own/repo', token: '', fetchImpl: mustNotFetch })).resolves.toBeNull();
     expect(called).toBe(false);
+  });
+
+  it('KDV-CI-17: the added-dump diff selects only ADDED manifests, never a file gained by an existing dump', () => {
+    // Class rule: a dump is NEW iff its manifest.json was ADDED between the two
+    // SHAs — a summary.md/redactions/artifact gained by an old dump must not
+    // re-announce that dump. The :(glob) magic pins `*` to one path segment.
+    expect(ADDED_MANIFEST_PATHSPEC).toEqual([':(glob)content/dumps/*/manifest.json']);
+    const argv = addedManifestDiffArgv('BASE', 'HEAD');
+    expect(argv).toEqual([
+      'diff',
+      '--diff-filter=A',
+      '--name-only',
+      'BASE',
+      'HEAD',
+      '--',
+      ':(glob)content/dumps/*/manifest.json',
+    ]);
+    // Regression pin: the old whole-directory pathspec listed every added file.
+    expect(argv).not.toContain('content/dumps');
   });
 });
 

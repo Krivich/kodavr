@@ -3,11 +3,12 @@
  * CONTRACT: scripts/product/telegram/telegram-mirror.mjs
  * ROLE: posts every newly published dump to the Telegram channel after a deploy
  * CONSUMES:
- *   node:child_process — run the git diff that lists newly added dump files
+ *   node:child_process — run the git diff (argv from the lib) of ADDED dump manifests
  *   node:fs — read the GitHub event payload and the dump files
  *   ../../lib/manifest-card.mjs — dumpSlugsFromFiles over the diff's file list
- *   ../../lib/telegram-mirror.mjs — the send + previous-deploy + orchestration helpers
+ *   ../../lib/telegram-mirror.mjs — the send + previous-deploy + added-manifest diff + orchestration helpers
  * INVARIANTS:
+ *   — a dump is announced only when its manifest.json was ADDED since the previous successful deploy; a file gained by an existing dump never re-announces it
  *   — the bot token is read from the environment only, never source
  *   — the entry point always exits 0; a missing token/event/diff is a logged skip
  */
@@ -15,12 +16,19 @@
 // scripts/product/telegram/telegram-mirror.mjs — the CI entry point of the Telegram dump mirror.
 // Runs from .github/workflows/publish-telegram.yml when the deploy workflow
 // completes on main. It finds the previous successful deploy's commit, takes the
-// dump files ADDED since then (so a redeploy never re-posts the whole archive),
-// renders each post and sends it to the channel. Everything is best-effort: a
-// failure is logged and the process still exits 0 so the mirror never fails CI.
+// dump manifests ADDED since then (a dump is new iff its manifest.json was added —
+// so a redeploy never re-posts the whole archive and a file gained by an existing
+// dump never re-announces it), renders each post and sends it to the channel.
+// Everything is best-effort: a failure is logged and the process still exits 0 so
+// the mirror never fails CI.
 import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { sendTelegram, previousDeploySha, mirrorDumps } from '../../lib/telegram-mirror.mjs';
+import {
+  addedManifestDiffArgv,
+  sendTelegram,
+  previousDeploySha,
+  mirrorDumps,
+} from '../../lib/telegram-mirror.mjs';
 import { dumpSlugsFromFiles } from '../../lib/manifest-card.mjs';
 
 const SITE_BASE = String(process.env.SITE_BASE || 'https://kodavr.xyz').replace(/\/+$/, '');
@@ -41,14 +49,12 @@ function readEvent() {
   }
 }
 
-// addedDumpFiles(baseSha, headSha) → the files added between the two commits, or
-// null when git fails (a shallow checkout, an unknown revision, …).
+// addedDumpFiles(baseSha, headSha) → the dump manifests added between the two
+// commits (the argv/pattern lives in the lib — the class rule is: a dump is new
+// iff its manifest.json was ADDED), or null when git fails (a shallow checkout,
+// an unknown revision, …).
 function addedDumpFiles(baseSha, headSha) {
-  const result = spawnSync(
-    'git',
-    ['diff', '--diff-filter=A', '--name-only', baseSha, headSha, '--', 'content/dumps'],
-    { encoding: 'utf8' },
-  );
+  const result = spawnSync('git', addedManifestDiffArgv(baseSha, headSha), { encoding: 'utf8' });
   if (result.error || result.status !== 0) return null;
   return String(result.stdout || '').split(/\r?\n/).filter(Boolean);
 }
@@ -80,7 +86,7 @@ async function main() {
 
   const files = addedDumpFiles(baseSha, headSha);
   if (!files || files.length === 0) {
-    log('no newly added dump files — nothing to mirror');
+    log('no newly added dump manifests — nothing to mirror');
     return;
   }
   const slugs = dumpSlugsFromFiles(files);
