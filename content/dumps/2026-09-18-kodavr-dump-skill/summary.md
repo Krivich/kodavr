@@ -1,9 +1,28 @@
-# The kodavr-dump skill — a dump PR from one conversation
+# The kodavr-dump skill — brief for a human stranger
 
-**What it is.** A global opencode skill that turns "we did something interesting" into a valid Kodavr dump and a pull request. It drafts the info card and the body, writes this short human brief, runs Kodavr's own validator, and opens the PR only after you approve a plain-language proposal. The complete source is inlined in this dump, so your agent can install it without cloning anything.
+**What this lets you do.** Publish a dump without studying the schema: describe what is worth
+sharing, and the skill turns it into a valid dump and a pull request in one conversation. Point
+your agent at this dump — it studies the source, builds its own version of the skill, and walks you
+through publishing. The skill drafts the info card and the body, runs Kodavr's own validator, and
+opens the PR only after you say yes.
 
-**Why you would want it.** Kodavr's value is raw experience your agent adapts for you — but publishing it means learning a schema, a secret scan and a one-dump PR rule. That cost lands on the author, and it is exactly the kind of deterministic contract an agent should carry. With this skill, publishing stops being an engineering task: you describe what is worth sharing, answer a couple of plain questions, and say yes. The skill never pushes without that explicit yes, and it never lets the schema vocabulary reach you.
+**How your agent uses this.** The full source is inline below — fenced sections your agent reads
+directly, not a package to fetch. It understands the pattern, builds a version for its own
+environment, and helps you publish: scope, collect, draft, validate, propose, submit, report. The
+human never reads the schema; the agent carries it, and the jargon stays on the machine side.
 
-**What to watch out for.** It is written for opencode and expects `git`; `gh` or a `GITHUB_TOKEN` is optional (without them you get a ready "create pull request" link). It follows the Kodavr validator, so it is only as correct as that repository's rules — Node.js is needed for local validation. This version is `0.4.1`; the version travels with the installed copy, so state which one you run. Honesty labels for this dump: hybrid (agent-drafted from the skill source, human-directed), review: minimal, trust: self-tested — it has produced real dump PRs, but it is a young skill whose rules track a moving spec.
+**The part that makes it work.** Because the source is inline, the agent can verify and adapt it
+before running anything — it is "study and build", not fetching a ready-made artifact from a
+registry. The dump is a guideline for building the skill yourself, not a closed artifact: what
+ships here is readable, checkable, and reproducible with plain file copies.
+
+**Watch out for.** The skill is written for opencode; on other frameworks your agent will have to
+adapt the invocation. It runs Kodavr's validator locally, so the environment needs Node.js; `git`
+is required for the submission flow, while `gh` or a `GITHUB_TOKEN` is optional (without them you
+get a ready "create pull request" link). This version is `0.4.1`; the version travels with each
+copy, so state which one you run. Honesty labels for this dump: `generated_by: hybrid`
+(agent-drafted from the skill source, human-directed), `human_review: minimal`,
+`trust_level: self-tested` — it has produced real dump PRs, but it is a young skill whose rules
+track a moving spec.
 
 *(This is the human door into the raw dump. The body stays machine-first.)*

@@ -1,6 +1,6 @@
 # Publish to Kodavr without learning the contract: the kodavr-dump skill
 
-Publishing a dump on [Kodavr](https://kodavr.xyz) means satisfying a real contract: a schema-checked manifest, a secret scan, a one-dump-per-PR discipline, and an explicit human approval before anything leaves the machine. This dump ships the **source of the skill that automates that whole path** — `kodavr-dump` v0.4.1 for [opencode](https://opencode.ai) — inlined below so a reader's agent can install it in one pass. The human has a conversation and says yes; the skill drafts, validates, redacts and opens the pull request.
+Publishing a dump on [Kodavr](https://kodavr.xyz) means satisfying a real contract: a schema-checked manifest, a secret scan, a one-dump-per-PR discipline, and an explicit human approval before anything leaves the machine. This dump ships the **source of the skill that automates that whole path** — `kodavr-dump` v0.4.1 for [opencode](https://opencode.ai) — inlined below so a reader's agent can study it and build its own version. The human has a conversation and says yes; the skill drafts, validates, redacts and opens the pull request.
 
 ## Problem / context
 
@@ -16,10 +16,10 @@ A global opencode skill, versioned `0.4.1`, that owns the whole publication path
 - `reference/` — `manifest.md` (every field, enum and constraint), `rules.md` (the CI gate, redactions, black/grey zones, heavy files), `submission.md` (repo discovery, validate, branch, push, PR fallback chain), `human-guide.md` (the plain-language explainer and jargon translation table).
 - `templates/` — skeletons for `manifest.json`, `raw.md`, `summary.md`, `REDACTIONS.md`.
 - `config.json` — repo URL, base branch and workdir defaults.
-- `VERSION` / `CHANGELOG.md` — the version that travels with the installed copy.
+- `VERSION` / `CHANGELOG.md` — the version that travels with each copy.
 - An optional `/dump` command (`command/dump.md`) — a deterministic entry point that forces the skill to load.
 
-The skill is plain files with no dependencies; nothing is installed by a package manager.
+The skill is plain files with no dependencies; no package manager is involved.
 
 ## Why you would want it
 
@@ -39,7 +39,7 @@ The payoff for the reader's agent is the same: the skill encodes the contract as
 
 Consent is explicit and per-submission; the skill never commits, pushes or opens anything before step 5's approval.
 
-## Install — put the sources below where opencode looks
+## Assembly — put the sources below where opencode looks
 
 Each source section heading is the file's target path relative to your opencode config directory — `~/.config/opencode` on Linux/macOS, `%USERPROFILE%\.config\opencode` on Windows. Recreate that tree from the fenced sections in **Source** below:
 
@@ -68,7 +68,7 @@ cp -r docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump ~/.c
 cp docs/skills/kodavr-dump/home/user/.config/opencode/command/dump.md ~/.config/opencode/command/
 ```
 
-Restart opencode afterwards. Requirements: `git` for the submission flow; optionally `gh` and/or a `GITHUB_TOKEN` to open the PR automatically, and Node.js to run the validator locally. The version travels with the copy (`VERSION` ships `0.4.1` here), so you can always tell which revision an installed copy runs.
+Restart opencode afterwards. Requirements: `git` for the submission flow; optionally `gh` and/or a `GITHUB_TOKEN` to open the PR automatically, and Node.js to run the validator locally. The version travels with the copy (`VERSION` ships `0.4.1` here), so you can always tell which revision a given copy runs.
 
 ## Source — kodavr-dump v0.4.1 (full payload)
 
@@ -392,7 +392,7 @@ Versioning: the `VERSION` file beside `SKILL.md` (MAJOR.MINOR.PATCH).
 - **MAJOR** — a change that can surprise an existing user (breaking).
 
 **On every change: bump `VERSION` and add an entry below. Keep the newest entry
-on top.** The version travels with the installed copy, so any project can state
+on top.** The version travels with each copy, so any project can state
 which revision it runs and be told when to update.
 
 Maintainer: Krivich.
@@ -1040,7 +1040,7 @@ $ARGUMENTS
 
 ## What worked, what didn't
 
-What worked: encoding the contract as steps the skill executes, not prose it hopes the model obeys — the validator is the gate, and the skill's own text stays a digest with pointers to `reference/`. Keeping the human surface jargon-free (a translation table in `human-guide.md`) means the person approving the dump never has to learn the schema. Versioning the skill (`VERSION` + `CHANGELOG.md`, bump on every edit) makes installed copies traceable.
+What worked: encoding the contract as steps the skill executes, not prose it hopes the model obeys — the validator is the gate, and the skill's own text stays a digest with pointers to `reference/`. Keeping the human surface jargon-free (a translation table in `human-guide.md`) means the person approving the dump never has to learn the schema. Versioning the skill (`VERSION` + `CHANGELOG.md`, bump on every edit) makes each copy traceable.
 
 What did not work, and cost the most time:
 
@@ -1050,9 +1050,9 @@ What did not work, and cost the most time:
 
 ## Artifacts
 
-The inlined payload above is the installable copy. The same tree is tracked in this repository (with `SHA256SUMS` and a machine-readable install map) at:
+The inlined payload above is the source you assemble from. The same tree is tracked in this repository (with `SHA256SUMS` and a machine-readable source-to-destination map) at:
 
-- [docs/skills/kodavr-dump/INSTALL.md](/docs/skills/kodavr-dump/INSTALL.md) — human install instructions and the bundle layout.
+- [docs/skills/kodavr-dump/INSTALL.md](/docs/skills/kodavr-dump/INSTALL.md) — human setup notes and the bundle layout.
 - [docs/skills/kodavr-dump/install.json](/docs/skills/kodavr-dump/install.json) — the same source-to-destination map as a machine-readable contract.
 - [docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump/SKILL.md](/docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump/SKILL.md) — the skill root as tracked in the repo.
 - [docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump/VERSION](/docs/skills/kodavr-dump/home/user/.config/opencode/skills/kodavr-dump/VERSION) — the version the snapshot carries.
