@@ -203,6 +203,10 @@ th:last-child,td:last-child{border-right:0}
   font:500 12px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;text-decoration:none;background:transparent}
 .cta:hover{background:var(--ink);color:var(--paper);text-decoration:none}
 .cta::after{content:"→"}
+/* KDV-MOBILE-11: the CTA pair is ONE wrapping flex row with the agent lane's
+   gap grammar (.agent-links): stacked rows on a narrow screen keep the
+   --sp-2 row gap instead of sitting flush; one row + an 8px gap when wide. */
+.cta-row{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 
 /* ============ 07 · CARDS ============ */
 .card{position:relative;border:1px solid var(--line);background:var(--paper);padding:var(--sp-5);

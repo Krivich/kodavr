@@ -105,6 +105,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-MOBILE-08**: CSS mechanics: `viewport-fit=cover`, `touch-action: manipulation`, `prefers-reduced-motion` for gate animation, breakpoint custom properties (`--bp-mobile: 480px`, `--bp-tablet: 768px`) and a single mobile-first `styles.css`; the post-gate footer line appears when the dump is opened via "0". *(§6.5; flow: legacy)*
 - ✅ **KDV-MOBILE-09**: The agent lane is on the first screen, wraps with no horizontal scroll, every control is ≥44px, and the copy chip shares the jump-links row. *(§6.5; flow: legacy)*
 - ✅ **KDV-MOBILE-10**: Every human page class — the home feed and a dump page — fits the §6.5 gzip budget (HTML < 100KB gzipped) as the build emits it, no `<link>` in those pages names a foreign origin, and the single shipped stylesheet pulls no `@import`. *(§6.5, §6.4; the dump page's budget, the system font stack and the inline logo are KDV-MOBILE-06's — the served-page same-origin crawl is KDV-SURFACE-12's e2e; flow: legacy)*
+- ✅ **KDV-MOBILE-11**: The hero's two `.cta` links sit in a `.cta-row` flex container with wrap, so on a narrow screen they stack with the same `--sp-2` row gap the agent lane uses — never flush against each other; the same markup carries the class on the 404 page. *(§6.5; flow: Consume)*
 
 ## KDV-A11Y — Accessibility (§6.6)
 
@@ -288,7 +289,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-MANIFEST | 12 | 11 | 1 | 0 | 0 |
 | KDV-CONTRACT | 11 | 11 | 0 | 0 | 0 |
 | KDV-SURFACE | 28 | 27 | 0 | 1 | 0 |
-| KDV-MOBILE | 10 | 9 | 1 | 0 | 0 |
+| KDV-MOBILE | 11 | 10 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 10 | 10 | 0 | 0 | 0 |
 | KDV-CI | 26 | 24 | 2 | 0 | 0 |
@@ -300,4 +301,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **214** | **172** | **14** | **27** | **1** |
+| **Total** | **215** | **173** | **14** | **27** | **1** |

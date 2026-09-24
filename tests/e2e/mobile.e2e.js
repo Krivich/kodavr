@@ -188,6 +188,35 @@ test.describe('mobile 375x667', () => {
     }
   });
 
+  test('KDV-MOBILE-11: the wrapped hero CTA pair keeps the agent lane row gap — never flush', async ({ page }) => {
+    await page.goto('/');
+    const first = page.locator('main.home a.cta[href="about/"]');
+    const second = page.locator('main.home a.cta[href="contribute/"]');
+    await expect(first).toBeVisible();
+    await expect(second).toBeVisible();
+
+    // Both stamped doors render at full size (no overlap, no collapsed box).
+    const a = await first.boundingBox();
+    const b = await second.boundingBox();
+    expect(a.height, 'the first CTA keeps its stamped box').toBeGreaterThanOrEqual(30);
+    expect(b.height, 'the second CTA keeps its stamped box').toBeGreaterThanOrEqual(30);
+
+    // At 375px the pair does not fit one row: it stacks. The row gap must be
+    // the agent lane's --sp-2 (8px), not the flush 0px a bare <p> line-wrap
+    // gives: a side-by-side pair yields a negative number, a flush wrap 0 —
+    // both fail this one assertion.
+    const gap = b.y - (a.y + a.height);
+    expect(gap, 'stacked CTA rows keep the --sp-2 gap, never flush').toBeGreaterThanOrEqual(7);
+
+    // The wrapper is a wrapping flex row with the lane's gap (same grammar as
+    // .agent-links), on the base rule — no media query involved.
+    expect(await first.evaluate((el) => el.parentElement.classList.contains('cta-row'))).toBe(true);
+    const row = page.locator('main.home p.cta-row');
+    expect(await row.evaluate((el) => getComputedStyle(el).display)).toBe('flex');
+    expect(await row.evaluate((el) => getComputedStyle(el).flexWrap)).toBe('wrap');
+    expect(await row.evaluate((el) => getComputedStyle(el).gap)).toBe('8px');
+  });
+
   test('KDV-MOBILE-08: viewport-fit, touch-action, breakpoint tokens, reduced-motion CSS and the post-gate line', async ({ page }) => {
     await page.goto(DUMP);
 

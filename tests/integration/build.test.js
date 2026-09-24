@@ -1678,6 +1678,25 @@ describe('build controller (integration)', () => {
     }
   });
 
+  it('KDV-MOBILE-11: the hero CTA pair sits in a wrapping .cta-row flex container, on the home page and the 404', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+
+    // §6.5: the two stamped doors are ONE flex row with the agent lane's wrap
+    // gap — on a narrow screen they stack with an 8px row gap, never flush
+    // against each other. The base rule covers every width (no media query).
+    const css = await readFile(join(publicDir, 'assets', 'styles.css'), 'utf8');
+    expect(css).toMatch(/\.cta-row\s*\{[^}]*display:\s*flex[^}]*flex-wrap:\s*wrap[^}]*gap:\s*var\(--sp-2\)/);
+
+    // The same markup carries the class on both pages that render a `.cta`.
+    const home = stripStickers(stripInlineBoot(decodeEntities(await readFile(join(publicDir, 'index.html'), 'utf8'))));
+    expect(home).toContain('<p class="cta-row">');
+    const notFound = stripStickers(
+      stripInlineBoot(decodeEntities(await readFile(join(publicDir, '404.html'), 'utf8'))),
+    );
+    expect(notFound).toContain('<p class="cta-row">');
+  });
+
   it('KDV-MOBILE-07: the 192x192 touch icon is published and head carries theme-color plus the apple-touch-icon', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');
