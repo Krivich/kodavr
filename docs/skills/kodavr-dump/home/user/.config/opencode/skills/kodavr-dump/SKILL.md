@@ -137,6 +137,11 @@ fields or features.
   list), **What to watch out for** (limits, prerequisites, risks, honesty labels).
   Keep it short; the raw body stays raw.
 
+**Falsifiable, not impressive.** Every sentence must be checkable against the
+dump body: no `every`/`all`/`always`/`never` unless the body demonstrates it,
+no paid-for claims the body does not cite. A reviewer's agent will grep — and
+so will the reader's.
+
 A bad summary describes the artifact ("an opencode skill that runs a seven-step
 loop"). A good one sells the outcome and names the take ("publishing used to
 need the schema and git; now it is one conversation and one yes — your agent

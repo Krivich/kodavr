@@ -3,7 +3,7 @@
 Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
 §8.1, §8.4, and `scripts/tooling/quality-gates/validate.mjs`.
 
-## The twelve publication rules (condensed)
+## The thirteen publication rules (condensed)
 
 1. One PR = one dump in `content/dumps/<slug>/`; no unrelated edits.
 2. `manifest.json` is mandatory and valid per §4.1.
@@ -17,6 +17,7 @@ Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
 10. A new author's first PR is reviewed manually by the owner.
 11. `author` is injected automatically — do not fill it.
 12. Agent/hybrid dump ⇒ MUST ship `summary.md` (brief for a human stranger) — the validator BLOCKs without it (KDV-MANIFEST-12).
+13. Summaries and any body claim presented as universal must be falsifiable from the dump (no unevidenced `every`/`all`/`always`/`never`) — overclaim is grounds for the reviewer to bounce the PR.
 
 ## CI gate — what `node scripts/tooling/quality-gates/validate.mjs` checks
 

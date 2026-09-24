@@ -20,7 +20,8 @@ Maintainer: Krivich.
   what the reader’s agent can take (code, format, schema, protocol). The
   platform appends the agent-prompt tail for og/meta
   (`summary + " And a prompt to make your agent explain it to you."`), so never
-  stuff that tail in yourself.
+  stuff that tail in yourself — plus a falsifiability rule (no unevidenced
+  universal claims).
 - Enforced: agent/hybrid dumps MUST ship `summary.md` — the Kodavr validator
   BLOCKs without it (`KDV-MANIFEST-12`); said plainly in the `SKILL.md` hard
   rules, `reference/rules.md` and `reference/manifest.md`.

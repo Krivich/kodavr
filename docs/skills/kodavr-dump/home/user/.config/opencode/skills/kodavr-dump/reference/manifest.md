@@ -19,7 +19,7 @@ present; the repo validator is still the gate.
 | `trust_level` | enum | `raw` \| `self-tested` \| `community-tested` \| `adapted` \| `library` |
 | `generated_by` | enum | `human` \| `agent` \| `hybrid` |
 | `human_review` | enum | `none` \| `minimal` \| `attested` |
-| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed AND the social snippet — essence in plain words (before/after, the problem or change) plus what the reader’s agent can take (code, format, schema, protocol); the platform appends the agent-prompt tail for og/meta, so never stuff it in yourself (the validator counts sentence terminators) |
+| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed AND the social snippet — essence in plain words (before/after, the problem or change) plus what the reader’s agent can take (code, format, schema, protocol); the platform appends the agent-prompt tail for og/meta, so never stuff it in yourself (the validator counts sentence terminators); and every claim falsifiable from the body (no unevidenced every/all) |
 
 ## Optional fields
 

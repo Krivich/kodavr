@@ -214,6 +214,11 @@ fields or features.
   list), **What to watch out for** (limits, prerequisites, risks, honesty labels).
   Keep it short; the raw body stays raw.
 
+**Falsifiable, not impressive.** Every sentence must be checkable against the
+dump body: no `every`/`all`/`always`/`never` unless the body demonstrates it,
+no paid-for claims the body does not cite. A reviewer's agent will grep — and
+so will the reader's.
+
 A bad summary describes the artifact ("an opencode skill that runs a seven-step
 loop"). A good one sells the outcome and names the take ("publishing used to
 need the schema and git; now it is one conversation and one yes — your agent
@@ -400,7 +405,8 @@ Maintainer: Krivich.
   what the reader’s agent can take (code, format, schema, protocol). The
   platform appends the agent-prompt tail for og/meta
   (`summary + " And a prompt to make your agent explain it to you."`), so never
-  stuff that tail in yourself.
+  stuff that tail in yourself — plus a falsifiability rule (no unevidenced
+  universal claims).
 - Enforced: agent/hybrid dumps MUST ship `summary.md` — the Kodavr validator
   BLOCKs without it (`KDV-MANIFEST-12`); said plainly in the `SKILL.md` hard
   rules, `reference/rules.md` and `reference/manifest.md`.
@@ -592,7 +598,7 @@ present; the repo validator is still the gate.
 | `trust_level` | enum | `raw` \| `self-tested` \| `community-tested` \| `adapted` \| `library` |
 | `generated_by` | enum | `human` \| `agent` \| `hybrid` |
 | `human_review` | enum | `none` \| `minimal` \| `attested` |
-| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed AND the social snippet — essence in plain words (before/after, the problem or change) plus what the reader’s agent can take (code, format, schema, protocol); the platform appends the agent-prompt tail for og/meta, so never stuff it in yourself (the validator counts sentence terminators) |
+| `summary` | string | 1–3 sentences; the **hook** a stranger sees in the feed AND the social snippet — essence in plain words (before/after, the problem or change) plus what the reader’s agent can take (code, format, schema, protocol); the platform appends the agent-prompt tail for og/meta, so never stuff it in yourself (the validator counts sentence terminators); and every claim falsifiable from the body (no unevidenced every/all) |
 
 ## Optional fields
 
@@ -684,7 +690,7 @@ present; the repo validator is still the gate.
 Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
 §8.1, §8.4, and `scripts/tooling/quality-gates/validate.mjs`.
 
-## The twelve publication rules (condensed)
+## The thirteen publication rules (condensed)
 
 1. One PR = one dump in `content/dumps/<slug>/`; no unrelated edits.
 2. `manifest.json` is mandatory and valid per §4.1.
@@ -698,6 +704,7 @@ Authoritative sources: `CONTRIBUTING.md`, `docs/SPEC.md` §2, §7.7, §7.8,
 10. A new author's first PR is reviewed manually by the owner.
 11. `author` is injected automatically — do not fill it.
 12. Agent/hybrid dump ⇒ MUST ship `summary.md` (brief for a human stranger) — the validator BLOCKs without it (KDV-MANIFEST-12).
+13. Summaries and any body claim presented as universal must be falsifiable from the dump (no unevidenced `every`/`all`/`always`/`never`) — overclaim is grounds for the reviewer to bounce the PR.
 
 ## CI gate — what `node scripts/tooling/quality-gates/validate.mjs` checks
 
