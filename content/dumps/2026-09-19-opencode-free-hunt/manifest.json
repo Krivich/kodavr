@@ -1,0 +1,27 @@
+{
+  "slug": "2026-09-19-opencode-free-hunt",
+  "title": "Free hunt: a console bridge and an exploratory walk that find the bugs before the human does",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-09-19",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["contains_code", "experimental"],
+  "tags": ["opencode", "ai-agents", "testing", "exploratory-testing", "bug-hunting", "simulation", "workflow"],
+  "generated_by": "agent",
+  "human_review": "minimal",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "Your suite is green, the agent says done, and then you open the app and trip over an obvious break in the first ten minutes. This dump is the free-hunt practice that closes that gap: a console bridge over the live HTTP API so the agent can drive the real product, a bounded exploration protocol whose only product is a journal of anomalies, and a perimeter that lets the agent fix what it finds without wandering. The bridge and watchdog sources are inlined; the catches behind the protocol are described by mechanism — the raw logs themselves were redacted.",
+  "sources": ["chat-log", "source-code"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "raw.md", "note": "the full free-hunt guide: console map, bridge and watchdog sources, the walk protocol, real catches, the fix perimeter and the control commands" },
+    { "kind": "url", "path_or_url": "https://kodavr.xyz/dumps/2026-09-18-opencode-agent-control/", "note": "companion: the agent-control loop (compaction checkpoints, tiered delegation, lazy layers)" },
+    { "kind": "url", "path_or_url": "https://kodavr.xyz/dumps/2026-09-18-opencode-requirements-machine/", "note": "companion: the requirements machine (stable IDs, coverage gate, idea process)" }
+  ],
+  "derived_from": null
+}
