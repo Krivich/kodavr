@@ -228,6 +228,14 @@ export const COPY_FIELDS = Object.freeze({
   contribute: Object.freeze([
     'contribute_kicker',
     'contribute_lead',
+    // feedback-contribute_skill item 01: the contribute-lane leads the
+    // `02 · flow` plate — lead, the single copy control over the §7.16 prompt,
+    // hint and the secondary link to the skill dump page.
+    'contribute_lane_lead',
+    'contribute_lane_button',
+    'contribute_prompt',
+    'contribute_lane_hint',
+    'contribute_lane_secondary',
     'contribute_bring_heading',
     'contribute_step_fork_lead',
     'contribute_step_fork_and',
@@ -246,6 +254,10 @@ export const COPY_FIELDS = Object.freeze({
     'contribute_licences_lead',
     'contribute_house_rules_label',
     'contribute_issues_label',
+    // The copy control's state strings — the same copydeck values the §7.12
+    // lane partial passes (mirror of site/agent-lane.hbs's data attributes).
+    'copied_label',
+    'copied_announcement',
   ]),
   gate: Object.freeze([
     'gate_kicker',

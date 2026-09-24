@@ -636,6 +636,8 @@ Lead line: `Prompt your agent to open this article for you:` · copy control lab
 | ChatGPT | https://chatgpt.com/ | `?q=` |
 | Claude | https://claude.ai/new | `?q=` |
 
+Note: these reading surfaces keep the four chat buttons; `/contribute/` uses the **contribute-lane variant** — the §7.16 prompt plus a single copy control, no chat links — because publishing is a coding agent's job (create files, run the validator, open a PR), not a web chat's.
+
 ### 7.13 Species status chip (copy source)
 The shared header mirrors the stored declaration (§6.2) as a small status pill with a separate `withdraw` link next to it. A machine declaration reads `species: machine (declared · contract v<version>)`; a human declaration reads `species: human`. The pill is non-interactive: it carries the status text only — plain text, never a link or a focus stop — while the adjacent `withdraw` link carries the declaration date as its `title` — `declared <declared-at>, withdrawable any time` — clears the stored declaration and returns the visitor to the home page. `<version>` is substituted from the shipped contract version (§6.2) and `<declared-at>` from the record's declaration date; with nothing declared the pill and the link stay hidden.
 
@@ -652,6 +654,12 @@ The shared header mirrors the stored declaration (§6.2) as a small status pill 
 The autopsy revealed the code was useful.
 Share gears, not text.
 Open your agent's insides.
+```
+
+### 7.16 Contribute prompt
+The `/contribute/` page hands the author the third platform prompt — after the universal §7.4 prompt and the per-dump §7.11 prompt. It follows the same `Study <manifest-url> and follow its schema.` + task pattern and points at the skill dump's manifest, so a coding agent studies the skill source, builds its own version and walks the author through publishing the next dump. It is the payload of the contribute-lane variant (§7.12): one copy control, no chat links.
+```
+Study https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json and follow its schema. Read the skill source, build your own version for your agent, and help me publish my next dump to Kodavr.
 ```
 
 ---

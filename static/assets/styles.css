@@ -470,15 +470,18 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
 .reception-rating{font-family: var(--font-prose);line-height:1.7}
 
 /* §7.12: the pinned prompt is a glanceable artefact — mono, muted, indented
-   under a left rule, so it reads as the block the lane above hands over. */
-.article-prompt, .machine-prompt, .home-prompt{font-family:var(--font-mono);color:var(--muted);font-size:.85rem;
+   under a left rule, so it reads as the block the lane above hands over.
+   feedback-contribute_skill item 01: the contribute-lane's §7.16 prompt joins
+   the same group (DECISION D2 — one prompt role, no new prompt style). */
+.article-prompt, .machine-prompt, .home-prompt, .contribute-prompt{font-family:var(--font-mono);color:var(--muted);font-size:.85rem;
   margin-top:0;margin-left:.5rem;margin-bottom:var(--sp-4);padding-left:.75rem;border-left:2px solid var(--line-2)}
 /* §3.7 P1-1: a grey block hugs its text — the hall's code blocks keep their
    full width and horizontal scroll (KDV-MOBILE-02). */
 .article-prompt,
 .gate-rest,
 .machine-prompt,
-.home-prompt{width:fit-content;max-width:100%}
+.home-prompt,
+.contribute-prompt{width:fit-content;max-width:100%}
 /* KDV-SURFACE-13: at 1280x720 the first screen must hold the lane→doors stack
    with headroom; the demo's lane gap is roomier than the contract allows. */
 #plate-want .agent-lane{margin-block:var(--sp-2)}
@@ -509,13 +512,23 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
   padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);
   font:400 14px/1 var(--font-prose);text-decoration:none;cursor:pointer;touch-action:manipulation}
 .agent-link:hover,.copy-prompt:hover{border-color:var(--ink)}
+/* feedback-contribute_skill item 01 (DECISION D2): the contribute-lane's one
+   control is the PRIMARY action — the .copy-prompt chrome stamped up in the
+   .cta's taste (one rule, no new font or page-CSS role). */
+.contribute-copy{display:inline-flex;align-items:center;min-height:var(--tap);padding:12px 24px;border-color:var(--ink)}
 /* feedback-marketing item 11: hovering a lane control lights the prompt below
    it (accent left rule) — the hand-over taught without a word. The controls sit
    inside .agent-lane (ul>li), so the document's `button:hover ~ prompt` can't
-   match from the button; :has() on the wrapper reaches the sibling prompt. */
-.agent-lane:has(.agent-link:hover,.copy-prompt:hover) ~ .article-prompt,
-.agent-lane:has(.agent-link:hover,.copy-prompt:hover) ~ .machine-prompt,
-.agent-lane:has(.agent-link:hover,.copy-prompt:hover) ~ .home-prompt{border-left-color:var(--accent)}
+   match from the button; :has() on the wrapper reaches the sibling prompt.
+   feedback-contribute_skill item 02: keyboard focus (`:focus-visible`) gets the
+   same parity as hover. */
+.agent-lane:has(.agent-link:hover,.agent-link:focus-visible,.copy-prompt:hover,.copy-prompt:focus-visible) ~ .article-prompt,
+.agent-lane:has(.agent-link:hover,.agent-link:focus-visible,.copy-prompt:hover,.copy-prompt:focus-visible) ~ .machine-prompt,
+.agent-lane:has(.agent-link:hover,.agent-link:focus-visible,.copy-prompt:hover,.copy-prompt:focus-visible) ~ .home-prompt{border-left-color:var(--accent)}
+/* item 02: the contribute-lane's prompt is a CHILD of its lane (not a sibling),
+   so the :has() reaches it with the child combinator — hovering or focusing the
+   one copy button lights "this button copies this". */
+.contribute-lane:has(.contribute-copy:hover,.contribute-copy:focus-visible) .contribute-prompt{border-left-color:var(--accent)}
 
 /* --- misc leftovers -------------------------------------------------- */
 .not-found-text{margin:0;background:var(--block);border:1px solid var(--line);border-left:3px solid var(--ink);
@@ -571,7 +584,7 @@ details.card .inner{padding:0 var(--sp-5) var(--sp-5);border-top:1px solid var(-
      doors-first mobile order). At 320px the doors are a short scroll away; the
      composition promise is bounded by the viewport (§6.5). The inline plates
      inherit the page's own padding, so no full-bleed override is needed. */
-  .article-prompt, .machine-prompt, .home-prompt{font-size:13px}
+  .article-prompt, .machine-prompt, .home-prompt, .contribute-prompt{font-size:13px}
 
   .agent-links{width:100%}
   .agent-link,

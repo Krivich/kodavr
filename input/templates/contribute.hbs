@@ -15,6 +15,18 @@
     <p class="lead">{{copy.contribute_lead}}</p>
   </section>
   <section class="plate" data-plate="{{copy.contribute_plate_flow}}">
+    {{!-- feedback-contribute_skill item 01: the contribute-lane leads the plate —
+         ONE copy control over the §7.16 prompt, no chat links (publishing is a
+         coding agent's job, §7.12's contribute variant); the manual path follows
+         under its own heading (item 03). The button wires the copydeck's copied
+         label/announcement exactly like site/agent-lane.hbs. --}}
+    <div class="contribute-lane">
+      <p class="agent-lane-lead">{{copy.contribute_lane_lead}}</p>
+      <p><button type="button" class="copy-prompt contribute-copy" data-copy-target="contribute-prompt" data-copied-label="{{copy.copied_label}}" data-copied-announcement="{{copy.copied_announcement}}">{{copy.contribute_lane_button}}</button></p>
+      <pre class="contribute-prompt" id="contribute-prompt">{{copy.contribute_prompt}}</pre>
+      <p class="agent-lane-hint">{{copy.contribute_lane_hint}}</p>
+      <p class="contribute-lane-secondary"><a href="{{locale_prefix}}/dumps/2026-09-18-kodavr-dump-skill/">{{copy.contribute_lane_secondary}}</a></p>
+    </div>
     <h2>{{copy.contribute_bring_heading}}</h2>
     <ol class="steps">
       <li>{{copy.contribute_step_fork_lead}} <code>content/dumps/&lt;slug&gt;/manifest.json</code> {{copy.contribute_step_fork_and}} <code>raw.md</code>.</li>

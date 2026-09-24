@@ -425,7 +425,7 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     // v4/KDV-SURFACE-28 introduces `.article-prompt` (the `02` plate's pinned
     // prompt) and retires the gate/reception prompt walls with the modal.
     expect(css).toMatch(
-      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt,\s*\.contribute-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
     );
     expect(css).toMatch(/^pre\s*\{[^}]*font-family:\s*var\(--font-mono\)/m);
 
@@ -473,7 +473,7 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     // (KDV-MOBILE-02), so this must NOT be a bare `pre { width: fit-content }`.
     // v4/KDV-SURFACE-28: `.article-prompt` (the `02` plate) joins the grey blocks
     // that hug their text; `.gate-rest` stays the declaration's own block.
-    const hug = css.match(/\.article-prompt,\s*\.gate-rest,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*\}/);
+    const hug = css.match(/\.article-prompt,\s*\.gate-rest,\s*\.machine-prompt,\s*\.home-prompt,\s*\.contribute-prompt\s*\{[^}]*\}/);
     expect(hug, 'prompt/rest hug rule').not.toBeNull();
     expect(hug[0]).toMatch(/width:\s*fit-content/);
     expect(hug[0]).toMatch(/max-width:\s*100%/);
@@ -498,7 +498,7 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
 
     // §6.5 two contours: the prompt walls and the manifest card stay monospace.
     expect(css).toMatch(
-      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt,\s*\.contribute-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
     );
     expect(css).toMatch(/details\.card\s*\{[^}]*font-family:\s*var\(--font-mono\)/);
   });
@@ -519,16 +519,51 @@ describe('visual language: two contours, one contract card (KDV-MOBILE-06 / KDV-
     // the button itself — the hover crosses the wrapper via :has() (the §04
     // species-chip pattern) to the lane's later sibling prompt on every surface
     // that pairs them (article plate, machine panel, home plate).
+    // feedback-contribute_skill item 02: KEYBOARD FOCUS gets the same parity —
+    // `:hover` and `:focus-visible` light the prompt identically.
     const rule = css.match(
       /\.agent-lane:has\([^)]*\)\s*~\s*\.article-prompt,\s*\.agent-lane:has\([^)]*\)\s*~\s*\.machine-prompt,\s*\.agent-lane:has\([^)]*\)\s*~\s*\.home-prompt\s*\{[^}]*\}/,
     );
     expect(rule, 'lane-hover → prompt rule').not.toBeNull();
     expect(rule[0]).toContain('.agent-link:hover');
+    expect(rule[0]).toContain('.agent-link:focus-visible');
     expect(rule[0]).toContain('.copy-prompt:hover');
+    expect(rule[0]).toContain('.copy-prompt:focus-visible');
     expect(rule[0]).toMatch(/border-left-color:\s*var\(--accent\)/);
-    // The resting state stays the muted 2px rule — the hover only recolours it.
+    // The resting state stays the muted 2px rule — the hover only recolours it
+    // (the group now also carries the contribute-lane's prompt, item 01).
     expect(css).toMatch(
-      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt\s*\{[^}]*border-left:\s*2px solid var\(--line-2\)/,
+      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt,\s*\.contribute-prompt\s*\{[^}]*border-left:\s*2px solid var\(--line-2\)/,
     );
+  });
+
+  it('KDV-SURFACE-29: the contribute copy button lights its prompt on hover/focus and ships the copydeck attrs', () => {
+    // feedback-contribute_skill item 02: the contribute-lane's prompt is a
+    // CHILD of its lane (not a sibling), so the rule reaches it directly —
+    // hover AND keyboard focus of the one copy control recolour the left rule.
+    const rule = css.match(/\.contribute-lane:has\([^)]*\)\s*\.contribute-prompt\s*\{[^}]*\}/);
+    expect(rule, 'contribute-lane hover/focus → prompt rule').not.toBeNull();
+    expect(rule[0]).toContain('.contribute-copy:hover');
+    expect(rule[0]).toContain('.contribute-copy:focus-visible');
+    expect(rule[0]).toMatch(/border-left-color:\s*var\(--accent\)/);
+    // The prompt joins the shared prompt group (mono, muted, left rule, width).
+    expect(css).toMatch(
+      /\.article-prompt,\s*\.machine-prompt,\s*\.home-prompt,\s*\.contribute-prompt\s*\{[^}]*font-family:\s*var\(--font-mono\)/,
+    );
+
+    // item 01: ONE real control, labelled with the copydeck's copied strings
+    // and wired to the prompt id below it — never the four chat links.
+    const lane = template('contribute.hbs');
+    expect(lane).toContain('class="copy-prompt contribute-copy"');
+    expect(lane).toContain('data-copy-target="contribute-prompt"');
+    expect(lane).toContain('data-copied-label="{{copy.copied_label}}"');
+    expect(lane).toContain('data-copied-announcement="{{copy.copied_announcement}}"');
+    expect(lane).toContain('id="contribute-prompt"');
+    expect(lane).not.toContain('class="agent-link"');
+
+    // D1: site.js auto-initialises copy buttons on DOM ready (the per-button
+    // bound mark keeps it idempotent), so /contribute/ works without the dumps
+    // controller that used to be the only caller of initCopyButtons.
+    expect(read('static/assets/site.js')).toMatch(/initCopyButtons\(\);/);
   });
 });

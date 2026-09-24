@@ -741,6 +741,56 @@ describe('build controller (integration)', () => {
     expect(home).not.toMatch(/href="[^"]*reception/);
   });
 
+  it('KDV-SURFACE-29: /contribute/ leads 02 · flow with the contribute-lane — lead, one copy button, prompt, hint, secondary link — and no chat links', async () => {
+    tmpRoot = await setupProject(['sample-dump']);
+    const publicDir = join(tmpRoot, 'output', 'public');
+    const page = stripStickers(
+      stripInlineBoot(decodeEntities(await readFile(join(publicDir, 'contribute', 'index.html'), 'utf8'))),
+    );
+
+    // feedback-contribute_skill items 01/03: the lane is the plate's FIRST
+    // element, above the demoted manual path (heading + the three steps).
+    const flowPlate = page.slice(
+      page.indexOf('data-plate="02 · flow"'),
+      page.indexOf('data-plate="03 · schema"'),
+    );
+    const laneAt = flowPlate.indexOf('class="contribute-lane"');
+    const headingAt = flowPlate.indexOf('>Manual path (if you prefer)<');
+    const stepsAt = flowPlate.indexOf('<ol class="steps"');
+    expect(laneAt, 'contribute-lane in 02 · flow').toBeGreaterThanOrEqual(0);
+    expect(headingAt, 'demoted manual-path heading').toBeGreaterThanOrEqual(0);
+    expect(stepsAt, 'manual-path steps').toBeGreaterThanOrEqual(0);
+    expect(laneAt).toBeLessThan(headingAt);
+    expect(headingAt).toBeLessThan(stepsAt);
+
+    // The lane: lead, ONE copy control wired to the prompt below it, hint, and
+    // the plain secondary link to the skill dump page (D3, document-relative
+    // after the P2c pass — KDV-SURFACE-09).
+    expect(flowPlate).toContain(t('CONTRIBUTE_LANE_LEAD', 'en'));
+    expect(flowPlate).toContain('data-copy-target="contribute-prompt"');
+    expect(flowPlate).toContain('data-copied-label="Copied ✓"');
+    expect(flowPlate).toContain('data-copied-announcement="Copied to the clipboard."');
+    expect(flowPlate).toContain('id="contribute-prompt"');
+    expect(flowPlate).toContain(t('CONTRIBUTE_LANE_HINT', 'en'));
+    expect(flowPlate).toContain(t('CONTRIBUTE_LANE_BUTTON', 'en'));
+    // Depth-1 page → the P2c pass relativizes the root-absolute template href.
+    expect(flowPlate).toContain('href="../dumps/2026-09-18-kodavr-dump-skill/"');
+    expect(flowPlate).toContain(t('CONTRIBUTE_LANE_SECONDARY', 'en'));
+    expect(flowPlate).toContain('>Manual path (if you prefer)</h2>');
+    expect(flowPlate.match(/<li>/g) ?? []).toHaveLength(3);
+
+    // Exactly one copy control on the page; the §7.16 prompt renders exactly
+    // once in the DOM (the inline boot blobs are stripped, so counts are honest).
+    expect(page.match(/data-copy-target=/g) ?? []).toHaveLength(1);
+    const prompt = t('CONTRIBUTE_PROMPT', 'en');
+    expect(page.split(prompt).length - 1).toBe(1);
+
+    // Publishing is a coding agent's job: NO chat links anywhere on /contribute/.
+    expect(page).not.toContain('class="agent-link"');
+    expect(page).not.toContain('class="agent-links"');
+    expect(page).not.toContain('class="agent-lane"');
+  });
+
   it('KDV-SURFACE-26 + KDV-SURFACE-28: the 01 · PREVIEW plate names the dump above the declaration, and a non-dump page carries no dump context', async () => {
     tmpRoot = await setupProject(['sample-dump']);
     const publicDir = join(tmpRoot, 'output', 'public');

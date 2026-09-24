@@ -27,6 +27,7 @@ import {
   BRIEF_FALLBACK,
   BRIEF_BLOCK,
   LANE_COPY_LABEL,
+  CONTRIBUTE_PROMPT,
   FOOTER_TEXT,
   FOOTER_LICENCES,
   FOOTER_CONTRACT,
@@ -319,6 +320,23 @@ describe('copydeck', () => {
     expect(PROMPT_TEXT).toBe(
       'Study https://kodavr.xyz/index.json and follow its schema. Read articles to me and act like a magazine I can talk to.',
     );
+  });
+
+  it('KDV-SURFACE-29: the contribute prompt is verbatim from §7.16 and §7.12 names the contribute-lane variant', () => {
+    // feedback-contribute_skill items 01/07: §7.16 is the third prompt (after
+    // §7.4 universal and §7.11 per-dump) — the fence must carry the copydeck
+    // constant byte for byte (the prompt contains a URL: no smart-quote drift).
+    expect(blockFor('7.16')).toBe(CONTRIBUTE_PROMPT);
+    expect(CONTRIBUTE_PROMPT).toBe(
+      'Study https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json and follow its schema. Read the skill source, build your own version for your agent, and help me publish my next dump to Kodavr.',
+    );
+    // item 07 (§7.12 part): the reading surfaces keep the four chat buttons;
+    // /contribute/ is named as the contribute-lane variant (prose section, no
+    // fence — read the section text between its headings).
+    const laneSection = SPEC.slice(SPEC.indexOf('### 7.12'), SPEC.indexOf('### 7.13'));
+    expect(laneSection).toContain('contribute-lane variant');
+    expect(laneSection).toContain('/contribute/');
+    expect(laneSection).toContain('four chat buttons');
   });
 
   it('KDV-SURFACE-15: the machine-panel reset label is the human counterpart of the reception reset', () => {

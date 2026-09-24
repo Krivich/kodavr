@@ -55,6 +55,14 @@ const BINDINGS = {
     ['data-plate="{{copy.contribute_plate_flow}}"', 'data-plate="02 · flow"', 'CONTRIBUTE_PLATE_FLOW', '02 · flow'],
     ['data-plate="{{copy.contribute_plate_schema}}"', 'data-plate="03 · schema"', 'CONTRIBUTE_PLATE_SCHEMA', '03 · schema'],
     ['data-plate="{{copy.contribute_plate_licences}}"', 'data-plate="04 · licences"', 'CONTRIBUTE_PLATE_LICENCES', '04 · licences'],
+    // feedback-contribute_skill items 01/03: the contribute-lane leads the flow
+    // plate; the manual path heading is demoted under it.
+    ['<p class="agent-lane-lead">{{copy.contribute_lane_lead}}</p>', '<p class="agent-lane-lead">Point your coding agent at the skill — it will read the source, build its own version, and walk you through publishing:</p>', 'CONTRIBUTE_LANE_LEAD', 'Point your coding agent at the skill — it will read the source, build its own version, and walk you through publishing:'],
+    ['<button type="button" class="copy-prompt contribute-copy" data-copy-target="contribute-prompt" data-copied-label="{{copy.copied_label}}" data-copied-announcement="{{copy.copied_announcement}}">{{copy.contribute_lane_button}}</button>', '<button type="button" class="copy-prompt contribute-copy" data-copy-target="contribute-prompt" data-copied-label="Copied ✓" data-copied-announcement="Copied to the clipboard.">Copy prompt</button>', 'CONTRIBUTE_LANE_BUTTON', 'Copy prompt'],
+    ['<pre class="contribute-prompt" id="contribute-prompt">{{copy.contribute_prompt}}</pre>', '<pre class="contribute-prompt" id="contribute-prompt">Study https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json and follow its schema. Read the skill source, build your own version for your agent, and help me publish my next dump to Kodavr.</pre>', 'CONTRIBUTE_PROMPT', 'Study https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json and follow its schema. Read the skill source, build your own version for your agent, and help me publish my next dump to Kodavr.'],
+    ['<p class="agent-lane-hint">{{copy.contribute_lane_hint}}</p>', '<p class="agent-lane-hint">(paste this prompt into a coding agent — OpenCode, Claude Code, Cursor, Codex — not a web chat: publishing means creating files, running the validator, and opening a PR, which a chat cannot do)</p>', 'CONTRIBUTE_LANE_HINT', '(paste this prompt into a coding agent — OpenCode, Claude Code, Cursor, Codex — not a web chat: publishing means creating files, running the validator, and opening a PR, which a chat cannot do)'],
+    ['<p class="contribute-lane-secondary"><a href="{{locale_prefix}}/dumps/2026-09-18-kodavr-dump-skill/">{{copy.contribute_lane_secondary}}</a></p>', '<p class="contribute-lane-secondary"><a href="/dumps/2026-09-18-kodavr-dump-skill/">First look at the skill source</a></p>', 'CONTRIBUTE_LANE_SECONDARY', 'First look at the skill source'],
+    ['<h2>{{copy.contribute_bring_heading}}</h2>', '<h2>Manual path (if you prefer)</h2>', 'CONTRIBUTE_BRING_HEADING', 'Manual path (if you prefer)'],
   ],
   'notfound.hbs': [
     ['<a class="skip-link" href="#main">{{copy.skip_to_content}}</a>', '<a class="skip-link" href="#main">Skip to content</a>', 'SKIP_TO_CONTENT', 'Skip to content'],
@@ -118,6 +126,43 @@ describe('i18n surface: catalog (KDV-I18N-01)', () => {
     expect(EN.HOME_FOR_HUMANS).toBeUndefined();
     expect(EN.HOME_LATEST_DUMPS).toBeUndefined();
     expect(EN.HOME_PLATE_REGISTRY).toBeUndefined();
+  });
+
+  it('KDV-SURFACE-29: the contribute-lane copy resolves in every locale (doc-verbatim where the record gives it)', () => {
+    const keys = [
+      'CONTRIBUTE_LANE_LEAD',
+      'CONTRIBUTE_PROMPT',
+      'CONTRIBUTE_LANE_HINT',
+      'CONTRIBUTE_LANE_BUTTON',
+      'CONTRIBUTE_LANE_SECONDARY',
+      'CONTRIBUTE_BRING_HEADING',
+    ];
+    for (const locale of LOCALES.map((entry) => entry.code)) {
+      for (const key of keys) {
+        const value = t(key, locale);
+        expect(typeof value, `${locale}/${key}`).toBe('string');
+        expect(value.length, `${locale}/${key}`).toBeGreaterThan(0);
+      }
+    }
+    // feedback-contribute_skill items 01/03: the public record's EN and ru
+    // lines are the contract — verbatim, down to capitalization and parens.
+    expect(t('CONTRIBUTE_LANE_LEAD', 'en')).toBe(
+      'Point your coding agent at the skill — it will read the source, build its own version, and walk you through publishing:',
+    );
+    expect(t('CONTRIBUTE_LANE_HINT', 'en')).toBe(
+      '(paste this prompt into a coding agent — OpenCode, Claude Code, Cursor, Codex — not a web chat: publishing means creating files, running the validator, and opening a PR, which a chat cannot do)',
+    );
+    expect(t('CONTRIBUTE_LANE_BUTTON', 'en')).toBe('Copy prompt');
+    expect(t('CONTRIBUTE_LANE_SECONDARY', 'en')).toBe('First look at the skill source');
+    expect(t('CONTRIBUTE_BRING_HEADING', 'en')).toBe('Manual path (if you prefer)');
+    expect(t('CONTRIBUTE_LANE_LEAD', 'ru')).toBe(
+      'Направьте кодинг-агента на скилл — он прочитает исходник, соберёт свою версию и проведёт вас через публикацию:',
+    );
+    expect(t('CONTRIBUTE_LANE_HINT', 'ru')).toBe(
+      '(вставьте промпт в кодинг-агента — OpenCode, Claude Code, Cursor, Codex — а не в веб-чат: публикация это создать файлы, прогнать валидатор и открыть PR, чего чат не умеет)',
+    );
+    expect(t('CONTRIBUTE_LANE_BUTTON', 'ru')).toBe('Скопировать промпт');
+    expect(t('CONTRIBUTE_BRING_HEADING', 'ru')).toBe('Ручной путь (если предпочитаете)');
   });
 
   it('KDV-SURFACE-24: the home hero parts compose HOME_TITLE in every locale', () => {

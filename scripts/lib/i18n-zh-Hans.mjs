@@ -366,11 +366,20 @@ export const ZH_HANS = Object.freeze({
   ABOUT_ARCH_TRUST_BODY:
     'raw → self-tested → community-tested → adapted → library；这条阶梯按每个转储声明，且可被机器检查。',
   ABOUT_DECISIONS_LABEL: '完整架构决策',
-  // §7 contribute sheet.
+  // §7 contribute sheet (feedback-contribute_skill items 01/03: the lane leads
+  // the flow plate; the manual path is demoted under its own heading).
   CONTRIBUTE_KICKER: '给作者',
   CONTRIBUTE_LEAD:
     '一个 pull request = 一个转储。CI 会在合并前拒绝垃圾内容；所有者会亲手读第一个 PR。此后的一切都靠信任。',
-  CONTRIBUTE_BRING_HEADING: '带来一个转储',
+  CONTRIBUTE_LANE_LEAD:
+    '把你的编码代理指向这个技能——它会阅读源码、构建自己的版本，并带你完成发布：',
+  CONTRIBUTE_PROMPT:
+    '研究 https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json 并遵循其 schema。阅读技能源码，为我的代理构建你自己的版本，并帮助我在 Kodavr 发布我的下一个转储。',
+  CONTRIBUTE_LANE_BUTTON: '复制提示词',
+  CONTRIBUTE_LANE_HINT:
+    '（把这个提示词粘贴给编码代理——OpenCode、Claude Code、Cursor、Codex——而不是网页聊天：发布意味着创建文件、运行校验器并打开 PR，这是聊天做不到的）',
+  CONTRIBUTE_LANE_SECONDARY: '先看看技能的源码',
+  CONTRIBUTE_BRING_HEADING: '手动路径（如果你更喜欢）',
   CONTRIBUTE_STEP_FORK_LEAD: '复刻仓库并添加',
   CONTRIBUTE_STEP_FORK_AND: '和',
   CONTRIBUTE_STEP_PR: '每个转储打开一个 pull request。',

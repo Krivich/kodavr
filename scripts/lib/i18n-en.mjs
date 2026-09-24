@@ -147,11 +147,20 @@ const UI = Object.freeze({
   // §11/KDV-I18N-01: the four-plate /contribute/ sheet. A step or checklist
   // line that wraps a literal filename splits: the prose is the catalog, the
   // filename (`content/dumps/<slug>/manifest.json`, `raw.md`, `REDACTIONS.md`,
-  // `CONTRIBUTING.md`) stays in the template.
+  // `CONTRIBUTING.md`) stays in the template. feedback-contribute_skill
+  // items 01/03: the contribute-lane leads the `02 · flow` plate (the §7.16
+  // prompt itself lives in copy.mjs, the §7 copydeck) and the manual path is
+  // demoted under its own heading.
   CONTRIBUTE_KICKER: 'for authors',
   CONTRIBUTE_LEAD:
     'One pull request = one dump. CI rejects junk before merge; the owner reads a first PR by hand. Everything after that is trust.',
-  CONTRIBUTE_BRING_HEADING: 'Bring a dump',
+  CONTRIBUTE_LANE_LEAD:
+    'Point your coding agent at the skill — it will read the source, build its own version, and walk you through publishing:',
+  CONTRIBUTE_LANE_BUTTON: 'Copy prompt',
+  CONTRIBUTE_LANE_HINT:
+    '(paste this prompt into a coding agent — OpenCode, Claude Code, Cursor, Codex — not a web chat: publishing means creating files, running the validator, and opening a PR, which a chat cannot do)',
+  CONTRIBUTE_LANE_SECONDARY: 'First look at the skill source',
+  CONTRIBUTE_BRING_HEADING: 'Manual path (if you prefer)',
   CONTRIBUTE_STEP_FORK_LEAD: 'Fork the repository and add',
   CONTRIBUTE_STEP_FORK_AND: 'and',
   CONTRIBUTE_STEP_PR: 'Open one pull request per dump.',

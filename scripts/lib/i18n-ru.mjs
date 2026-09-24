@@ -370,11 +370,20 @@ export const RU = Object.freeze({
   ABOUT_ARCH_TRUST_BODY:
     'raw → self-tested → community-tested → adapted → library; лестница заявляется для каждого дампа и проверяема машиной.',
   ABOUT_DECISIONS_LABEL: 'Полные архитектурные решения',
-  // §7 contribute sheet.
+  // §7 contribute sheet (feedback-contribute_skill items 01/03: the lane leads
+  // the flow plate; the manual path is demoted under its own heading).
   CONTRIBUTE_KICKER: 'для авторов',
   CONTRIBUTE_LEAD:
     'Один pull request = один дамп. CI отклоняет мусор до слияния; владелец вручную читает первый PR. Всё после этого — доверие.',
-  CONTRIBUTE_BRING_HEADING: 'Принесите дамп',
+  CONTRIBUTE_LANE_LEAD:
+    'Направьте кодинг-агента на скилл — он прочитает исходник, соберёт свою версию и проведёт вас через публикацию:',
+  CONTRIBUTE_PROMPT:
+    'Изучи https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json и следуй его схеме. Прочитай исходник скилла, собери свою версию для моего агента и помоги мне опубликовать мой следующий дамп на Kodavr.',
+  CONTRIBUTE_LANE_BUTTON: 'Скопировать промпт',
+  CONTRIBUTE_LANE_HINT:
+    '(вставьте промпт в кодинг-агента — OpenCode, Claude Code, Cursor, Codex — а не в веб-чат: публикация это создать файлы, прогнать валидатор и открыть PR, чего чат не умеет)',
+  CONTRIBUTE_LANE_SECONDARY: 'Сначала посмотреть исходник скилла',
+  CONTRIBUTE_BRING_HEADING: 'Ручной путь (если предпочитаете)',
   CONTRIBUTE_STEP_FORK_LEAD: 'Форкните репозиторий и добавьте',
   CONTRIBUTE_STEP_FORK_AND: 'и',
   CONTRIBUTE_STEP_PR: 'Откройте один pull request на дамп.',

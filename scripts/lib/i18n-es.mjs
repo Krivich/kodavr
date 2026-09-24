@@ -369,11 +369,20 @@ export const ES = Object.freeze({
   ABOUT_ARCH_TRUST_BODY:
     'raw → self-tested → community-tested → adapted → library; la escalera se declara por dump y es verificable por máquina.',
   ABOUT_DECISIONS_LABEL: 'Decisiones de arquitectura completas',
-  // §7 contribute sheet.
+  // §7 contribute sheet (feedback-contribute_skill items 01/03: the lane leads
+  // the flow plate; the manual path is demoted under its own heading).
   CONTRIBUTE_KICKER: 'para autores',
   CONTRIBUTE_LEAD:
     'Un pull request = un dump. La CI rechaza la basura antes del merge; el propietario lee a mano el primer PR. Todo lo demás es confianza.',
-  CONTRIBUTE_BRING_HEADING: 'Trae un dump',
+  CONTRIBUTE_LANE_LEAD:
+    'Dirige a tu coding agent al skill — leerá el código fuente, construirá su propia versión y te guiará en la publicación:',
+  CONTRIBUTE_PROMPT:
+    'Estudia https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json y sigue su esquema. Lee el código fuente del skill, construye tu propia versión para mi agente y ayúdame a publicar mi próximo dump en Kodavr.',
+  CONTRIBUTE_LANE_BUTTON: 'Copiar prompt',
+  CONTRIBUTE_LANE_HINT:
+    '(pega este prompt en un coding agent — OpenCode, Claude Code, Cursor, Codex — no en un chat web: publicar es crear archivos, ejecutar el validador y abrir un PR, algo que un chat no puede hacer)',
+  CONTRIBUTE_LANE_SECONDARY: 'Mira primero el código fuente del skill',
+  CONTRIBUTE_BRING_HEADING: 'Camino manual (si prefieres)',
   CONTRIBUTE_STEP_FORK_LEAD: 'Haz un fork del repositorio y añade',
   CONTRIBUTE_STEP_FORK_AND: 'y',
   CONTRIBUTE_STEP_PR: 'Abre un pull request por dump.',

@@ -24,6 +24,7 @@
  *   chipTitle — the §7.13 chip title with the declaration date filled in
  *   COPIED_ANNOUNCEMENT — the live-region note after a copy
  *   COPIED_LABEL — the copy button's success label
+ *   CONTRIBUTE_PROMPT — the §7.16 contribute-lane boot prompt (skill dump manifest)
  *   DECLARATION_TOAST — the toast shown once the declaration is accepted
  *   DISCUSS_LABEL — the "Issues / discuss" link label
  *   DUMP_DEFINITION — the one-line "what is a dump"
@@ -233,6 +234,13 @@ export const GATE_TEXT = [
 export function dumpPrompt(manifestUrl) {
   return `Study ${manifestUrl} and follow its schema. Read articles to me and act like a magazine I can talk to.`;
 }
+
+// §7.16: the contribute-lane's boot prompt — the third platform prompt, after
+// §7.4 (universal) and §7.11 (per-dump). Same `Study <manifest-url> and follow
+// its schema.` + task pattern, pointed at the skill dump's manifest; the SPEC
+// §7.16 fence carries this text byte for byte (feedback-contribute_skill item 01).
+export const CONTRIBUTE_PROMPT =
+  'Study https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json and follow its schema. Read the skill source, build your own version for your agent, and help me publish my next dump to Kodavr.';
 
 // Copy-button states (§6.5 "Copied ✓") and the conscious re-declaration link
 // (§6.2) — structural UI labels that belong next to the prose they accompany.

@@ -460,14 +460,20 @@
 
   // The chip and the language UI live in the shared header, parsed after this
   // head-loaded script: fill them once the DOM is ready (a controller may also
-  // refresh the chip later).
+  // refresh the chip later). DECISION D1/feedback-contribute_skill item 01:
+  // initCopyButtons auto-runs here for ANY page shipping [data-copy-target]
+  // (/contribute/'s contribute-lane has no controller); the per-button bound
+  // mark inside keeps it idempotent, so the dumps controller's own call on
+  // boot stays a harmless no-op re-scan.
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       initSpeciesChip();
       initLangUI();
+      initCopyButtons();
     });
   } else {
     initSpeciesChip();
     initLangUI();
+    initCopyButtons();
   }
 })();
