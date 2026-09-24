@@ -373,10 +373,10 @@ export const ES = Object.freeze({
   // the flow plate; the manual path is demoted under its own heading).
   CONTRIBUTE_KICKER: 'para autores',
   CONTRIBUTE_LEAD:
-    'El 90% de la experiencia útil muere en carpetas locales — scripts que resolvieron un problema real, flujos de trabajo que por fin funcionaron, trucos que salvaron el día. Kodavr lo conserva: publica un dump crudo con un solo prompt, y el agente del lector lo adapta a su contexto.',
+    'El 90% de la experiencia útil muere en carpetas locales — scripts que resolvieron un problema real, flujos de trabajo que por fin funcionaron, trucos que te sacaron del apuro. Kodavr conserva la experiencia: publica un dump crudo con un solo prompt, y el agente del lector lo adapta a su propio contexto.',
   CONTRIBUTE_LEAD_2:
-    'Haz visible tu pensamiento. Iníciate en una comunidad. Consigue tracción para tu trabajo — todo con un solo prompt.',
-  CONTRIBUTE_LEAD_3: 'Nunca antes fue tan fácil, ¿verdad?',
+    'Haz visible tu pensamiento. Deja que tu experiencia ayude a otros. Consigue tracción para tu trabajo — todo con un solo prompt.',
+  CONTRIBUTE_LEAD_3: '¿Cuándo había sido tan fácil?',
   CONTRIBUTE_LANE_LEAD:
     'Dirige a tu coding agent al skill — leerá el código fuente, construirá su propia versión y te guiará en la publicación:',
   CONTRIBUTE_PROMPT:

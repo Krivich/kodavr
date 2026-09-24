@@ -157,7 +157,7 @@ const UI = Object.freeze({
   CONTRIBUTE_LEAD:
     "90% of useful experience dies in local folders — scripts that solved a real problem, workflows that finally worked, hacks that saved the day. Kodavr saves it: publish a raw dump in one prompt, and the reader's agent adapts it to their context.",
   CONTRIBUTE_LEAD_2:
-    'Make your thinking visible. Bootstrap into a community. Gain traction for your work — all in one prompt.',
+    'Make your thinking visible. Let your experience help others. Gain traction for your work — all in one prompt.',
   CONTRIBUTE_LEAD_3: 'It was never this easy before, was it?',
   CONTRIBUTE_LANE_LEAD:
     'Point your coding agent at the skill — it will read the source, build its own version, and walk you through publishing:',
