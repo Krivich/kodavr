@@ -37,7 +37,7 @@ const CONTRIBUTING_RULES = [
   'Release', //               9  heavy files in a Release
   'auto-merge', //            10 first PR manual, then owner-granted auto-merge
   'merged PR', //             11 attribution from the merged PR
-  'summary.md', //            12 human brief layer attached when an agent wrote it
+  'summary.md', //            12 agent publication keeps the attach-brief obligation
 ];
 
 const ROOT_FILES = [

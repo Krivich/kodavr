@@ -1,14 +1,14 @@
-# kodavr-dump — install bundle (what goes where)
+# kodavr-dump — setup bundle (what goes where)
 
 This is a snapshot of the **global** opencode skill `kodavr-dump`: the one that
 turns "we did something interesting" into a Kodavr dump and opens the PR. It is
-a *snapshot*, not a live config — the files are parked at their real install
+a *snapshot*, not a live config — the files are parked at their real target
 paths, relative to a clear root, so the layout itself is the instruction.
 
 ## Convention
 
 The bundle mirrors the target tree relative to your home directory. This is the
-same idea as GNU Stow's "installation image" (a package tree laid out the way it
+same idea as GNU Stow's package-tree layout (a package tree laid out the way it
 should appear under the target) and Ansible's `roles/<role>/files` + a
 `copy src=... dest=...` task: the path is the mapping. `home/user` is a
 placeholder for `$HOME` — `user` is not copied literally.
@@ -25,7 +25,7 @@ The command is optional but recommended: it gives a deterministic entry point
 notice a natural-language request. Copy the whole skill directory as-is; no
 other repository files are touched.
 
-## Install
+## Setup
 
 Windows PowerShell:
 

@@ -7,7 +7,7 @@ Versioning: the `VERSION` file beside `SKILL.md` (MAJOR.MINOR.PATCH).
 - **MAJOR** — a change that can surprise an existing user (breaking).
 
 **On every change: bump `VERSION` and add an entry below. Keep the newest entry
-on top.** The version travels with the installed copy, so any project can state
+on top.** The version travels with each copy, so any project can state
 which revision it runs and be told when to update.
 
 Maintainer: Krivich.

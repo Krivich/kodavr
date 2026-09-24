@@ -7,7 +7,7 @@
   sources include a conversation), shows a human-friendly proposal, and — only
   after explicit approval — opens a dump PR per Kodavr's rules.
 - **Anonymized:** the home directory is the `user` placeholder.
-- **Not a live config:** the payload is parked at its install paths; the layout
+- **Not a live config:** the payload is parked at its target paths; the layout
   is the instruction. See `INSTALL.md`.
 
 ## Layout
@@ -34,15 +34,15 @@ docs/skills/kodavr-dump/
 
 ## Why this shape
 
-A home-relative mirror (GNU Stow's "installation image" pattern) plus an
+A home-relative mirror (GNU Stow's package-tree layout pattern) plus an
 explicit source→destination map in `INSTALL.md` (the Ansible `roles/*/files` +
 `copy` task pattern). The tree is the deployment manifest; nothing has to be
 guessed.
 
 ## Included / excluded
 
-- **Included:** the complete skill source. It has no dependencies, so nothing is
-  installed by a package manager.
+- **Included:** the complete skill source. It has no dependencies, so no
+  package manager is involved.
 - **Excluded:** nothing — no `node_modules`, no logs.
 - `SHA256SUMS` covers every payload file, excluding the bundle metadata:
   `README.md`, `INSTALL.md`, `install.json`, `MANIFEST.md`.
@@ -51,7 +51,7 @@ guessed.
 
 Why: copies of this skill fan out into projects, and fixes made in a client
 project used to leave no trace of who runs which revision or whom to tell on a
-breaking change. The cure is a version that travels with the installed copy:
+breaking change. The cure is a version that travels with each copy:
 
 - **`VERSION`** (in the payload, beside `SKILL.md`) is the single source: now
   `0.4.1`.

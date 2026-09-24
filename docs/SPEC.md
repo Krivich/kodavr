@@ -579,7 +579,7 @@ everything alive is there.
 9. Heavy files — into a Release per convention §8.4, not committed to the repository.
 10. A new author's first PR is reviewed manually by the owner; thereafter trust with auto-merge on green CI is possible (enabled by the owner, not the author).
 11. Author attribution is extracted from the merged PR's GitHub account automatically. Do not fill the `author` field in the manifest manually.
-12. If an agent wrote the dump, attach `summary.md` — a short brief for a human stranger (what happened, what applies, what to watch out for). A human without an agent reaches the dump only through it; the dump body itself stays raw and machine-first. Without the layer the reception shows an honest fallback line, never a promise of a brief that is not there.
+12. To publish through an agent, point a coding agent at the `kodavr-dump` skill dump: the skill source is inlined in that dump, so the agent reads it, verifies it, and builds its own version without installing a package — the manual path stays available and is not deprecated. If an agent wrote the dump, attach `summary.md` — a short brief for a human stranger (what happened, what applies, what to watch out for): a human without an agent reaches the dump only through it, and without the layer the reception shows an honest fallback line, never a promise of a brief that is not there.
 
 ### 7.8 PR template (`.github/PULL_REQUEST_TEMPLATE.md`)
 ```

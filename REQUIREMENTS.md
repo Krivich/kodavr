@@ -120,7 +120,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-COPY-04**: The README intro block renders the §7.5 text verbatim. *(§7.5; flow: legacy)*
 - ✅ **KDV-COPY-05**: The 404 page renders the §7.6 text verbatim. *(§7.6; flow: legacy)*
 - ✅ **KDV-COPY-06**: The `stakes: high` disclaimer (§7.9) is inserted into the body automatically at render. *(§7.9; flow: legacy)*
-- ✅ **KDV-COPY-07**: `CONTRIBUTING.md` contains all §7.7 rules and `.github/PULL_REQUEST_TEMPLATE.md` matches §7.8. *(§7.7–7.8; flow: legacy)*
+- ✅ **KDV-COPY-07**: `CONTRIBUTING.md` contains all §7.7 rules and `.github/PULL_REQUEST_TEMPLATE.md` matches §7.8. *(§7.7–7.8; docs/ideas/feedback-contribute_skill.md item 07; flow: legacy)*
 - ✅ **KDV-COPY-08**: The §7.10 "what is a dump" story is one copydeck source rendered on `/about/` (definition, the agent prompt, and the one-prompt→one-dump→one-PR tail). *(§7.10, §7.2, §7.5; flow: legacy)*
 - ✅ **KDV-COPY-09**: The agent lane (lead, copy label, Perplexity/Grok/ChatGPT/Claude labels and targets, best-effort ?q= prefill) is one copydeck source, and the gate text carries no literal fake [ 0 ] [ 1 ] affordance. *(§7.1, §7.12; flow: legacy)*
 - DEPRECATED **KDV-COPY-10**: The §7.14 home storefront human quickstart line is one copydeck source rendered verbatim under the "Check in at reception" link. Retired by Human Surface v4: the line and the `/reception/` link are deleted and the §7.14 fence is removed. *(§7.14; flow: legacy)*

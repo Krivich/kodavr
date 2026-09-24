@@ -27,11 +27,14 @@ what it can, review covers the rest. Meaning is mandatory, style is free.
     the author.
 11. **Author attribution is extracted automatically** from the merged PR's
     GitHub account. Do not fill the `author` field in the manifest manually.
-12. **If an agent wrote the dump, attach `summary.md`** — a short brief for a
-    human stranger: what happened, what applies, what to watch out for. A human
-    without an agent reaches the dump only through it; the dump body itself
-    stays raw and machine-first. Without the layer the reception shows an honest
-    fallback line, never a promise of a brief that is not there.
+12. **To publish through an agent, point a coding agent at the `kodavr-dump`
+    skill dump** — the skill source is inlined in that dump, so the agent reads
+    it, verifies it, and builds its own version without installing a package;
+    the manual path stays available and is not deprecated. **If an agent wrote
+    the dump, attach `summary.md`** — a short brief for a human stranger: what
+    happened, what applies, what to watch out for. A human without an agent
+    reaches the dump only through it. Without the layer the reception shows an
+    honest fallback line, never a promise of a brief that is not there.
 13. **Black zones (§2.5) are never publishable.** Illegal content — CSAM,
     extremism, calls to violence, stolen data — is blocked by the CI heuristics
     (`KDV-CI-08`, patterns in `config/black-zone.json`) and, regardless of the
