@@ -28,13 +28,16 @@ const BINDINGS = {
     // lead composed from its parts (the term `a dump` emphasized); HOME_TITLE
     // stays the plain SEO string.
     ['<p class="home-lead">{{home_title.lead}}<strong>{{home_title.term}}</strong>{{home_title.tail}}</p>', "Writers share raw experience — a dump — the reader's agent adapts it to their needs.", 'HOME_TITLE_LEAD', 'Writers share raw experience — '],
-    ['<p>{{copy.home_explainer}}</p>', '<p>Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.</p>', 'HOME_EXPLAINER', 'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.'],
+    ['<p>{{copy.home_explainer}}</p>', '<p>Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.</p>', 'HOME_EXPLAINER', 'Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.'],
     ['href="{{locale_prefix}}/about/">{{copy.home_about_cta}}</a>', 'href="/about/">Read the manifesto</a>', 'HOME_ABOUT_CTA', 'About the platform'],
     ['href="{{locale_prefix}}/contribute/">{{copy.home_contribute_cta}}</a>', 'href="/contribute/">Publish a dump</a>', 'HOME_CONTRIBUTE_CTA', 'How to contribute'],
     ['<h2>{{copy.home_for_machines}}</h2>', '<h2>For machines</h2>', 'HOME_FOR_MACHINES', 'For machines'],
     ['<h2>{{copy.home_latest_lead}}<em>{{copy.home_latest_term}}</em></h2>', '<h2>Latest dumps</h2>', 'HOME_LATEST_LEAD', 'Latest '],
     ['<em>{{copy.home_latest_term}}</em>', '<em>dumps</em>', 'HOME_LATEST_TERM', 'dumps'],
     ['<h2>{{copy.home_trust_levels}}</h2>', '<h2>Trust levels</h2>', 'HOME_TRUST_LEVELS', 'Trust levels'],
+    // KDV-SURFACE-31 (owner copy 2026-09-24): the 01 · HUMANS plate gains the
+    // sibling-grammar <h2>, bound like every other plate heading.
+    ['<h2>{{copy.home_humans_heading}}</h2>', '<h2>Read through your agent</h2>', 'HOME_HUMANS_HEADING', 'Read through your agent'],
     // §11/KDV-I18N-09: the numbered plates bind the catalog as a `data-plate`
     // attribute; the hero plate carries none (Human Surface v4 renumbers them).
     ['data-plate="{{copy.home_plate_humans}}"', 'data-plate="01 · humans"', 'HOME_PLATE_HUMANS', '01 · HUMANS'],
@@ -207,6 +210,11 @@ describe('i18n surface: catalog (KDV-I18N-01)', () => {
     expect(EN.FOOTER_TEXT).toBe(FOOTER_TEXT);
 
     expect(HOME_TAGLINE.length).toBeGreaterThan(0);
+    // KDV-SURFACE-24 (owner copy 2026-09-24): the shared meta/JSON-LD/dump
+    // description is byte-identical to the hero explainer in every locale.
+    for (const locale of LOCALES.map((entry) => entry.code)) {
+      expect(t('HOME_TAGLINE', locale), locale).toBe(t('HOME_EXPLAINER', locale));
+    }
   });
 });
 
@@ -220,6 +228,29 @@ describe('i18n surface: templates bind from the dataset (KDV-I18N-01)', () => {
       }
     });
   }
+
+  it('KDV-SURFACE-31: the 01 · HUMANS plate opens with an <h2> bound to home_humans_heading, translated in all four locales', () => {
+    const src = template('home.hbs');
+    // Visual parity with the sibling plates: the binding sits right after the
+    // plate opens, before the agent lane (no data-ignition-text — the build
+    // engine stamps that, the template never authors it).
+    const binding = '<h2>{{copy.home_humans_heading}}</h2>';
+    expect(src).toContain(binding);
+    const plateAt = src.indexOf('data-plate="{{copy.home_plate_humans}}"');
+    const headingAt = src.indexOf(binding);
+    const laneAt = src.indexOf('{{> site/agent-lane');
+    expect(plateAt).toBeGreaterThanOrEqual(0);
+    expect(headingAt).toBeGreaterThan(plateAt);
+    expect(laneAt).toBeGreaterThan(headingAt);
+    // Owner copy, all four locales, verbatim.
+    expect(t('HOME_HUMANS_HEADING', 'en')).toBe('Read through your agent');
+    expect(t('HOME_HUMANS_HEADING', 'ru')).toBe('Читайте через своего агента');
+    expect(t('HOME_HUMANS_HEADING', 'zh-Hans')).toBe('通过您的代理阅读');
+    expect(t('HOME_HUMANS_HEADING', 'es')).toBe('Lee a través de tu agente');
+    // The heading rides the home route dataset like its sibling plate headings.
+    const routes = buildRouteDatasets([], { baseUrl: 'https://example.test' });
+    expect(routes.home.copy.home_humans_heading).toBe('Read through your agent');
+  });
 
   it('KDV-I18N-01: head.hbs keeps the human <title> skeleton with the brand literal', () => {
     const head = template('site/head.hbs');
@@ -266,8 +297,9 @@ describe('i18n surface: datasets carry lang/rtl and the frame copy (KDV-I18N-01)
     expect(routes.home.copy.home_about_cta).toBe('About the platform');
     expect(routes.home.copy.home_contribute_cta).toBe('How to contribute');
     expect(routes.home.copy.home_explainer).toBe(
-      'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.',
+      'Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.',
     );
+    expect(routes.home.copy.home_humans_heading).toBe('Read through your agent');
     expect(routes.home.copy.pagination_label).toBe('Pagination');
     expect(routes.home.copy.pagination_prev).toBe('Previous page');
     expect(routes.home.copy.pagination_next).toBe('Next page');

@@ -71,6 +71,11 @@ Building something is 1x effort; packaging it for others is 10x. We fix that asy
 **What to change in the specification:**
 - **§KDV-SURFACE-24**: rewrite. Allow one explanatory line (the 1x/10x thesis) on the home page. The §7.10 story still lives on `/about/`, but a **brief definition of dump** ("unpolished field report") must be on the first screen.
 - Add a new `home_explainer` token to the copydeck.
+- **2026-09-24 update (owner copy):** the explainer is rewritten — the 1x/10x thesis leaves the first screen; the paragraph now sells reader-side adaptation (task / stack / style). Spec: KDV-SURFACE-24 (updated), KDV-SURFACE-31 (new, `01 · HUMANS` gains an `<h2>` via `home_humans_heading`), and the shared `HOME_TAGLINE` meta/JSON-LD description takes the same value proposition. New wording (verbatim, all four locales):
+  - en: Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.
+  - ru: Kodavr — это реестр сырого опыта: код, процессы и отчёты с полей. Ваш ИИ-агент читает их и адаптирует под вашу задачу — под вашу работу, ваш стек, ваш стиль.
+  - zh-Hans: Kodavr 是一个原始经验的注册表：代码、工作流程和实地报告。您的AI代理阅读它们，并根据您的问题进行调整——您的任务、您的技术栈、您的风格。
+  - es: Kodavr es un registro de experiencia cruda: código, flujos de trabajo e informes de campo. Tu agente de IA los lee y los adapta a tu problema: tu tarea, tu stack, tu estilo.
 
 ---
 

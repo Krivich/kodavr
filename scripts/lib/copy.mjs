@@ -56,7 +56,7 @@
  *   GATE_TITLE — the gate heading (the modal's accessible name)
  *   HALL_ANNOUNCEMENT — the live-region note when the hall opens
  *   HIGH_STAKES_DISCLAIMER — the stakes=high disclaimer
- *   HOME_EXPLAINER — the home storefront hero's one-paragraph explainer (definition + 1x/10x)
+ *   HOME_EXPLAINER — the home storefront hero's one-paragraph explainer (reader-benefit value prop: registry of raw experience, the agent adapts it)
  *   HOME_HUMANS_LEAD — the §7.12 lane lead on the home storefront (no single article there)
  *   HOME_TITLE — the home hero sentence, plain (SEO <title> and JSON-LD name)
  *   HOME_TITLE_LEAD — the home hero up to the emphasized term
@@ -343,7 +343,7 @@ export const HOME_TITLE_TAIL = " — the reader's agent adapts it to their needs
 export const HOME_TITLE = HOME_TITLE_LEAD + HOME_TITLE_TERM + HOME_TITLE_TAIL;
 
 export const HOME_EXPLAINER =
-  'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.';
+  'Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.';
 
 // §7.12: on the home storefront there is no single article — the universal
 // prompt is the invitation — so the lane lead names the ritual itself.

@@ -266,6 +266,7 @@ export const ES = Object.freeze({
   HOME_ABOUT_CTA: 'Sobre la plataforma',
   HOME_CONTRIBUTE_CTA: 'Cómo contribuir',
   HOME_FOR_MACHINES: 'Para máquinas',
+  HOME_HUMANS_HEADING: 'Lee a través de tu agente',
   HOME_LATEST_LEAD: 'Últimos ',
   HOME_LATEST_TERM: 'dumps',
   HOME_TRUST_LEVELS: 'Niveles de confianza',
@@ -415,11 +416,11 @@ export const ES = Object.freeze({
   HOME_TITLE_TERM: 'un dump',
   HOME_TITLE_TAIL: ' — y el agente del lector lo adapta a sus necesidades.',
   HOME_EXPLAINER:
-    'Kodavr es un registro de informes de campo sin pulir: código, flujos de trabajo y lecciones aprendidas, empaquetados para que tu agente de IA los lea y los adapte para ti. Construir algo cuesta 1x; empaquetarlo para otros cuesta 10x. Arreglamos esa asimetría.',
+    'Kodavr es un registro de experiencia cruda: código, flujos de trabajo e informes de campo. Tu agente de IA los lee y los adapta a tu problema: tu tarea, tu stack, tu estilo.',
   HOME_HUMANS_LEAD:
     'Lee Kodavr a través de tu propio agente: para eso está diseñado. Este es el prompt:',
   HOME_TAGLINE:
-    'Kodavr es un registro de dumps — informes de campo, scripts y flujos de trabajo sin pulir, con un contrato legible por máquina. Construir algo cuesta 1x; empaquetarlo para otros cuesta 10x. Arreglamos esa asimetría.',
+    'Kodavr es un registro de experiencia cruda: código, flujos de trabajo e informes de campo. Tu agente de IA los lee y los adapta a tu problema: tu tarea, tu stack, tu estilo.',
   OG_TAGLINE:
     'Un registro de experiencia cruda — «dumps» — que lees a través de tu agente de IA favorito. Comparte engranajes, no texto.',
   RECEPTION_PAGE_TITLE: 'Recepción',

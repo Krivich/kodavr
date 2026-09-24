@@ -214,12 +214,14 @@ describe('copydeck', () => {
     expect(LANE_COPY_LABEL).toBe('Or copy & paste it yourself');
   });
 
-  it('KDV-SURFACE-24: home_explainer is the storefront hero explainer verbatim (feedback-marketing item 3)', () => {
+  it('KDV-SURFACE-24: home_explainer is the storefront hero explainer verbatim (feedback-marketing item 3, owner copy 2026-09-24)', () => {
     expect(copydeck.HOME_EXPLAINER).toBe(
-      'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.',
+      'Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.',
     );
-    expect(copydeck.HOME_EXPLAINER).toContain('1x effort');
-    expect(copydeck.HOME_EXPLAINER).toContain('10x');
+    expect(copydeck.HOME_EXPLAINER).toContain('registry of raw experience');
+    expect(copydeck.HOME_EXPLAINER).toContain('Your AI agent');
+    expect(copydeck.HOME_EXPLAINER).not.toContain('1x');
+    expect(copydeck.HOME_EXPLAINER).not.toContain('10x');
   });
 
   it('KDV-COPY-03: footer text is verbatim from §7.3 and carries the report line', () => {

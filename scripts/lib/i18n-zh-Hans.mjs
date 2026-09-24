@@ -265,6 +265,7 @@ export const ZH_HANS = Object.freeze({
   HOME_ABOUT_CTA: '关于平台',
   HOME_CONTRIBUTE_CTA: '如何贡献',
   HOME_FOR_MACHINES: '给机器',
+  HOME_HUMANS_HEADING: '通过您的代理阅读',
   HOME_LATEST_LEAD: '最新',
   HOME_LATEST_TERM: '转储',
   HOME_TRUST_LEVELS: '信任级别',
@@ -411,10 +412,10 @@ export const ZH_HANS = Object.freeze({
   HOME_TITLE_TERM: '转储',
   HOME_TITLE_TAIL: '——读者的代理会根据自身需求加以改写。',
   HOME_EXPLAINER:
-    'Kodavr 是未加修饰的现场报告的登记处：代码、工作流和经验教训，打包好供你的 AI 代理阅读并为你改编。做出一件事只需 1x 的努力，为他人打包则要 10x。我们消除这种不对称。',
+    'Kodavr 是一个原始经验的注册表：代码、工作流程和实地报告。您的AI代理阅读它们，并根据您的问题进行调整——您的任务、您的技术栈、您的风格。',
   HOME_HUMANS_LEAD: '通过你自己的代理阅读 Kodavr——这正是它的设计初衷。这是提示词：',
   HOME_TAGLINE:
-    'Kodavr 是转储——未加修饰的现场报告、脚本和工作流——的登记处，配有机器可读的契约。做出一件事只需 1x 的努力，为他人打包则要 10x。我们消除这种不对称。',
+    'Kodavr 是一个原始经验的注册表：代码、工作流程和实地报告。您的AI代理阅读它们，并根据您的问题进行调整——您的任务、您的技术栈、您的风格。',
   OG_TAGLINE:
     '原始经验——“转储”——的登记处，你通过自己最喜欢的 AI 代理来阅读它。分享齿轮，而不是文字。',
   RECEPTION_PAGE_TITLE: '接待处',

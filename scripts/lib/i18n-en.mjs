@@ -35,6 +35,7 @@ const UI = Object.freeze({
   HOME_ABOUT_CTA: 'About the platform',
   HOME_CONTRIBUTE_CTA: 'How to contribute',
   HOME_FOR_MACHINES: 'For machines',
+  HOME_HUMANS_HEADING: 'Read through your agent',
   HOME_LATEST_LEAD: 'Latest ',
   HOME_LATEST_TERM: 'dumps',
   HOME_TRUST_LEVELS: 'Trust levels',
@@ -192,7 +193,7 @@ const UI = Object.freeze({
   // the storefront/social taglines, the nav labels and the locale-aware prompt
   // template. `LABELS_*` back the human manifest card; `TRUST_*` the home legend.
   HOME_TAGLINE:
-    'Kodavr is a registry of dumps — unpolished field reports, scripts and workflows with a machine-readable contract. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.',
+    'Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.',
   OG_TAGLINE:
     'A registry of raw experience — "dumps" — which you read through your favorite AI agent. Share gears, not text.',
   RECEPTION_PAGE_TITLE: 'Reception',

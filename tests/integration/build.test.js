@@ -684,10 +684,10 @@ describe('build controller (integration)', () => {
     expect(home).toMatch(
       /<p class="home-lead"[^>]*>Writers share raw experience — <strong[^>]*>a dump<\/strong> — the reader's agent adapts it to their needs\.<\/p>/,
     );
-    // feedback-marketing item 3: one explainer paragraph sits between the lead
-    // and the CTAs, spelling out what a dump is plus the 1x/10x thesis.
+    // feedback-marketing item 3 (owner copy 2026-09-24): one explainer paragraph
+    // sits between the lead and the CTAs — the reader-benefit value prop.
     const explainer =
-      'Kodavr is a registry of unpolished field reports: code, workflows, and lessons learned, packaged so your AI agent can read and adapt them for you. Building something is 1x effort; packaging it for others is 10x. We fix that asymmetry.';
+      'Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.';
     expect(home).toContain(`<p>${explainer}</p>`);
     expect(home).not.toContain('class="kicker"');
     // The storefront hero plate carries no numbered label.
@@ -697,10 +697,12 @@ describe('build controller (integration)', () => {
     // Two design system CTAs: understand it, or publish.
     expect(home).toMatch(/<a class="cta" href="about\/"[^>]*>About the platform<\/a>/);
     expect(home).toMatch(/<a class="cta" href="contribute\/"[^>]*>How to contribute<\/a>/);
-    // DOM order: wordmark → lead → explainer → CTAs.
+    // DOM order: wordmark → lead → explainer → CTAs. Match the paragraph, not
+    // the bare string — the shared HOME_TAGLINE meta description in <head>
+    // carries the same value proposition (KDV-SURFACE-24) and would match first.
     const wordmark = home.indexOf('class="home-wordmark"');
     const lead = home.indexOf('class="home-lead"');
-    const body = home.indexOf(explainer);
+    const body = home.indexOf(`<p>${explainer}</p>`);
     const cta = home.indexOf('class="cta"');
     expect(wordmark).toBeGreaterThanOrEqual(0);
     expect(lead).toBeGreaterThan(wordmark);

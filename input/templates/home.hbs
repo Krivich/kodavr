@@ -11,11 +11,12 @@
 <main id="main" tabindex="-1" class="home sheet-inner">
   {{!-- §6.1 v4/KDV-SURFACE-24: the storefront hero is the literal brand wordmark
        `KODAVR` over the positioning sentence as a lead, with the home_explainer
-       paragraph (feedback-marketing item 3) spelling out the dump definition and
-       the 1x/10x thesis below it. The term `a dump` is
-       emphasized from its own catalog part; the plain HOME_TITLE stays the SEO
-       <title>/JSON-LD string. The hero plate carries NO `data-plate` label, so no
-       `::before` number sits above the storefront. --}}
+       paragraph (feedback-marketing item 3, owner copy 2026-09-24) selling the
+       reader-benefit value prop: a registry of raw experience — code, workflows,
+       field reports — your AI agent adapts to your task, stack and style. The
+       term `a dump` is emphasized from its own catalog part; the plain
+       HOME_TITLE stays the SEO <title>/JSON-LD string. The hero plate carries NO
+       `data-plate` label, so no `::before` number sits above the storefront. --}}
   <section class="plate">
     <h1 class="home-wordmark">KODAVR</h1>
     <p class="home-lead">{{home_title.lead}}<strong>{{home_title.term}}</strong>{{home_title.tail}}</p>
@@ -28,6 +29,7 @@
        the §7.12 agent lane, above the feed so the ritual comes before the index.
        The prompt id (`home-prompt`) is the copy control's target. --}}
   <section class="plate" data-plate="{{copy.home_plate_humans}}">
+    <h2>{{copy.home_humans_heading}}</h2>
 {{> site/agent-lane copyTarget="home-prompt"}}
     <pre class="home-prompt" id="home-prompt">{{copy.prompt}}</pre>
   </section>
