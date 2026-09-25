@@ -4,7 +4,7 @@
  * EXPORTS:
  *   AGENT_LANE_HINT — the §7.12 note that a button passes on the prompt below
  *   AGENT_LANE_LEAD — the §7.12 human fast-lane lead line
- *   AGENT_LINKS — the §7.12 four agent jump targets (prefill capability)
+ *   AGENT_LINKS — the §7.12 five agent jump targets (prefill capability)
  *   agentLinks — the §7.12 jump links, prompt pre-filled where supported
  *   BRAND_SLOGAN_LEAD — the §7.15 lead slogan shown as-is on /about/
  *   BRAND_SLOGANS — the three §7.15 brand slogans in §1.4 order
@@ -193,13 +193,15 @@ export const AGENT_LANE_LEAD = 'Prompt your agent to open this article for you:'
 
 // §7.12: what the buttons do, spelled out under the lane.
 export const AGENT_LANE_HINT =
-  '(the four buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)';
+  '(the five buttons open a prefilled chat; the last one copies the prompt below for you to paste into your agent)';
 
 export const AGENT_LINKS = [
   { id: 'perplexity', label: 'Perplexity', href: 'https://www.perplexity.ai/search', prefill: 'q' },
   { id: 'grok', label: 'Grok', href: 'https://grok.com/', prefill: 'q' },
   { id: 'chatgpt', label: 'ChatGPT', href: 'https://chatgpt.com/', prefill: 'q' },
   { id: 'claude', label: 'Claude', href: 'https://claude.ai/new', prefill: 'q' },
+  // Qwen ignores `?q=` — its prefill param is `text`.
+  { id: 'qwen', label: 'Qwen', href: 'https://chat.qwen.ai/', prefill: 'text' },
 ];
 
 export function agentLinks(prompt) {

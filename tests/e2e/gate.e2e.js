@@ -346,7 +346,7 @@ test('KDV-SURFACE-15: a declared machine sees the machine panel and can reset to
 
   await expect(panel).toBeVisible();
   await expect(panel.locator('.machine-prompt')).toHaveText(DUMP_PROMPT);
-  await expect(panel.locator('.agent-link')).toHaveCount(4);
+  await expect(panel.locator('.agent-link')).toHaveCount(5);
 
   // The single reset lives at the bottom of the page (v4) and re-opens state 0.
   const reset = page.locator(RESET);
@@ -385,12 +385,12 @@ test('KDV-SURFACE-28: the invitation lane copies the §7.11 prompt and the botto
   await expect(page.locator(PLATE_DUMP)).toBeHidden();
 });
 
-test('KDV-SURFACE-13: the 02 · INTERESTING? plate leads with the human fast lane — a pinned prompt plus four agent jumps above the declaration', async ({ page }) => {
+test('KDV-SURFACE-13: the 02 · INTERESTING? plate leads with the human fast lane — a pinned prompt plus five agent jumps above the declaration', async ({ page }) => {
   await page.goto(DUMP);
 
   const lane = page.locator(`${PLATE_WANT} .agent-lane`);
   await expect(lane).toBeVisible();
-  await expect(page.locator(`${PLATE_WANT} .agent-link`)).toHaveCount(4);
+  await expect(page.locator(`${PLATE_WANT} .agent-link`)).toHaveCount(5);
 
   // §7.1/§7.12: the controls lead; the pinned prompt sits below them.
   const prompt = page.locator('#article-prompt');
@@ -464,11 +464,14 @@ test('KDV-SURFACE-14: the dump prompt is pinned and every jump target prefills',
   const chatgpt = page.locator(`${PLATE_WANT} .agent-link`, { hasText: 'ChatGPT' });
   await expect(chatgpt).toHaveAttribute('href', /^https:\/\/chatgpt\.com\/\?q=/);
   expect(await chatgpt.getAttribute('href')).toContain(encodeURIComponent(DUMP_PROMPT));
-  // §7.12: every jump target prefills via ?q=.
+  // §7.12: every jump target prefills via ?q= — Qwen via ?text= (it ignores ?q=).
   await expect(page.locator(`${PLATE_WANT} .agent-link`, { hasText: 'Grok' })).toHaveAttribute(
     'href',
     /^https:\/\/grok\.com\/\?q=/,
   );
+  const qwen = page.locator(`${PLATE_WANT} .agent-link`, { hasText: 'Qwen' });
+  await expect(qwen).toHaveAttribute('href', /^https:\/\/chat\.qwen\.ai\/\?text=/);
+  expect(await qwen.getAttribute('href')).toContain(encodeURIComponent(DUMP_PROMPT));
 });
 
 test('KDV-SURFACE-17: the header chip follows the species — hidden fresh, machine after 0, human after 1, cleared by withdraw', async ({ page }) => {

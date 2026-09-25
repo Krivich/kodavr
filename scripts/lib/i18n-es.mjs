@@ -69,7 +69,7 @@ const GATE_REST = [
 const AGENT_LANE_LEAD = 'Pídele a tu agente que abra este artículo por ti:';
 const LANE_COPY_LABEL = 'O cópialo y pégalo tú mismo';
 const AGENT_LANE_HINT =
-  '(los cuatro botones abren un chat prerrellenado; el último copia el prompt de abajo para que lo pegues en tu agente)';
+  '(los cinco botones abren un chat prerrellenado; el último copia el prompt de abajo para que lo pegues en tu agente)';
 const GATE_KICKER = 'elige cómo leer esto';
 const GATE_TITLE = 'DECLARACIÓN ANTES DE ENTRAR';
 const GATE_TEXT = [

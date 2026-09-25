@@ -302,8 +302,8 @@ describe('copydeck', () => {
   });
 
   it('KDV-COPY-09 + KDV-SURFACE-14: the agent lane is one copydeck source and the dump prompt is pinned', () => {
-    expect(AGENT_LINKS.map((a) => a.id)).toEqual(['perplexity', 'grok', 'chatgpt', 'claude']);
-    expect(AGENT_LINKS.map((a) => a.label)).toEqual(['Perplexity', 'Grok', 'ChatGPT', 'Claude']);
+    expect(AGENT_LINKS.map((a) => a.id)).toEqual(['perplexity', 'grok', 'chatgpt', 'claude', 'qwen']);
+    expect(AGENT_LINKS.map((a) => a.label)).toEqual(['Perplexity', 'Grok', 'ChatGPT', 'Claude', 'Qwen']);
     expect(AGENT_LANE_LEAD).toBe('Prompt your agent to open this article for you:');
     // §7.12 v4: the /reception/ variant of the lead is deleted with the route.
     expect(copydeck).not.toHaveProperty('AGENT_LANE_LEAD_KODAVR');
@@ -313,6 +313,8 @@ describe('copydeck', () => {
     expect(links[1].href).toBe('https://grok.com/?q=hello%20world');
     expect(links[2].href).toBe('https://chatgpt.com/?q=hello%20world');
     expect(links[3].href).toBe('https://claude.ai/new?q=hello%20world');
+    // §7.12: Qwen ignores ?q= — its prefill param is `text`.
+    expect(links[4].href).toBe('https://chat.qwen.ai/?text=hello%20world');
 
     const spec = blockFor('7.11');
     expect(dumpPrompt('<manifest>')).toBe(spec.replaceAll('<manifest-url>', '<manifest>'));
@@ -332,13 +334,13 @@ describe('copydeck', () => {
     expect(CONTRIBUTE_PROMPT).toBe(
       'Study https://kodavr.xyz/dumps/2026-09-18-kodavr-dump-skill/manifest.json and follow its schema. Read the skill source, build your own version for your agent, and help me publish my next dump to Kodavr.',
     );
-    // item 07 (§7.12 part): the reading surfaces keep the four chat buttons;
+    // item 07 (§7.12 part): the reading surfaces keep the five chat buttons;
     // /contribute/ is named as the contribute-lane variant (prose section, no
     // fence — read the section text between its headings).
     const laneSection = SPEC.slice(SPEC.indexOf('### 7.12'), SPEC.indexOf('### 7.13'));
     expect(laneSection).toContain('contribute-lane variant');
     expect(laneSection).toContain('/contribute/');
-    expect(laneSection).toContain('four chat buttons');
+    expect(laneSection).toContain('five chat buttons');
   });
 
   it('KDV-SURFACE-15: the machine-panel reset label is the human counterpart of the reception reset', () => {

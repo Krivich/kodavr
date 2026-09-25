@@ -68,7 +68,7 @@ const GATE_REST = [
 const AGENT_LANE_LEAD = '让你的代理为你打开这篇文章：';
 const LANE_COPY_LABEL = '或者自己复制粘贴';
 const AGENT_LANE_HINT =
-  '（前四个按钮会打开一个预填好的对话；最后一个会复制下方的提示词，供你粘贴到自己的代理中）';
+  '（前五个按钮会打开一个预填好的对话；最后一个会复制下方的提示词，供你粘贴到自己的代理中）';
 const GATE_KICKER = '选择阅读方式';
 const GATE_TITLE = '入场声明';
 const GATE_TEXT = [

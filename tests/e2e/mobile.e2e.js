@@ -180,7 +180,7 @@ test.describe('mobile 375x667', () => {
 
     const controls = page.locator('#plate-want .copy-prompt, #plate-want .agent-link');
     const count = await controls.count();
-    expect(count).toBe(5);
+    expect(count).toBe(6);
     for (let i = 0; i < count; i += 1) {
       const box = await controls.nth(i).boundingBox();
       expect(box.width).toBeGreaterThanOrEqual(44);

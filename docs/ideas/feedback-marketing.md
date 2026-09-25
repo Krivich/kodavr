@@ -240,6 +240,8 @@ This guarantees a useful first experience without overwhelming the user.
 
 **Current behavior:** The Perplexity/Grok/ChatGPT/Claude buttons and the prompt below are not visually connected.
 
+- **2026-09-25 update:** a fifth jump link, Qwen (`?text=` prefill), was added to the lane; the set is now Perplexity/Grok/ChatGPT/Claude/Qwen.
+
 **New behavior:** On hovering an agent button — **highlight the prompt** below (add `border-left: 3px solid var(--accent)` to `.article-prompt`).
 
 **What to change in CSS:**
