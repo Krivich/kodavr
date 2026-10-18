@@ -1,0 +1,26 @@
+{
+  "slug": "2026-10-12-opencode-requirements-machine-fractal",
+  "title": "The fractal requirements machine: module-local registries on top of the base machine",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-10-12",
+  "stakes": "low",
+  "trust_level": "self-tested",
+  "content_flags": ["contains_code", "experimental"],
+  "tags": ["opencode", "ai-agents", "requirements-management", "tdd", "modularity", "workflow"],
+  "generated_by": "hybrid",
+  "human_review": "minimal",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "The base requirements machine keeps every obligation in one project-wide registry; this extension turns any module folder into a machine of its own — its own registry, tests and coverage-script copy, with the folder name as the ID prefix, so root and module IDs can never collide and a module can be extracted with its git history. A root manifest plus a five-invariant aggregator keep the root aware, and about a week of real work on top showed the growth and the speculative research landing in the module while the root stayed clean. Applies on top of the 2026-09-18 requirements-machine dump; every file is inlined.",
+  "sources": ["chat-log", "source-code", "tests"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "raw.md", "note": "the fractal-machine guide with every file inlined" },
+    { "kind": "url", "path_or_url": "https://kodavr.xyz/dumps/2026-09-18-opencode-requirements-machine/", "note": "the base machine this dump extends — install it first" }
+  ],
+  "derived_from": "2026-09-18-opencode-requirements-machine"
+}
