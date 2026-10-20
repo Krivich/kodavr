@@ -1,0 +1,27 @@
+{
+  "slug": "2026-10-20-work-log-evidence-profile",
+  "title": "While HR fights AI-inflated resumes, we build a genuine resume from work traces",
+  "type": "case",
+  "domain": "engineering",
+  "date": "2026-10-20",
+  "stakes": "medium",
+  "trust_level": "self-tested",
+  "content_flags": ["contains_code", "opinion", "experimental", "requires_expert_review"],
+  "tags": ["work-logs", "profiling", "llm", "opencode", "privacy", "attestation", "resume", "recruitment", "hr", "agents"],
+  "generated_by": "hybrid",
+  "human_review": "none",
+  "verification": "checkable",
+  "license": "CC-BY-4.0",
+  "summary": "Your resume says you led development; your logs show the scope you cut, the designs you rejected, and what actually shipped. This dump turns those traces into a mirror for you and checkable claims for everyone else, with a runnable Python pipeline plus the recipe your AI agent can adapt to your own logs and stack. It keeps the raw logs private and shows where the method breaks.",
+  "sources": ["chat-log", "source-code"],
+  "layers": [
+    { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
+    { "name": "summary", "file": "summary.md", "fact_checked": false, "author_voice": true }
+  ],
+  "artifacts": [
+    { "kind": "file", "path_or_url": "raw.md", "note": "method, prompts, schema, and code" },
+    { "kind": "file", "path_or_url": "summary.md", "note": "short human-facing brief" },
+    { "kind": "file", "path_or_url": "REDACTIONS.md", "note": "what was removed and why" }
+  ],
+  "derived_from": null
+}
