@@ -1,4 +1,4 @@
-# The architecture map: teaching an agent not to break cross-cutting flows or route around them
+# The architecture map: a linted map an agent will read
 
 This is a self-contained setup guide for the **architecture-awareness** half of an agent-driven
 repository: a PlantUML map of the code tree and its cross-cutting flows, a linter that keeps the map

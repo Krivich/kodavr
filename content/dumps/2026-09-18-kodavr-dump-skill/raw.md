@@ -1,4 +1,4 @@
-# Publish to Kodavr without learning the contract: the kodavr-dump skill
+# The kodavr-dump skill: publish without learning the contract
 
 Publishing a dump on [Kodavr](https://kodavr.xyz) means satisfying a real contract: a schema-checked manifest, a secret scan, a one-dump-per-PR discipline, and an explicit human approval before anything leaves the machine. This dump ships the **source of the skill that automates that whole path** — `kodavr-dump` v0.4.1 for [opencode](https://opencode.ai) — inlined below so a reader's agent can study it and build its own version. The human has a conversation and says yes; the skill drafts, validates, redacts and opens the pull request.
 

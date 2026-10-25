@@ -957,6 +957,19 @@ describe('build controller (integration)', () => {
     expect(html).toContain('src="../../assets/ignition-runtime.js"');
     expect(html).toContain('src="../../assets/controllers/dumps.js"');
     expect(html).toContain('src="../../assets/site.js"');
+    // KDV-SURFACE-37: the helper is deferred — it no longer blocks the first
+    // paint, and the controllers' DOMContentLoaded callbacks still find it.
+    expect(html).toMatch(/<script src="\.\.\/\.\.\/assets\/site\.js" defer><\/script>/);
+    // KDV-SURFACE-36: what is published is smaller than what we read; the
+    // vendored engine assets are copied byte-for-byte.
+    const publishedCss = await readFile(join(publicDir, 'assets', 'styles.css'), 'utf8');
+    const publishedJs = await readFile(join(publicDir, 'assets', 'site.js'), 'utf8');
+    const sourceCss = await readFile(join(ROOT, 'static', 'assets', 'styles.css'), 'utf8');
+    const sourceJs = await readFile(join(ROOT, 'static', 'assets', 'site.js'), 'utf8');
+    expect(publishedCss).not.toContain('/*');
+    expect(publishedCss.length).toBeLessThan(sourceCss.length);
+    expect(publishedJs.split('\n').some((line) => line.trimStart().startsWith('//'))).toBe(false);
+    expect(publishedJs.length).toBeLessThan(sourceJs.length);
 
     // §7.2 v4 is absorbed: the reception wall is NOT migrated (its concern
     // already lives on /about/), while the author brief tier stays in the

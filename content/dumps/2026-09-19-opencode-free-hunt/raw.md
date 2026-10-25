@@ -1,4 +1,4 @@
-# Free hunt: a console bridge and an exploratory walk that find the bugs before the human does
+# Free hunt: the agent finds the bugs before you do
 
 Raw dump. Author voice, dead ends included. You do not need an LLM in your product for
 any of this: you need an HTTP API and a development agent with a console. The perimeter

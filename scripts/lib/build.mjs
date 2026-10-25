@@ -3,6 +3,8 @@
  * ROLE: the one build pipeline: content → datasets → engine → machine files
  * EXPORTS:
  *   buildProject — runs the whole build and returns the dump count
+ *   minifyCss — the publish-time CSS shrink (comments out, strings intact)
+ *   minifyJs — the publish-time JS shrink (comments/indent out, lines kept)
  * CONSUMES:
  *   ./dumps.mjs — read the dumps and build their datasets
  *   ./i18n.mjs — the active locales and the dataset coordinate
@@ -20,7 +22,7 @@
  *   — static/ is the only author-owned tree the build copies into the public root
  */
 
-import { copyFile, mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -82,6 +84,103 @@ async function publishStaticTree(fromDir, toDir) {
     const to = join(toDir, entry.name);
     if (entry.isDirectory()) await publishStaticTree(from, to);
     else if (entry.isFile()) await copyFile(from, to);
+  }
+}
+
+// --- KDV-SURFACE-36: minify what we ship, never what we read ----------------
+// The two author-owned assets carry their documentation as comments and their
+// layout as indentation; a reader of the repository wants that, a reader of the
+// page pays for it in bytes. So the shrink happens on the published copy only,
+// and only for these two names — the vendored engine files are not ours to
+// rewrite. Both walks are conservative on purpose: a string is content (it is
+// copied verbatim), a comment is never code, and calc() keeps the spaces its
+// grammar requires because no rule below removes whitespace next to `+`/`-`.
+
+// CSS: drop comments, collapse whitespace where the grammar ignores it.
+export function minifyCss(source) {
+  const closers = '{};:,>';
+  let out = '';
+  let pendingSpace = false;
+  let i = 0;
+  while (i < source.length) {
+    const ch = source[i];
+    if (ch === '/' && source[i + 1] === '*') {
+      const end = source.indexOf('*/', i + 2);
+      i = end === -1 ? source.length : end + 2;
+      pendingSpace = true;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      let j = i + 1;
+      while (j < source.length) {
+        if (source[j] === '\\') {
+          j += 2;
+          continue;
+        }
+        if (source[j] === ch) {
+          j += 1;
+          break;
+        }
+        j += 1;
+      }
+      if (pendingSpace && out && !closers.includes(out.at(-1))) out += ' ';
+      pendingSpace = false;
+      out += source.slice(i, j);
+      i = j;
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      pendingSpace = true;
+      i += 1;
+      continue;
+    }
+    if (pendingSpace) {
+      const prev = out.at(-1);
+      if (prev && !closers.includes(prev) && !'{};,>'.includes(ch)) out += ' ';
+      pendingSpace = false;
+    }
+    if (ch === '}' && out.endsWith(';')) out = out.slice(0, -1);
+    out += ch;
+    i += 1;
+  }
+  return out.trim();
+}
+
+// JS: drop full-line comments, blank lines and indentation. Lines are never
+// joined, so ASI, regex literals and template strings keep their meaning; a
+// multi-line template is left untouched (the state carries across lines).
+export function minifyJs(source) {
+  const kept = [];
+  let inTemplate = false;
+  for (const raw of source.split(/\r?\n/)) {
+    if (inTemplate) {
+      kept.push(raw);
+      if ((raw.match(/(?<!\\)`/g) ?? []).length % 2 === 1) inTemplate = false;
+      continue;
+    }
+    const line = raw.trim();
+    if (!line || line.startsWith('//')) continue;
+    const out = raw.replace(/^\s+/, '').trimEnd();
+    kept.push(out);
+    if ((out.match(/(?<!\\)`/g) ?? []).length % 2 === 1) inTemplate = true;
+  }
+  return `${kept.join('\n')}\n`;
+}
+
+// The published copy of each author-owned asset (missing = static is optional).
+const MINIFY_ON_PUBLISH = [
+  ['assets/styles.css', minifyCss],
+  ['assets/site.js', minifyJs],
+];
+
+async function minifyPublishedAssets(publicDir) {
+  for (const [rel, minify] of MINIFY_ON_PUBLISH) {
+    const file = join(publicDir, rel);
+    try {
+      await writeFile(file, minify(await readFile(file, 'utf8')), 'utf8');
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
   }
 }
 
@@ -258,6 +357,7 @@ export async function buildProject({
 
   // Author-owned static assets land in the public root (logo, stylesheet).
   await publishStaticTree(join(root, 'static'), publicDir);
+  await minifyPublishedAssets(publicDir);
 
   // Pretty URLs — the engine writes dumps/<dataset>.html, we own the mapped path.
   await publishDumpPages(publicDir, dumps, activeLocales);

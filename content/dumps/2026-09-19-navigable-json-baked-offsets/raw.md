@@ -1,4 +1,4 @@
-# Navigable JSON (.njson): A Lazy-Reading Data Format with Baked Byte Offsets for LLM Agents
+# Navigable JSON: baked byte offsets for lazy agent reads
 
 **Type:** `case` · **Domain:** `engineering` · **Stakes:** `low` · **Trust:** `self-tested`
 **Tags:** `navigable-json`, `random-access`, `lazy-reading`, `token-economy`, `data-format`, `llm-agents`, `serialization`, `fractal-rag`

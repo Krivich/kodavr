@@ -1,4 +1,4 @@
-# The fractal requirements machine: module-local registries on top of the base machine
+# The fractal requirements machine: registries per module
 
 This dump extends the base requirements machine
 ([2026-09-18-opencode-requirements-machine](https://kodavr.xyz/dumps/2026-09-18-opencode-requirements-machine/))

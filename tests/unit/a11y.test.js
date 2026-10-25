@@ -90,6 +90,32 @@ describe('accessibility: colour contrast (KDV-A11Y-05)', () => {
     // `pre` reads the token, not a literal light grey.
     expect(css).toMatch(/pre\s*\{[^}]*background:\s*var\(--pre-bg\)/);
   });
+
+  // KDV-A11Y-05 (class-level): text sits on two surfaces — the page (--bg) and
+  // the artefact/code fill (--pre-bg, what `pre` paints). Checking a token only
+  // against the page hides a pair that is legible on one surface and not on the
+  // other: the prompt blocks (`.home-prompt`, `.article-prompt`,
+  // `.machine-prompt`, `.contribute-prompt`) are --muted text on a --pre-bg
+  // `pre`, which measured 4.47:1 — under AA while the same token passed on --bg.
+  // The invariant is now the matrix: every text token × every surface token.
+  for (const [scheme, tokens] of [
+    ['light', light],
+    ['dark', dark],
+  ]) {
+    it(`${scheme}: every text token clears 4.5:1 on both surfaces`, () => {
+      for (const text of ['fg', 'ink-2', 'muted']) {
+        for (const surface of ['bg', 'pre-bg']) {
+          expect(tokens[text], `${scheme} --${text}`).toBeTruthy();
+          expect(tokens[surface], `${scheme} --${surface}`).toBeTruthy();
+          const ratio = contrast(tokens[text], tokens[surface]);
+          expect(
+            Number(ratio.toFixed(3)),
+            `${scheme}: --${text} (${tokens[text]}) on --${surface} (${tokens[surface]})`,
+          ).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    });
+  }
 });
 
 // ---------------------------------------------------------------------------

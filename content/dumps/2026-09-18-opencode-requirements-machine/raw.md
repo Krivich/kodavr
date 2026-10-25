@@ -1,4 +1,4 @@
-# The requirements machine: stable IDs, coverage checks and an idea process for agent-driven code
+# The requirements machine: stable IDs and coverage checks
 
 This is a self-contained setup guide for the **requirements-management** half of a
 long-session OpenCode configuration: a single registry of obligations with stable IDs

@@ -58,4 +58,8 @@
 <script type="application/ld+json">{{{jsonld}}}</script>
 {{/if}}
 <link rel="stylesheet" href="/assets/styles.css">
-<script src="/assets/site.js"></script>
+{{!-- KDV-SURFACE-37: deferred. The engine's controllers run from
+     `window.ignition.controller(...)` when the runtime fires DOMContentLoaded,
+     and deferred scripts execute before that, so `window.Kodavr` is there when
+     they need it — while the tag stops blocking the first paint. --}}
+<script src="/assets/site.js" defer></script>

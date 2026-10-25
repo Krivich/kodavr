@@ -1,7 +1,10 @@
 // static/assets/site.js — Kodavr's shared client helpers.
 //
-// A plain IIFE (no modules) loaded synchronously from <head>, so window.Kodavr
-// exists before the auto-injected controllers run. It owns the locally stored
+// A plain IIFE (no modules) loaded from <head> with `defer`: the engine's
+// controllers run from window.ignition.controller() on DOMContentLoaded, and a
+// deferred script executes before that, so window.Kodavr is in place when they
+// ask for it — and the tag stops blocking the first paint (KDV-SURFACE-37).
+// It owns the locally stored
 // species choice, the copy-to-clipboard buttons and the §6.6 live-region
 // announcement helper. All copydeck text reaches the DOM through the dataset;
 // this file only flips UI state.

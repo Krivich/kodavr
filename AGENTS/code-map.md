@@ -18,7 +18,7 @@ How to read / maintain / render → **AGENTS/workflow-arrows.md**.
 - **input/controllers/dumps.js** — the §6.2 inline-plate declaration behaviour on a dump page (states 0 / M / H)
   invariants: — the `01 · PREVIEW` / `02 · INTERESTING?` / `03 · DECLARATION`; — plates ship hidden in SSR: without JS the raw body is the whole page; — no modal: the state transitions are in-place (plate visibility + the; — bottom "передумал" reset), never a dialog open/close; — focus never falls to <body> when the declaration collapses
 - **scripts/lib/build.mjs** — the one build pipeline: content → datasets → engine → machine files
-  exports: buildProject
+  exports: buildProject, minifyCss, minifyJs
   consumes: ./dumps.mjs, ./i18n.mjs, ./ignition.mjs, ./machine.mjs, ./pages.mjs, ./relativize.mjs, node:child_process, node:fs/promises, node:module, node:path, node:util
   invariants: — one build timestamp for every artifact (article:modified_time, manifest built_at, machine files); — static/ is the only author-owned tree the build copies into the public root
 - **scripts/lib/copy.mjs** — the single source of truth for every human string (§7)

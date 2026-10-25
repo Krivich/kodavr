@@ -1,4 +1,4 @@
-# The BIOS Pattern: Self-Executing JSON Contracts for AI Agents
+# The BIOS Pattern: Self-Executing JSON Contracts for Agents
 
 This dump describes an architectural pattern that turns ordinary JSON contracts into self-describing, executable protocols for AI agents. The key insight: use JSON Schema not as a validator, but as an **executable BIOS** — an entry point that tells the agent where it is, what its role is, and what to do next.
 

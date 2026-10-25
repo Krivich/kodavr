@@ -1,5 +1,5 @@
 
-# Navigable JSON as a Turing Machine: Two Orchestration Patterns with Schema-Guided Reasoning
+# Navigable JSON as a Turing machine: orchestration patterns
 
 **Type:** `case` · **Domain:** `engineering` · **Stakes:** `low` · **Trust:** `self-tested`
 **Tags:** `navigable-json`, `turing-complete`, `schema-guided-reasoning`, `agent-orchestration`, `state-machine`, `hybrid-architecture`, `bohm-jacopini`, `live-validation`

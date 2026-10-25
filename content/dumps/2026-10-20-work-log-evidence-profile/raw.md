@@ -1,4 +1,4 @@
-# While HR fights AI-inflated resumes, we build a genuine resume from work traces
+# Turning work traces into a resume nobody can inflate
 
 This is a field report about a method, not about a specific person. It describes how to turn raw work logs into a profile where every claim can be traced to evidence, and why the same recipe transfers to other tools. Real results, project names, quotes, and personal data are not part of this dump; the examples below are synthetic.
 

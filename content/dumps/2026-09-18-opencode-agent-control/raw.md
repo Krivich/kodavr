@@ -1,4 +1,4 @@
-# The agent-control loop: compaction checkpoints, tiered delegation and lazy layers for OpenCode
+# Agent control in OpenCode: checkpoints, tiers, lazy layers
 
 This is a self-contained setup guide for the **agent-control** half of a long-session
 OpenCode configuration: keeping the context alive across compaction, pushing heavy

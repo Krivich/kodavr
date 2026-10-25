@@ -64,7 +64,9 @@ test.describe('mobile 375x667', () => {
     await seedMachine(page);
     await page.goto(DUMP);
     const css = await stylesheet(page);
-    expect(css).toContain('clamp(1rem, 2.5vw, 1.125rem)');
+    // The published stylesheet is minified (KDV-SURFACE-36): a declaration is
+    // matched by value, never by its incidental whitespace.
+    expect(css).toMatch(/clamp\(1rem,\s*2\.5vw,\s*1\.125rem\)/);
     expect(css).toMatch(/\.hall img\s*\{[^}]*max-width:\s*100%/);
     expect(css).toMatch(/\.hall pre\s*\{[^}]*overflow-x:\s*auto/);
 
@@ -224,10 +226,11 @@ test.describe('mobile 375x667', () => {
     expect(viewport).toContain('viewport-fit=cover');
 
     const css = await stylesheet(page);
-    expect(css).toContain('--bp-mobile: 480px');
-    expect(css).toContain('--bp-tablet: 768px');
-    expect(css).toContain('touch-action: manipulation');
-    expect(css).toContain('prefers-reduced-motion: reduce');
+    // Minified output (KDV-SURFACE-36): value-matched, whitespace-insensitive.
+    expect(css).toMatch(/--bp-mobile:\s*480px/);
+    expect(css).toMatch(/--bp-tablet:\s*768px/);
+    expect(css).toMatch(/touch-action:\s*manipulation/);
+    expect(css).toMatch(/prefers-reduced-motion:\s*reduce/);
 
     const token = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--bp-mobile').trim(),

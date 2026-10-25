@@ -11,9 +11,13 @@
    --bg=--paper, --pre-bg=--block, --line=--muted. The demo's decorative
    hairline (#DBD8D0) is only 1.31:1 on paper and cannot be the measured
    --line; the AA-safe line is the muted grey in both schemes. Line roles are
-   therefore: --line = the structural (AA) line, --line-2 = the hairline. */
+   therefore: --line = the structural (AA) line, --line-2 = the hairline.
+   --muted carries text, not just lines: it is the prompt blocks' colour, and
+   those sit on the --pre-bg fill (a `pre`), where the demo grey measured
+   4.47:1 — half a point under AA. It is darkened to clear 4.5:1 on both
+   surfaces; --line keeps the demo grey because a 1px rule only owes 3:1. */
 :root{
-  --fg:#161513; --bg:#F6F5F1; --muted:#6E6A63; --line:#6E6A63; --pre-bg:#ECEAE3;
+  --fg:#161513; --bg:#F6F5F1; --muted:#67635C; --line:#6E6A63; --pre-bg:#ECEAE3;
   /* the demo palette — aliases over the tokens above (one truth per colour) */
   --paper:var(--bg); --ink:var(--fg); --block:var(--pre-bg);
   --ink-2:#403D37; --line-2:#B4B0A6;

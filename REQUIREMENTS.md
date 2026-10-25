@@ -96,6 +96,8 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-33**: The `<title>` tag is a budgeted projection of the authored title: `title · Kodavr` when the whole tag fits 60 characters, the bare title when the brand suffix would overflow — the suffix is dropped BEFORE the authored string is ever shortened, so the brand can never push a title into the truncated zone, and `og:title`/the page `h1` keep the authored string. The literal brand suffix lives in one place (`TITLE_SUFFIX`), not in the template. *(§6.4; tests/unit/seo-budgets.test.js; flow: Consume)*
 - ✅ **KDV-SURFACE-34**: The `<meta name="description">` is the search snippet: the authored text clamped at a word boundary to 155 characters (ellipsis counted inside the budget) and carrying NO agent tail — the onboarding suffix is our hook, not the author's summary, and a crawler truncates it away; `og:description`/`twitter:description` keep the full composed line because a social card has no truncation to survive. *(§6.4; tests/unit/seo-budgets.test.js, tests/integration/build.test.js; flow: Consume)*
 - ✅ **KDV-SURFACE-35**: The sitemap submits only documents of their own: the engine's pagination files (`home/<dataset>/page/N.html`) canonicalize to the locale root and are therefore excluded instead of being handed to crawlers as URLs that say "index the other one". *(§6.4; tests/unit/seo-budgets.test.js; flow: Consume)*
+- ✅ **KDV-SURFACE-36**: What the build publishes is smaller than what the author reads: `static/assets/styles.css` and `static/assets/site.js` are minified into the public tree (comments dropped, whitespace collapsed outside strings, JS lines never joined so ASI and regex/template literals keep their meaning), while the readable sources in `static/` stay untouched and the vendored engine assets are copied byte-for-byte. *(§6.4; tests/unit/assets-minify.test.js; flow: Publish)*
+- ✅ **KDV-SURFACE-37**: The author-owned helper is deferred — `<script src="/assets/site.js" defer>` lets the browser parse and paint before running it, while the engine's controllers (registered through `window.ignition.controller` and run on `DOMContentLoaded`) still find `window.Kodavr`. *(§6.4; tests/integration/build.test.js; flow: Consume)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -117,7 +119,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-A11Y-02**: The declaration is an accessible inline named region: the `03 · DECLARATION` section borrows its accessible name from the §7.1 statement (`aria-labelledby="gate-title"`), the `0`/`1` choices carry descriptive names (not bare digits), focus never falls to `<body>` when the declaration collapses (it returns to `main`), and Esc/hardware-back dismiss it. *(§6.6, §6.2; flow: legacy)*
 - ✅ **KDV-A11Y-03**: No-navigation changes are announced: the gate→hall, gate→human-lane and "Copied ✓" transitions update an SSR-present `role="status"`/`aria-live` region, the inline declaration is a named region, the bottom "передумал" reset announces the re-opened declaration in place, and the one-shot declaration toast (KDV-SURFACE-19) fires in its own `role="status"` region. *(§6.6, §6.3; flow: legacy)*
 - ✅ **KDV-A11Y-04**: Every control is keyboard-operable with a never-suppressed visible `:focus-visible` indicator and ≥44px targets; the current top-nav item and the pagination's current page carry `aria-current="page"`, and the prev/next arrows are named. *(§6.6, §6.5; flow: legacy)*
-- ✅ **KDV-A11Y-05**: Text contrast is ≥4.5:1 (normal) and ≥3:1 (large/UI) in BOTH the light and dark schemes, the palette is declared per scheme and no information relies on colour alone. *(§6.6; flow: legacy)*
+- ✅ **KDV-A11Y-05**: Text contrast is ≥4.5:1 (normal) and ≥3:1 (large/UI) in BOTH the light and dark schemes, the palette is declared per scheme and no information relies on colour alone. Every text token is held against **every** surface it can sit on (`--bg` and the `--pre-bg` code fill), not just the page — a pair that is legible on one surface and not on the other is the failure this covers (the prompt blocks were `--muted` on `--pre-bg`: 4.47:1). *(§6.6; tests/unit/a11y.test.js; flow: legacy)*
 - ✅ **KDV-A11Y-06**: Decorative images/SVGs are hidden from assistive tech, informative images have alt text, and icon-only controls have an `.sr-only` text alternative. *(§6.6; flow: legacy)*
 
 ## KDV-COPY — Copydeck (§7)
@@ -292,7 +294,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-STRUCT | 9 | 8 | 1 | 0 | 0 |
 | KDV-MANIFEST | 13 | 12 | 1 | 0 | 0 |
 | KDV-CONTRACT | 11 | 11 | 0 | 0 | 0 |
-| KDV-SURFACE | 31 | 30 | 0 | 0 | 0 |
+| KDV-SURFACE | 33 | 32 | 0 | 0 | 0 |
 | KDV-MOBILE | 11 | 10 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 10 | 10 | 0 | 0 | 0 |
@@ -305,4 +307,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **219** | **178** | **14** | **26** | **1** |
+| **Total** | **221** | **180** | **14** | **26** | **1** |
