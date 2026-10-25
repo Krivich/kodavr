@@ -584,7 +584,9 @@ export function buildRouteDatasets(dumps, { baseUrl, logo, locale = DEFAULT_LOCA
   const feedItems = entries.map((entry) => ({ ...entry, href: `${prefix}/dumps/${entry.slug}/` }));
   // §11/KDV-I18N-07: the SEO fields and the storefront story resolve per locale,
   // so a non-default frame changes copy without touching a template.
-  const homeTitle = t('HOME_TITLE', locale);
+  // §6.4/KDV-SURFACE-33: the home `<title>`/JSON-LD name is its own short key —
+  // the hero sentence (`HOME_TITLE`, composed of its parts below) stays prose.
+  const homeTitle = t('HOME_SEO_TITLE', locale);
   const tagline = t('HOME_TAGLINE', locale);
   // §6.1 v4: the home `01 · HUMANS` plate carries the universal §7.4 prompt and
   // the §7.12 lane; both ride the home `copy` slice (mirrors the dump page's lane).

@@ -87,13 +87,10 @@ describe('search-surface budgets (KDV-SURFACE-33/34)', () => {
     const routes = buildRouteDatasets([], { baseUrl: BASE, logo: '', locale: 'en' });
     for (const layout of Object.keys(routes)) {
       const page = routes[layout];
-      // KDV-SURFACE-33: the copydeck's own title is the author's string — the
-      // suffix is what may never push the tag over the budget. A title that leaves
-      // no room keeps the suffix out (never a truncated H1); a dump, whose title is
-      // data, is held to the budget by KDV-MANIFEST-13 instead.
-      const withSuffix = `${page.title} · Kodavr`;
-      expect([page.title, withSuffix], layout).toContain(page.title_tag);
-      if (page.title_tag !== page.title) expect(page.title_tag.length, layout).toBeLessThanOrEqual(TITLE_TAG_MAX);
+      // KDV-SURFACE-33: the copydeck's own titles are authored under the same tag
+      // budget as data — the home tag is a short key of its own (HOME_SEO_TITLE),
+      // not the hero sentence truncated.
+      expect(page.title_tag.length, `${layout}: ${page.title_tag}`).toBeLessThanOrEqual(TITLE_TAG_MAX);
       expect(page.meta_description.length, layout).toBeLessThanOrEqual(META_DESCRIPTION_MAX);
       expect(page.og_title, layout).toBe(page.title);
     }

@@ -58,7 +58,8 @@
  *   HIGH_STAKES_DISCLAIMER — the stakes=high disclaimer
  *   HOME_EXPLAINER — the home storefront hero's one-paragraph explainer (reader-benefit value prop: registry of raw experience, the agent adapts it)
  *   HOME_HUMANS_LEAD — the §7.12 lane lead on the home storefront (no single article there)
- *   HOME_TITLE — the home hero sentence, plain (SEO <title> and JSON-LD name)
+ *   HOME_TITLE — the home hero sentence, plain (the composition of its parts)
+ *   HOME_SEO_TITLE — the home `<title>`/JSON-LD name, authored under the tag budget
  *   HOME_TITLE_LEAD — the home hero up to the emphasized term
  *   HOME_TITLE_TERM — the home hero's emphasized term (`a dump`)
  *   HOME_TITLE_TAIL — the home hero after the emphasized term
@@ -338,11 +339,16 @@ export const WHAT_IS_A_DUMP = [
 
 // §6.1 v4: the home storefront hero — one sentence with the term `a dump`
 // emphasized. The parts let the template compose the <strong> without retyping
-// the sentence; HOME_TITLE is the plain composition (SEO <title>/JSON-LD name).
+// the sentence; HOME_TITLE is the plain composition (the hero's own text).
 export const HOME_TITLE_LEAD = 'Writers share raw experience — ';
 export const HOME_TITLE_TERM = 'a dump';
 export const HOME_TITLE_TAIL = " — the reader's agent adapts it to their needs.";
 export const HOME_TITLE = HOME_TITLE_LEAD + HOME_TITLE_TERM + HOME_TITLE_TAIL;
+
+// §6.4/KDV-SURFACE-33: the home `<title>`/JSON-LD name. The hero sentence above is
+// prose for a human reading the page; a search result needs one short claim, so the tag
+// gets its own key instead of truncating the hero (the split deferred by human-surface-v4).
+export const HOME_SEO_TITLE = 'Raw experience your agent adapts to your problem';
 
 export const HOME_EXPLAINER =
   'Kodavr is a registry of raw experience: code, workflows, and field reports. Your AI agent reads them and adapts to your problem — your task, your stack, your style.';
