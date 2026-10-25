@@ -579,9 +579,16 @@ function splitLocale(urlPath, locales) {
  * `dumps/<slug>/index.html` → `${baseUrl}/dumps/<slug>/`.
  *
  * §6.4 hygiene: the 404 page is served for arbitrary missing paths and is not a
- * canonical URL, so it is excluded; each dump's `lastmod` is its own manifest
- * date while other pages carry the build date; priority ranks home over dumps
- * over auxiliary routes.
+ * canonical URL, so it is excluded. The engine's pagination files
+ * (`home/<dataset>/page/N.html`) are render fragments whose canonical points at
+ * the locale root (KDV-SURFACE-08/35), so they are not documents of their own and
+ * never enter the sitemap — submitting them asked Google to index a URL that says
+ * "index the other one". `lastmod` is honest or absent (KDV-SURFACE-30): a dump
+ * carries the newest change among its own content files (the caller passes the
+ * git-derived date, falling back to the manifest date), every other page carries
+ * NO lastmod at all — a build timestamp claims "changed" on every deploy and
+ * makes crawlers distrust the field. Priority ranks home over dumps over the
+ * auxiliary routes.
  *
  * §11/KDV-I18N-04: every URL carries the `xhtml:link` alternates of the BUILT
  * locales that emit the same locale-neutral page (plus `x-default` → the default
@@ -593,13 +600,13 @@ export async function writeSitemap({ outputDir, baseUrl, dumps = [], generatedAt
   // `machine → i18n → i18n-en → copy → machine` and break module init.
   const { LOCALES, DEFAULT_LOCALE } = await import('./i18n.mjs');
   const base = normalizeBaseUrl(baseUrl);
-  const buildDate = generatedAt ?? new Date().toISOString();
   const dumpDates = new Map();
   for (const dump of dumps) {
-    const date = dump.manifest?.date;
+    // KDV-SURFACE-30: the caller's content date wins (newest change among the
+    // dump's own files); the manifest date is the floor when git is unavailable.
+    const date = dump.lastModified ?? dump.manifest?.date;
     if (date) dumpDates.set(`dumps/${dumpSlug(dump)}/`, date);
   }
-
   const files = await collectHtmlFiles(outputDir);
   const urls = [];
   // locale-neutral path → (locale code → absolute loc) for the alternate clusters.
@@ -610,12 +617,16 @@ export async function writeSitemap({ outputDir, baseUrl, dumps = [], generatedAt
     if (urlPath === 'index') urlPath = '';
     if (urlPath === '404') continue;
     const { locale, neutral } = splitLocale(urlPath, LOCALES);
+    // Engine pagination files: canonical → the locale root, never a document.
+    if (/^home\/.+\/page\/\d+$/.test(neutral)) continue;
     const isHome = urlPath === '';
-    const isDump = dumpDates.has(urlPath);
+    // Keyed by the locale-NEUTRAL path, so `/ru/dumps/x/` and `/es/dumps/x/`
+    // carry the same honest date as `/dumps/x/` instead of the build timestamp.
+    const isDump = dumpDates.has(neutral);
     const loc = isHome ? `${base}/` : `${base}/${urlPath}`;
     urls.push({
       loc,
-      lastmod: isDump ? dumpDates.get(urlPath) : buildDate,
+      lastmod: isDump ? dumpDates.get(neutral) : null,
       changefreq: 'weekly',
       priority: isHome ? '1.0' : isDump ? '0.8' : '0.5',
       neutral,
@@ -636,8 +647,8 @@ export async function writeSitemap({ outputDir, baseUrl, dumps = [], generatedAt
         const xDefault = group.get(DEFAULT_LOCALE) ?? group.get(variants[0].code);
         lines.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(xDefault)}"/>`);
       }
+      if (url.lastmod) lines.push(`    <lastmod>${url.lastmod}</lastmod>`);
       lines.push(
-        `    <lastmod>${url.lastmod}</lastmod>`,
         `    <changefreq>${url.changefreq}</changefreq>`,
         `    <priority>${url.priority}</priority>`,
       );

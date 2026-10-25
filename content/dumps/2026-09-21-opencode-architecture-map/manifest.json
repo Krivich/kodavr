@@ -1,6 +1,6 @@
 {
   "slug": "2026-09-21-opencode-architecture-map",
-  "title": "The architecture map: teaching an agent not to break cross-cutting flows or route around them",
+  "title": "The architecture map: a linted map an agent will read",
   "type": "case",
   "domain": "engineering",
   "date": "2026-09-21",
@@ -12,7 +12,7 @@
   "human_review": "minimal",
   "verification": "executable",
   "license": "CC-BY-4.0",
-  "summary": "An agent forgets the architecture between sessions: it reads the file in front of it and re-invents a shortcut around a shared step, breaking a cross-cutting flow it never saw. This dump is a helicopter view an agent will actually read and can trust: a PlantUML map with one label grammar, coloured by business process and linted against the code tree (checks A-J, P1-P3) with a guarded escape hatch, plus a design-time hook that forces every new requirement to name the process it touches. All sources are inlined; it is the companion to the requirements-machine dump.",
+  "summary": "An agent forgets the architecture and re-invents a shortcut around a step it never saw. This dump: a process-coloured PlantUML map linted against the code tree, plus a design-time hook.",
   "sources": ["chat-log", "source-code"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

@@ -1,6 +1,6 @@
 {
   "slug": "2026-09-19-opencode-free-hunt",
-  "title": "Free hunt: a console bridge and an exploratory walk that find the bugs before the human does",
+  "title": "Free hunt: the agent finds the bugs before you do",
   "type": "case",
   "domain": "engineering",
   "date": "2026-09-19",
@@ -12,7 +12,7 @@
   "human_review": "minimal",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "Your suite is green, the agent says done, and then you open the app and trip over an obvious break in the first ten minutes. This dump is the free-hunt practice that closes that gap: a console bridge over the live HTTP API so the agent can drive the real product, a bounded exploration protocol whose only product is a journal of anomalies, and a perimeter that lets the agent fix what it finds without wandering. The bridge and watchdog sources are inlined; the catches behind the protocol are described by mechanism — the raw logs themselves were redacted.",
+  "summary": "Your suite is green, the agent says done, and you trip over a break in ten minutes. Free hunt closes it: a console bridge to the live API and a bounded exploration that ends in an anomaly journal.",
   "sources": ["chat-log", "source-code"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

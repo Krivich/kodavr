@@ -199,7 +199,7 @@ The published manifest embeds its JSON Schema inline (`schema`, the same object 
 {
   "slug": "2026-09-20-economist-docflow",
   "type": "pack",
-  "title": "Agent-powered document workflow for a non-programmer (economist)",
+  "title": "Agent-powered document workflow for an economist",
   "date": "2026-09-20",
   "domain": "finance",
   "tags": ["opencode", "agent-setup", "templates", "non-programmer"],
@@ -379,7 +379,14 @@ Tag and domain pages are NOT built in MVP (§A12, trigger in §13).
 6. Line about the blanket 18+ category.
 
 ### 6.4 SEO requirements
-Dump content is fully indexed (body in SSR-HTML); gate/reception — dismissible interstitial per age-gate precedent; feed pagination — separate page files; sitemap and robots are generated; og-tags on every dump page: og:image = logo; og:title = title only — stakes/trust stay in meta tags and visible cards, never in the title tag or og:title; og:description and the meta description (the dump previews) = `manifest.summary + " And a prompt to make your agent explain it to you."` — the article's essence plus the agent-onboarding hook, never a static hook.
+Dump content is fully indexed (body in SSR-HTML); gate/reception — dismissible interstitial per age-gate precedent; feed pagination — separate page files; sitemap and robots are generated; og-tags on every dump page: og:image = logo; og:title = title only — stakes/trust stay in meta tags and visible cards, never in the title tag or og:title; og:description and the twitter description (the dump previews) = `manifest.summary + " And a prompt to make your agent explain it to you."` — the article's essence plus the agent-onboarding hook, never a static hook.
+
+**Search-surface budgets (KDV-SURFACE-33/34/35, KDV-MANIFEST-13).** Three surfaces have hard numbers, because the search engine's truncation is not ours to negotiate:
+
+- `<title>` = `title · Kodavr` while the whole tag fits **60** characters; otherwise the bare title — the brand suffix is ours and is dropped first, an authored string is never shortened. `og:title` and the visible `h1` keep the authored title, so the tag can never disagree with the page.
+- `<meta name="description">` = the authored text clamped at a **word boundary to 155** characters with the ellipsis inside the budget, and **without** the agent tail: the hook is our onboarding copy, and a crawler truncates it away. `og:description`/`twitter:description` keep the full composed line — a social card is not truncated.
+- A dump is authored against those numbers: `title` ≤ 60 and `summary` ≤ 200 characters are **validation errors** (`KDV-CI-02`), not style advice, because the title is the `h1` and the first ~155 characters of the summary ARE the snippet.
+- The sitemap lists documents of their own: `home/<dataset>/page/N.html` pagination files canonicalize to the locale root and are excluded. A dump's `lastmod` is the later of its manifest `date` and the commit date that last touched its folder (every locale variant of the dump shares it); a page whose content date is unknown carries **no** `lastmod` — a build timestamp is a lie that teaches crawlers to ignore the field.
 
 ### 6.5 Mobile adaptation and the viral-seed scenario
 

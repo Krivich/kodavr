@@ -148,6 +148,20 @@ need the schema and git; now it is one conversation and one yes — your agent
 gets the skill sources inline"). Adapt the tone to the human, but never
 oversell — `stakes` and `content_flags` still have to say the truth.
 
+**Two hard numbers (validation errors, not advice).** The platform renders your
+`title` as the page `h1` and the `<title>` tag, and shows the first ~155
+characters of your `summary` as the search snippet. So:
+
+- `title` — **≤ 60 characters** (the brand suffix is appended only when it still
+  fits, so do not budget for it yourself). One concrete claim, the reader's
+  outcome, no "a dump about …".
+- `summary` — **≤ 200 characters**, and the first ~155 must stand on their own as
+  a snippet: sentence one is the essence, then what the reader's agent gets. Write
+  for a stranger scrolling a search result, not for a changelog.
+
+Both are checked by the repo's validator before the PR; an over-budget dump is
+rejected, so cut the line instead of hoping it survives truncation.
+
 Manifest field guidance:
 
 - `slug`: `<YYYY-MM-DD>-<short-kebab>` (ASCII, lowercase). Must equal the dir name.

@@ -1,7 +1,7 @@
 {
   "slug": "2026-09-20-economist-docflow",
   "type": "pack",
-  "title": "Agent-powered document workflow for a non-programmer (economist)",
+  "title": "Agent-powered document workflow for an economist",
   "date": "2026-09-20",
   "domain": "finance",
   "tags": ["opencode", "agent-setup", "templates", "non-programmer"],

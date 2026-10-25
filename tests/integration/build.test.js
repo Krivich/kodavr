@@ -5,7 +5,7 @@ import { gzipSync } from 'node:zlib';
 import { mkdtemp, mkdir, cp, readFile, readdir, stat, rm, writeFile } from 'node:fs/promises';
 import { XMLValidator } from 'fast-xml-parser';
 import { buildProject } from '../../scripts/lib/build.mjs';
-import { ROUTE_PAGES, FOOTER_REPORT_URL } from '../../scripts/lib/pages.mjs';
+import { ROUTE_PAGES, FOOTER_REPORT_URL, clampForSearch } from '../../scripts/lib/pages.mjs';
 import { t } from '../../scripts/lib/i18n.mjs';
 import { ROBOTS_TXT, HUMANS_TXT } from '../../scripts/lib/verbatim.mjs';
 import { CONTRACT_VERSION, TRUST_LEGEND_LEAD, TRUST_LEVEL_MEANINGS } from '../../scripts/lib/machine.mjs';
@@ -1340,9 +1340,16 @@ describe('build controller (integration)', () => {
     expect(breadcrumb.itemListElement.map((entry) => entry.name)).toEqual(['Home', 'JSON-LD Dump']);
 
     // Dump previews carry the article's essence plus the agent suffix — the
-    // composed description (summary + suffix), never a static hook.
+    // composed description (summary + suffix), never a static hook. KDV-SURFACE-34:
+    // the `<meta name="description">` is the SEARCH snippet — the same summary
+    // clamped at a word boundary, WITHOUT the agent tail, because the tail is our
+    // onboarding hook and a crawler truncates it away anyway.
     const decoded = decodeEntities(dumpHtml);
-    expect(decoded).toContain(`<meta name="description" content="${composed}">`);
+    const snippet = clampForSearch(summary);
+    expect(snippet.length).toBeLessThanOrEqual(155);
+    expect(composed.startsWith(summary)).toBe(true);
+    expect(decoded).toContain(`<meta name="description" content="${snippet}">`);
+    expect(decoded).not.toContain(`<meta name="description" content="${composed}">`);
     expect(decoded).toContain(`<meta property="og:description" content="${composed}">`);
     expect(decoded).toContain(`<meta name="twitter:description" content="${composed}">`);
 

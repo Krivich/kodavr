@@ -1,6 +1,6 @@
 {
   "slug": "2026-10-12-opencode-requirements-machine-fractal",
-  "title": "The fractal requirements machine: module-local registries on top of the base machine",
+  "title": "The fractal requirements machine: registries per module",
   "type": "case",
   "domain": "engineering",
   "date": "2026-10-12",
@@ -12,7 +12,7 @@
   "human_review": "minimal",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "The base requirements machine keeps every obligation in one project-wide registry; this extension turns any module folder into a machine of its own — its own registry, tests and coverage-script copy, with the folder name as the ID prefix, so root and module IDs can never collide and a module can be extracted with its git history. A root manifest plus a five-invariant aggregator keep the root aware, and about a week of real work on top showed the growth and the speculative research landing in the module while the root stayed clean. Applies on top of the 2026-09-18 requirements-machine dump; every file is inlined.",
+  "summary": "The base machine keeps every obligation in one registry; this turns any module folder into a machine of its own — registry, tests, and the folder name as ID prefix, so IDs never collide.",
   "sources": ["chat-log", "source-code", "tests"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

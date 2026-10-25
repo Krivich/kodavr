@@ -10,17 +10,21 @@
  *   ./machine.mjs — write index.json, feeds, tags, sitemap
  *   ./pages.mjs — route datasets, SEO, the logo
  *   ./relativize.mjs — host-agnostic internal links
+ *   node:child_process — read each dump's last content commit for the sitemap
  *   node:fs/promises — the filesystem
  *   node:module — resolve the handlebars asset
  *   node:path — join paths
+ *   node:util — promisify execFile
  * INVARIANTS:
  *   — one build timestamp for every artifact (article:modified_time, manifest built_at, machine files)
  *   — static/ is the only author-owned tree the build copies into the public root
  */
 
 import { copyFile, mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { promisify } from 'node:util';
 import { readDumps, toDataset } from './dumps.mjs';
 import { datasetName, parseDataset, translatedLocales } from './i18n.mjs';
 import { runIgnition } from './ignition.mjs';
@@ -29,6 +33,7 @@ import { buildRouteDatasets, readLogoSvg, routeOutputPath, ROUTE_PAGES } from '.
 import { relativizeSite } from './relativize.mjs';
 
 const require = createRequire(import.meta.url);
+const execFileAsync = promisify(execFile);
 
 // The engine's own copyUniversalAssets looks for handlebars under
 // node_modules/ignition-ssg/node_modules (which does not exist) and merely logs
@@ -149,6 +154,33 @@ async function publishRoutePages(publicDir, activeLocales) {
   }
 }
 
+// §6.4/KDV-SURFACE-30: the newest change to a dump's OWN content files, as the
+// repository records it. File mtimes cannot carry this — a CI checkout stamps
+// every file with the same time — so the only honest source is the commit date
+// that last touched the dump's folder. Without git, or for a folder git does not
+// track yet, the manifest `date` stays the floor (the caller applies it).
+async function dumpContentDate(root, contentDir, slug) {
+  try {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['log', '-1', '--format=%cs', '--', `${contentDir}/${slug}`],
+      { cwd: root },
+    );
+    const date = stdout.trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+  } catch {
+    return null;
+  }
+}
+
+// newestDate(a, b) → the later of two `YYYY-MM-DD` strings (lexicographic), or
+// whichever one exists.
+function newestDate(a, b) {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  return a >= b ? a : b;
+}
+
 export async function buildProject({
   root,
   contentDir,
@@ -164,7 +196,14 @@ export async function buildProject({
   const dumpsDataDir = join(dataRoot, 'dumps');
   const publicDir = join(root, outputDir, 'public');
 
-  const dumps = await readDumps(contentRoot);
+  const dumps = [];
+  for (const dump of await readDumps(contentRoot)) {
+    // §6.4/KDV-SURFACE-30: a dump's sitemap `lastmod` is the later of its manifest
+    // date and the last commit that touched its own folder — an edited copy or
+    // layer is no longer advertised to crawlers as "unchanged since publication".
+    const contentDate = await dumpContentDate(root, contentDir, dump.slug);
+    dumps.push({ ...dump, lastModified: newestDate(dump.manifest?.date, contentDate) });
+  }
 
   // One build timestamp for every artifact: `article:modified_time`, the
   // manifest `built_at` and machine files all agree.

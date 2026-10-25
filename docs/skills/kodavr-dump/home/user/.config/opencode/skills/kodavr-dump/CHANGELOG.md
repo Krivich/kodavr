@@ -1,4 +1,4 @@
-# Changelog — kodavr-dump
+﻿# Changelog — kodavr-dump
 
 Versioning: the `VERSION` file beside `SKILL.md` (MAJOR.MINOR.PATCH).
 
@@ -12,6 +12,19 @@ which revision it runs and be told when to update.
 
 Maintainer: Krivich.
 
+## 0.4.2 — 2026-10-25
+
+- Search-surface budgets (`SKILL.md` Step 3, "Writing the summary"): `title` is
+  **≤ 60 characters** and `summary` is **≤ 200**, and both are validation errors
+  (`KDV-MANIFEST-13`), not style advice. The title becomes the page `h1` and the
+  `<title>` tag — the brand suffix is appended only when it still fits, so never
+  budget for it yourself. The first ~155 characters of the summary ARE the search
+  snippet, so sentence one has to stand alone.
+- The agent-prompt tail left the search snippet: `<meta name="description">` is
+  the summary clamped at a word boundary, WITHOUT
+  `" And a prompt to make your agent explain it to you."`; `og:description` and
+  `twitter:description` still compose `summary + tail`, because a social card is
+  not truncated. The 0.4.1 rule ("never stuff the tail in yourself") is unchanged.
 ## 0.4.1 — 2026-09-24
 
 - Summary rule (`SKILL.md` Step 3, `reference/manifest.md`,

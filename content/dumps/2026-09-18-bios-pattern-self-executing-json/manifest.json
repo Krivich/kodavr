@@ -1,6 +1,6 @@
 {
   "slug": "2026-09-18-bios-pattern-self-executing-json",
-  "title": "The BIOS Pattern: Self-Executing JSON Contracts for AI Agents",
+  "title": "The BIOS Pattern: Self-Executing JSON Contracts for Agents",
   "type": "case",
   "domain": "engineering",
   "date": "2026-09-18",
@@ -21,7 +21,7 @@
   "human_review": "minimal",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "Agents receive JSON but do not know what to do with it: is this a blog, a knowledge base, documentation? This dump describes a pattern that turns JSON Schema into an executable BIOS — a `$schema` pointer plus an inline `schema` whose `description` fields carry the agent's role and next steps — so a document boots an agent with no external config. Kodavr is the first implementation; the pattern applies to any machine-readable contract.",
+  "summary": "Agents receive JSON but do not know what to do with it. This pattern turns JSON Schema into an executable BIOS — a schema whose descriptions boot an agent with no external config.",
   "sources": ["chat-log", "source-code"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

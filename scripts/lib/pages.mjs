@@ -6,6 +6,7 @@
  *   FOOTER_REPORT_URL — the §7.3 report link (new Issue, risk template preselected)
  *   HOME_TAGLINE — the home storefront tagline (SEO description)
  *   MANIFEST_LABELS — field labels for the human-readable manifest card
+ *   META_DESCRIPTION_MAX — the `<meta name="description">` budget (what a SERP shows)
  *   OG_IMAGE_ALT — the OG image alt text
  *   OG_IMAGE_HEIGHT — the OG image height
  *   OG_IMAGE_PATH — the OG image path
@@ -16,11 +17,15 @@
  *   SITE_LOCALE — the og:locale value
  *   SITE_NAME — the site name
  *   SITE_NAV — the primary navigation links
+ *   TITLE_SUFFIX — the brand suffix appended to a page title when it fits
+ *   TITLE_TAG_MAX — the `<title>` budget in characters
  *   agentLinksFor — the §7.12 jump links with the localized prompt pre-filled
  *   buildNav — the nav array for a page whose path is current
  *   buildAlternates — the hreflang alternate cluster for a page's built locales
  *   buildLanguages — the header switcher entries (same page, each built locale)
+ *   clampForSearch — a text → its SERP-clamped projection (word boundary + ellipsis)
  *   ogLocaleAlternates — the `og:locale:alternate` codes for a page's other locales
+ *   titleTag — a page title → its `<title>` string under the budget
  *   buildRouteDatasets — one dataset per layout route
  *   catalogKeyFor — a dataset field name → its catalog key (null when not catalog-backed)
  *   routeOutputPath — a { locale, layout, key } coordinate → its public-relative path
@@ -353,6 +358,38 @@ export const OG_IMAGE_ALT = 'Kodavr — a registry of raw experience';
 export const SITE_NAME = 'Kodavr';
 export const SITE_LOCALE = 'en_US';
 
+// §6.4/KDV-SURFACE-33: the `<title>` budget. The brand suffix is OURS, so it is
+// the first thing dropped: an authored title that leaves no room keeps the tag
+// inside the budget instead of pushing the brand into the truncated zone. The
+// visible H1 and `og:title` stay the authored string — only the tag is budgeted.
+export const TITLE_SUFFIX = ` · ${SITE_NAME}`;
+export const TITLE_TAG_MAX = 60;
+
+// §6.4/KDV-SURFACE-34: the meta description budget — what a search engine shows.
+// The meta description is a CLAMPED projection of the authored text (cut at a
+// word boundary, ellipsis included in the budget) and never carries the agent
+// tail; `og:description` keeps the full composed line, because a social card has
+// no truncation to survive.
+export const META_DESCRIPTION_MAX = 155;
+
+// titleTag(title) → the `<title>` string under the budget: `title · Kodavr`
+// when it fits, the bare title when the suffix would overflow.
+export function titleTag(title) {
+  const full = `${title}${TITLE_SUFFIX}`;
+  return full.length <= TITLE_TAG_MAX ? full : title;
+}
+
+// clampForSearch(text, max) → the text cut at a word boundary with an ellipsis,
+// never longer than `max` characters; shorter text passes through untouched.
+export function clampForSearch(text, max = META_DESCRIPTION_MAX) {
+  const value = String(text ?? '').trim();
+  if (value.length <= max) return value;
+  const cut = value.slice(0, max - 1);
+  const boundary = cut.lastIndexOf(' ');
+  const head = boundary > 0 ? cut.slice(0, boundary) : cut;
+  return `${head.trimEnd()}…`;
+}
+
 // Single-page routes: layout + dataset are always `main`; the engine writes
 // `output/public/<layout>/main.html` and build.mjs moves it to the spec URL.
 // `home` is the exception: it uses the engine's declarative pagination, which
@@ -465,6 +502,10 @@ function commonPage({
   const webpage = jsonldWebpage({ websiteId: website['@id'], url, name: title, description, inLanguage: htmlLang });
   return {
     title,
+    // §6.4/KDV-SURFACE-33/34: the tag and the snippet are budgeted projections of
+    // the same authored copy — `title`/`og_title`/`og_description` stay untouched.
+    title_tag: titleTag(title),
+    meta_description: clampForSearch(description),
     og_title: title,
     og_description: description,
     // §6.4: absolute canonical URL and social card. `og:*`/canonical stay

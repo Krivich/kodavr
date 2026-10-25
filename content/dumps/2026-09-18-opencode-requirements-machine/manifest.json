@@ -1,6 +1,6 @@
 {
   "slug": "2026-09-18-opencode-requirements-machine",
-  "title": "The requirements machine: stable IDs, coverage checks and an idea process for agent-driven code",
+  "title": "The requirements machine: stable IDs and coverage checks",
   "type": "case",
   "domain": "engineering",
   "date": "2026-09-18",
@@ -12,7 +12,7 @@
   "human_review": "minimal",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "Agents forget obligations between sessions: a requirement is re-litigated, an idea is treated as design, and the same rule ends up in two places that drift. This dump is the requirements-management half — a single registry with stable IDs and a test per row, a coverage check that fails loudly on a typo'd ID or a passing row without a test, and an idea process that only mints grounded, testable requirements. All source files are inlined; it is one of two companion dumps.",
+  "summary": "Agents forget obligations between sessions, so the same rule ends up in two drifting places. This dump gives one registry with stable IDs, a test per row, and a coverage check that fails loudly.",
   "sources": ["chat-log", "source-code"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

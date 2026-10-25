@@ -106,7 +106,8 @@ describe('i18n alternate-locale SEO cluster (KDV-I18N-04)', () => {
         'ru/about/index.html',
         'dumps/sample-dump/index.html',
         'ru/dumps/sample-dump/index.html',
-        'home/main/page/1.html', // a single-locale engine page
+        'contribute/index.html', // a page emitted in one locale only
+        'home/main/page/1.html', // an engine pagination file (canonical → the root)
         '404.html',
       ]) {
         const parts = rel.split('/');
@@ -129,7 +130,10 @@ describe('i18n alternate-locale SEO cluster (KDV-I18N-04)', () => {
         `<xhtml:link rel="alternate" hreflang="x-default" href="${BASE}/about/"/>`,
       );
       // A single-locale page is not linked to a locale that is not emitted.
-      expect(urlBlock(sitemap, `${BASE}/home/main/page/1`)).not.toContain('xhtml:link');
+      expect(urlBlock(sitemap, `${BASE}/contribute/`)).not.toContain('xhtml:link');
+      // KDV-SURFACE-35: an engine pagination file is a render fragment, not a
+      // document — it canonicalizes to the locale root and is never submitted.
+      expect(sitemap).not.toContain('/home/main/page/1</loc>');
     } finally {
       await rm(out, { recursive: true, force: true });
     }

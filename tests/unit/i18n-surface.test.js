@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { EN } from '../../scripts/lib/i18n-en.mjs';
 import { LOCALES, getLocale, t } from '../../scripts/lib/i18n.mjs';
 import { GATE_TITLE, FOOTER_TEXT } from '../../scripts/lib/copy.mjs';
-import { buildRouteDatasets, HOME_TAGLINE } from '../../scripts/lib/pages.mjs';
+import { buildRouteDatasets, HOME_TAGLINE, TITLE_SUFFIX, titleTag } from '../../scripts/lib/pages.mjs';
 import { readDumps, toDataset } from '../../scripts/lib/dumps.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -284,9 +284,15 @@ describe('i18n surface: templates bind from the dataset (KDV-I18N-01)', () => {
     expect(dataset.copy.dumps_want_heading).toBe('Read through your agent');
   });
 
-  it('KDV-I18N-01: head.hbs keeps the human <title> skeleton with the brand literal', () => {
+  it('KDV-I18N-01: head.hbs keeps the human <title> skeleton and the brand literal stays data', () => {
     const head = template('site/head.hbs');
-    expect(head).toContain('<title>{{title}} · Kodavr</title>');
+    // KDV-SURFACE-33: the tag is a budgeted projection (the brand suffix drops
+    // before an authored title is ever shortened), so the literal moved from the
+    // template into `TITLE_SUFFIX` — one source for the brand, not two.
+    expect(head).toContain('<title>{{title_tag}}</title>');
+    expect(head).not.toMatch(/<title>\{\{title\}\}/);
+    expect(TITLE_SUFFIX).toBe(' · Kodavr');
+    expect(titleTag('Short')).toBe('Short · Kodavr');
   });
 
   it('KDV-I18N-01: every full layout reads lang from the dataset, dir gated on rtl, never ltr', () => {

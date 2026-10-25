@@ -1,6 +1,6 @@
 {
   "slug": "2026-09-19-navigable-json-baked-offsets",
-  "title": "Navigable JSON (.njson): lazy reading with baked byte offsets for LLM agents",
+  "title": "Navigable JSON: baked byte offsets for lazy agent reads",
   "type": "case",
   "domain": "engineering",
   "date": "2026-09-19",
@@ -12,7 +12,7 @@
   "human_review": "minimal",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "Agents read JSON sequentially, so reaching one record in a hundred costs all hundred; Navigable JSON bakes byte offsets into the file at build time so a reader skips bodies it does not need, while the file stays valid JSON. This case gives the format, a working linker and reader, a real 5-record index with live offsets, and what happened when a small model navigated it. A reader's agent can lift the format and the reference code and apply the same lazy reading to any large index.",
+  "summary": "Agents read JSON sequentially, so one record in a hundred costs all hundred. Navigable JSON bakes byte offsets at build time, so a reader skips bodies it does not need while the file stays valid JSON.",
   "sources": ["chat-log", "source-code"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },

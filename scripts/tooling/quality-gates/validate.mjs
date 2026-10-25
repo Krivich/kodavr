@@ -63,6 +63,15 @@ const ASSET_RE = /^assets\/[^/]+\.(png|svg|puml)$/i;
 const MAX_FILE_BYTES = 1024 * 1024; // 1 MB
 const MAX_DUMP_BYTES = 20 * 1024 * 1024; // 20 MB
 
+// KDV-MANIFEST-13/§4.1: the search-surface budgets a dump is authored against.
+// TITLE_MAX is the `<title>` budget (the brand suffix is dropped before the
+// authored title is ever shortened); SUMMARY_MAX keeps the summary a door of
+// 1–2 sentences; SNIPPET_MAX is what a search engine shows (the render clamps
+// the meta description there at a word boundary).
+const TITLE_MAX = 60;
+const SUMMARY_MAX = 200;
+const SNIPPET_MAX = 155;
+
 const TEXT_EXTENSIONS = new Set([
   '.md', '.markdown', '.txt', '.json', '.jsonc', '.yml', '.yaml', '.js', '.mjs',
   '.cjs', '.ts', '.tsx', '.jsx', '.sh', '.bash', '.ps1', '.py', '.rb', '.go',
@@ -330,6 +339,21 @@ export function validateManifest(manifest, rel, errors) {
     if (sentences < 1 || sentences > 3) {
       errors.push(`KDV-CI-02 ${rel}/manifest.json: \`summary\` must be 1–3 sentences (§4.1, got ${sentences})`);
     }
+  }
+  // KDV-MANIFEST-13/§4.1: the search-surface budgets. `title` becomes the page H1
+  // and the `<title>` tag (the brand suffix is dropped when it does not fit), and
+  // the first ~155 characters of `summary` ARE the search snippet — so both are
+  // authored under a hard ceiling instead of being truncated downstream. The
+  // numbers live here, not in prose: an author cannot unknowingly overflow.
+  if (typeof manifest.title === 'string' && manifest.title.length > TITLE_MAX) {
+    errors.push(
+      `KDV-CI-02 ${rel}/manifest.json: \`title\` must be ≤${TITLE_MAX} characters (§4.1, got ${manifest.title.length}) — it is the page H1 and the <title> tag`,
+    );
+  }
+  if (typeof manifest.summary === 'string' && manifest.summary.length > SUMMARY_MAX) {
+    errors.push(
+      `KDV-CI-02 ${rel}/manifest.json: \`summary\` must be ≤${SUMMARY_MAX} characters (§4.1, got ${manifest.summary.length}) — its first ~${SNIPPET_MAX} characters are the search snippet`,
+    );
   }
   // KDV-MANIFEST-08/§4.1: sources vocabulary, derived_from, consumption_contract.
   if ('sources' in manifest) {

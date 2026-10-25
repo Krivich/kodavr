@@ -40,6 +40,8 @@ import {
   OG_IMAGE_TYPE,
   SITE_NAME,
   SITE_LOCALE,
+  titleTag,
+  clampForSearch,
 } from './pages.mjs';
 import {
   jsonldWebsite,
@@ -343,6 +345,11 @@ export function toDataset(dump, { baseUrl = '', logo = '', repoRoot = null, repo
     // §6.4/KDV-SURFACE-11: the preview description is the dump's summary plus
     // the agent suffix; the bare `summary` stays on the manifest card and in
     // the JSON-LD Article.description.
+    // §6.4/KDV-SURFACE-33/34: `<title>` and `<meta name="description">` are the
+    // budgeted projections — brand suffix dropped before the authored title is
+    // shortened, snippet clamped at a word boundary and never carrying the tail.
+    title_tag: titleTag(manifest.title),
+    meta_description: clampForSearch(manifest.summary),
     og_description: previewDescription,
     // §6.4: absolute canonical URL; `og:*` stays absolute (consumed out of
     // context, §8.3); the social card is the site-wide 1200x630 PNG.

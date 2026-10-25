@@ -1,4 +1,4 @@
-# kodavr — Requirements
+﻿# kodavr — Requirements
 
 Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 
@@ -44,6 +44,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - 🟧 **KDV-MANIFEST-10**: `commit_sha` plus `author.*` fields are injected at build time. *(§4.1, §8.2; flow: legacy)*
 - ✅ **KDV-MANIFEST-11**: The §4.2 (note/case) and §4.3 (pack) example manifests validate against the schema. *(§4.2–4.3; flow: legacy)*
 - ✅ **KDV-MANIFEST-12**: Dumps authored by an agent or hybrid process (`generated_by: agent` or `hybrid`) must ship the `summary` layer (`summary.md`) beside the manifest, so the human preview's brief never falls back to the bare manifest. *(§4.1; docs/ideas/feedback-marketing.md item 1; flow: Consume)*
+- ✅ **KDV-MANIFEST-13**: `title` (≤60 characters) and `summary` (≤200 characters) are authored under the search-surface budgets: the title is the page H1 and the `<title>` tag, and the first ~155 characters of the summary ARE the snippet. The ceiling is enforced by `validateManifest` (a hard `KDV-CI-02` error, not a style note), so every dump — including agent-written ones — lands inside the budget instead of being truncated downstream; the existing 11 manifests were backfilled to the rule. *(§4.1; tests/unit/seo-budgets.test.js; flow: Publish)*
 
 ## KDV-CONTRACT — Machine endpoints (§5)
 
@@ -89,9 +90,12 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-SURFACE-27**: The home storefront's `01 · HUMANS` plate carries the human on-ramp above the dumps feed — the storefront-variant §7.12 lane lead with the agent jump links and copy control, and the universal §7.4 prompt rendered exactly once on its own prompt id (`home-prompt`) — so the "read through your agent" ritual comes before the index. *(§6.1, §7.4, §7.12; flow: Consume)*
 - ✅ **KDV-SURFACE-28**: The article page's gate is inline, not a modal: the plates `01 · PREVIEW` (the explainer statement `WHAT YOUR AGENT WILL TELL YOU` + its note + the dump named + the author brief card or its honest fallback, closing with the agent-conversion CTA — copy the prompt below and paste it into your agent) / `02 · INTERESTING?` (the §7.12 lane + prompt) / `03 · DECLARATION` (§7.1 text) sit above the raw-body `01 · DUMP` plate; in state 0 all three are revealed by the controller and the raw body is collapsed, state M collapses to `01 · DUMP` + the machine panel, state H collapses to `01 · PREVIEW` + `02`, and the single bottom "передумал" reset re-opens the declaration in place; SSR ships the three plates hidden so the no-JS page stays the raw body. *(§6.2, §6.3, §6.6; docs/ideas/feedback-marketing.md items 4–5; flow: Consume)*
 - ✅ **KDV-SURFACE-29**: The `/contribute/` `02 · flow` plate leads with the contribute-lane as its FIRST element — the lane lead, ONE primary copy control wired to the §7.16 prompt (its id `contribute-prompt`, carrying the copydeck's copied label/announcement), the coding-agent hint, and a plain secondary link to the skill dump page, with ZERO chat links (publishing is a coding agent's job, §7.12's contribute variant) — and the manual path is demoted under the `Manual path (if you prefer)` heading above its unchanged three steps; hovering or keyboard-focusing the copy button lights the prompt's left rule in the accent (child combinator), and the standard §7.12 lane rule gains the same `:focus-visible` parity. *(§6.1, §7.12, §7.16; docs/ideas/feedback-contribute_skill.md items 01–03, 07; flow: Publish)*
-- ⬜ **KDV-SURFACE-30**: A dump's sitemap entry reports a `lastmod` that reflects the last change to the dump's own content — the later of the manifest `date` and the newest content change among its built files (summary, brief, body, manifest) — instead of the manifest date alone, so a copy or layer edit is no longer advertised to crawlers as "unchanged since publication". NOT IMPLEMENTED YET — registered from a live check (the og/brief refresh of 2026-09-24 still ships `lastmod` = the dump's publication date). *(§6.4; tightens KDV-SURFACE-12's `lastmod` rule; flow: Consume)*
+- ✅ **KDV-SURFACE-30**: A dump's sitemap entry reports a `lastmod` that reflects the last change to the dump's own content — the later of the manifest `date` and the newest content change among its built files (summary, brief, body, manifest) — instead of the manifest date alone, so a copy or layer edit is no longer advertised to crawlers as "unchanged since publication". Implemented as the git commit date that last touched `content/dumps/<slug>/` (file mtimes are useless in CI — a checkout stamps every file with the same time; `deploy.yml` fetches full history for this), falling back to the manifest date when git is unavailable, and applied to EVERY locale variant of the dump (the mapping is locale-neutral, so `/ru/dumps/…` no longer carries the build time). Pages whose content date is unknown publish NO `lastmod` at all — a build timestamp claims "changed" on every deploy and teaches crawlers to distrust the field. *(§6.4; tightens KDV-SURFACE-12's `lastmod` rule; flow: Consume)*
 - ✅ **KDV-SURFACE-31**: The home storefront's `01 · HUMANS` plate opens with an `<h2>` bound to the `home_humans_heading` copy key (present and translated in all four locales), matching the heading grammar of the sibling plates so the plate no longer reads as headless. *(§6.1; docs/ideas/feedback-marketing.md item 3 update 2026-09-24; flow: Consume)*
 - ✅ **KDV-SURFACE-32**: The dump reading page's `02 · INTERESTING?` plate opens with an `<h2>` bound to the `dumps_want_heading` copy key (present and translated in all four locales, value pinned in lockstep with the home `home_humans_heading`), giving the agent lane the same heading grammar as the storefront plates. *(§6.2–6.3, §7.12; docs/ideas/feedback-marketing.md item 3 update 2026-09-24; flow: Consume)*
+- ✅ **KDV-SURFACE-33**: The `<title>` tag is a budgeted projection of the authored title: `title · Kodavr` when the whole tag fits 60 characters, the bare title when the brand suffix would overflow — the suffix is dropped BEFORE the authored string is ever shortened, so the brand can never push a title into the truncated zone, and `og:title`/the page `h1` keep the authored string. The literal brand suffix lives in one place (`TITLE_SUFFIX`), not in the template. *(§6.4; tests/unit/seo-budgets.test.js; flow: Consume)*
+- ✅ **KDV-SURFACE-34**: The `<meta name="description">` is the search snippet: the authored text clamped at a word boundary to 155 characters (ellipsis counted inside the budget) and carrying NO agent tail — the onboarding suffix is our hook, not the author's summary, and a crawler truncates it away; `og:description`/`twitter:description` keep the full composed line because a social card has no truncation to survive. *(§6.4; tests/unit/seo-budgets.test.js, tests/integration/build.test.js; flow: Consume)*
+- ✅ **KDV-SURFACE-35**: The sitemap submits only documents of their own: the engine's pagination files (`home/<dataset>/page/N.html`) canonicalize to the locale root and are therefore excluded instead of being handed to crawlers as URLs that say "index the other one". *(§6.4; tests/unit/seo-budgets.test.js; flow: Consume)*
 
 ## KDV-MOBILE — Mobile and performance (§6.5)
 
@@ -286,9 +290,9 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 |---|---|---|---|---|---|
 | KDV-ARCH | 7 | 5 | 2 | 0 | 0 |
 | KDV-STRUCT | 9 | 8 | 1 | 0 | 0 |
-| KDV-MANIFEST | 12 | 11 | 1 | 0 | 0 |
+| KDV-MANIFEST | 13 | 12 | 1 | 0 | 0 |
 | KDV-CONTRACT | 11 | 11 | 0 | 0 | 0 |
-| KDV-SURFACE | 28 | 27 | 0 | 1 | 0 |
+| KDV-SURFACE | 31 | 30 | 0 | 0 | 0 |
 | KDV-MOBILE | 11 | 10 | 1 | 0 | 0 |
 | KDV-A11Y | 6 | 6 | 0 | 0 | 0 |
 | KDV-COPY | 10 | 10 | 0 | 0 | 0 |
@@ -301,4 +305,4 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
 | KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **215** | **173** | **14** | **27** | **1** |
+| **Total** | **219** | **178** | **14** | **26** | **1** |

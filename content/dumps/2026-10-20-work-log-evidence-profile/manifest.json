@@ -1,6 +1,6 @@
 {
   "slug": "2026-10-20-work-log-evidence-profile",
-  "title": "While HR fights AI-inflated resumes, we build a genuine resume from work traces",
+  "title": "Turning work traces into a resume nobody can inflate",
   "type": "case",
   "domain": "engineering",
   "date": "2026-10-20",
@@ -12,7 +12,7 @@
   "human_review": "none",
   "verification": "checkable",
   "license": "CC-BY-4.0",
-  "summary": "Your resume says you led development; your logs show the scope you cut, the designs you rejected, and what actually shipped. This dump turns those traces into a mirror for you and checkable claims for everyone else, with a runnable Python pipeline plus the recipe your AI agent can adapt to your own logs and stack. It keeps the raw logs private and shows where the method breaks.",
+  "summary": "Your resume says you led development; your logs show the scope you cut, the designs you rejected and what shipped. This dump turns those traces into a mirror for you and checkable claims for others.",
   "sources": ["chat-log", "source-code"],
   "layers": [
     { "name": "raw", "file": "raw.md", "fact_checked": false, "author_voice": true },
