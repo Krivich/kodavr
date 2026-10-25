@@ -59,7 +59,7 @@
        the summary's name/title) — no navigation and no URL/SEO change. Without JS
        this stays a plain switcher. --}}
   <details class="lang-switch" data-current-locale="{{locale}}" data-lang-hint-template="{{copy.lang_hint}}">
-    <summary class="lang-switch-summary" aria-label="{{copy.lang_switch_label}}"><span class="lang-switch-current">{{#each languages}}{{#if current}}{{endonym}}{{/if}}{{/each}}</span></summary>
+    <summary class="lang-switch-summary" aria-label="{{copy.lang_switch_label}}: {{#each languages}}{{#if current}}{{endonym}}{{/if}}{{/each}}"><span class="lang-switch-current">{{#each languages}}{{#if current}}{{endonym}}{{/if}}{{/each}}</span></summary>
     <ul class="lang-switch-menu">
       {{#each languages}}
       <li><a href="{{href}}" hreflang="{{hreflang}}" lang="{{hreflang}}" data-lang-code="{{code}}"{{#if current}} aria-current="true"{{/if}}>{{endonym}}</a></li>

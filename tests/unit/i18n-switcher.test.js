@@ -17,9 +17,28 @@ const BASE = 'https://example.test';
 describe('i18n language switcher markup (KDV-I18N-06)', () => {
   const header = template('site/header.hbs');
 
+  // KDV-I18N-10: the hint is a nudge, not a loop, and its name carries the
+  // visible endonym (WCAG 2.5.3). Both live in the shipped assets, so they are
+  // asserted there rather than in a comment.
+  it('KDV-I18N-10: the hint pulse is bounded and the summary name contains the visible endonym', () => {
+    const css = readFileSync(join(ROOT, 'static/assets/styles.css'), 'utf8');
+    const rule = css.match(/\.lang-switch\[data-lang-hint\]\s+\.lang-switch-summary::before\{[^}]*\}/);
+    expect(rule, 'hint dot rule').not.toBeNull();
+    // three iterations, never `infinite`: a permanent repaint is a permanent cost
+    expect(rule[0]).toMatch(/animation:\s*lang-hint-pulse\s+2s\s+ease-in-out\s+3\b/);
+    expect(rule[0]).not.toContain('infinite');
+    // the accessible name starts with the link label AND names the visible locale
+    expect(header).toMatch(
+      /aria-label="\{\{copy\.lang_switch_label\}\}: \{\{#each languages\}\}\{\{#if current\}\}\{\{endonym\}\}\{\{\/if\}\}\{\{\/each\}\}"/,
+    );
+  });
+
   it('KDV-I18N-06: the switcher is a native <details> with a labelled summary and an endonym loop', () => {
     expect(header).toMatch(/<details class="lang-switch"/);
-    expect(header).toMatch(/<summary class="lang-switch-summary" aria-label="\{\{copy\.lang_switch_label\}\}">/);
+    // WCAG 2.5.3 (label in name): the accessible name carries the visible endonym.
+    expect(header).toMatch(
+      /<summary class="lang-switch-summary" aria-label="\{\{copy\.lang_switch_label\}\}: \{\{#each languages\}\}\{\{#if current\}\}\{\{endonym\}\}\{\{\/if\}\}\{\{\/each\}\}">/,
+    );
     expect(header).toMatch(/class="lang-switch-current">\{\{#each languages\}\}/);
     expect(header).toMatch(/\{\{#each languages\}\}/);
     expect(header).toMatch(/hreflang="\{\{hreflang\}\}"/);

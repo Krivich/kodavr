@@ -285,6 +285,7 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 - ✅ **KDV-I18N-07**: The copydeck is keyed dictionaries — English is the verbatim source; `t(key, locale, params)` resolves; a missing key is a loud build error, never a silent fallback. *(i18n-idea §5; flow: legacy)* — phase 4a: the whole dataset `copy` object (every `copy.<field>` a template renders, plus titles/taglines/nav/manifest labels) is assembled per locale from the catalog; `t` passes non-string values through; a coverage test fails on any uncovered field or unreachable key; `en` output stays byte-identical.
 - ⬜ **KDV-I18N-08**: Machine files (`index.json`, feeds, `.well-known`, `manifest.json`) stay English canonical. *(i18n-idea §5; flow: legacy)*
 - ✅ **KDV-I18N-09**: Every locale's frame carries its own section-plate labels and locale-prefixed internal PAGE links, so a `/ru/` (or `/zh/`, `/es/`) page never links the English target; machine files stay canonical. *(i18n-idea §5; flow: legacy)* — the numbered plates (`01 · registry`, …) are catalog keys bound as the `data-plate` attribute; every route and dump dataset carries `locale_prefix` (`''`/`'/ru'`/`'/zh'`/`'/es'`) and the frame binds it (logo, withdraw, About/Reception CTAs, resets, dump FAB); the home feed is paginated client-side too, so each item gets a baked locale-prefixed `href` on a COPY of the index entry — `/index.json` and manifests keep their canonical absolute URLs with no extra field. `en` visible output is unchanged.
+- ✅ **KDV-I18N-10**: The language hint is a bounded nudge and never a permanent repaint: the pulse runs three times (reduced motion keeps the static accent), and the switcher's accessible name contains the visible endonym (Language: English) — WCAG 2.5.3 label-in-name, in every locale. *(§11, §6.6; tests/unit/i18n-switcher.test.js; flow: Consume)*
 
 ## Summary
 
@@ -306,5 +307,5 @@ Source: [docs/SPEC.md](docs/SPEC.md). Every requirement has a **stable ID**.
 | KDV-CONTENT | 3 | 3 | 0 | 0 | 0 |
 | KDV-BUILD | 13 | 12 | 1 | 0 | 0 |
 | KDV-SCOPE | 8 | 8 | 0 | 0 | 0 |
-| KDV-I18N | 9 | 8 | 0 | 1 | 0 |
-| **Total** | **221** | **180** | **14** | **26** | **1** |
+| KDV-I18N | 10 | 9 | 0 | 1 | 0 |
+| **Total** | **222** | **181** | **14** | **26** | **1** |
